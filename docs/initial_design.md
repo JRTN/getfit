@@ -35,7 +35,7 @@ All ground-floor decisions are closed. Later sections give the detail behind eac
 | # | Area | Decision |
 | --- | --- | --- |
 | 1 | Language | Kotlin, written in an explicit style (explicit types, block bodies, named classes) |
-| 2 | SDK levels | minSdk 34, targetSdk 36, compileSdk 36 |
+| 2 | SDK levels | minSdk 34, targetSdk 37, compileSdk 37 (amended 2026-10-16 from 36: current Compose and androidx.core require compileSdk 37) |
 | 3 | IDE | Android Studio |
 | 4 | Modules | Fine-grained: `:app`, `:feature:*`, `:core:*`; convention plugins in `build-logic` |
 | 5 | Date/time | kotlinx-datetime; `Instant` → `Long` epoch ms, `LocalDate` → `Int` epoch day in Room; primitives in `:core:projection` |
@@ -72,18 +72,18 @@ All ground-floor decisions are closed. Later sections give the detail behind eac
 
 ## Platform, SDK levels and tooling
 
-The app targets Android 16 (API 36) and installs on Android 14 (API 34) and later, the first version with Health Connect built in.
+The app targets Android 17 (API 37) and installs on Android 14 (API 34) and later, the first version with Health Connect built in.
 
 | Setting | Value | Reason |
 | --- | --- | --- |
 | `minSdk` | 34 | Health Connect is part of the OS; no separate APK, availability check or pre-14 rationale intent filter |
-| `targetSdk` | 36 | Google Play has required API 36 for new apps and updates since 2026-08-31 ([source](https://developer.android.com/google/play/requirements/target-sdk)) |
-| `compileSdk` | 36 | Matches target |
+| `targetSdk` | 37 | Exceeds Google Play's API 36 requirement (in force since 2026-08-31, [source](https://developer.android.com/google/play/requirements/target-sdk)); raised from 36 on 2026-10-16 together with `compileSdk` |
+| `compileSdk` | 37 | Matches target; required by Compose 1.12 and androidx.core 1.19 |
 | Release `applicationId` | `com.jrussell.fitness` | Permanent; brand-neutral so the display name can change freely |
 | Debug `applicationId` | `com.jrussell.fitness.debug` | Debug installs never touch the release build's database |
 | Display name | GetFit / GetFit (Debug) | `app_name` string resource, changeable in any release |
 
-**API 36 behaviours designed for from the start**
+**API 36+ behaviours designed for from the start** (Android 17 behaviour changes to be reviewed as they affect features)
 
 - Edge-to-edge is mandatory: `enableEdgeToEdge()` in the activity, insets handled by `Scaffold` / `WindowInsets`, status-bar icon contrast flips with the theme.
 - `onBackPressed()` is no longer delivered: all back handling uses `BackHandler` / `PredictiveBackHandler`.
@@ -741,7 +741,7 @@ A unit test computes the WCAG contrast ratio of every foreground/background toke
 | Elevation | `tonalElevation = 0.dp` everywhere; separation by hairline dividers |
 | Corners | 2–4 dp |
 | Density | Compact visual rows; every interactive element keeps a ≥ 48 dp touch target via `minimumInteractiveComponentSize()` |
-| Edge-to-edge | Mandatory at API 36; insets handled by `Scaffold` |
+| Edge-to-edge | Mandatory since API 36; insets handled by `Scaffold` |
 
 ### Redundant encoding (never colour alone)
 
