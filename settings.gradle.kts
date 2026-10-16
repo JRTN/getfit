@@ -19,6 +19,7 @@ rootProject.name = "fitness"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 include(":app")
+include(":architecture-tests")
 
 include(":feature:today")
 include(":feature:nutrition")

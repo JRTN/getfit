@@ -12,3 +12,5 @@ ktlint_code_style = android_studio
 max_line_length = 120
 ij_kotlin_allow_trailing_comma = true
 ij_kotlin_allow_trailing_comma_on_call_site = true
+# Design decision #1 (explicit style) requires block bodies; ktlint would rewrite them as expression bodies.
+ktlint_standard_function-expression-body = disabled
