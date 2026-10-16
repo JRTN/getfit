@@ -30,6 +30,7 @@ class AndroidApplicationConventionPlugin : Plugin<Project> {
     /** Called by Gradle once when `:app` applies `app.android.application`. */
     override fun apply(target: Project) {
         with(target) {
+            pluginManager.apply("app.quality")
             pluginManager.apply(libs.pluginId("android-application"))
             pluginManager.apply(libs.pluginId("compose-compiler"))
 

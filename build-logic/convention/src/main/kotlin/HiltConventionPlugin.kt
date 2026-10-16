@@ -3,7 +3,9 @@ import com.jrussell.fitness.buildlogic.library
 import com.jrussell.fitness.buildlogic.pluginId
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.tasks.testing.Test
 import org.gradle.kotlin.dsl.dependencies
+import org.gradle.kotlin.dsl.withType
 
 /**
  * Convention plugin `app.hilt`: enables Hilt dependency injection in an Android module.
@@ -34,6 +36,13 @@ class HiltConventionPlugin : Plugin<Project> {
             dependencies {
                 add("implementation", libs.library("hilt-android"))
                 add("ksp", libs.library("hilt-compiler"))
+            }
+
+            // Hilt generates a unit-test component tree (generated/hilt/component_trees/*UnitTest)
+            // even in modules with no tests. Gradle 9 sees those generated sources and fails the
+            // test task for "discovering no tests", so relax that check in Hilt modules only.
+            tasks.withType<Test>().configureEach {
+                failOnNoDiscoveredTests.set(false)
             }
         }
     }

@@ -41,6 +41,7 @@ class JvmLibraryConventionPlugin : Plugin<Project> {
      */
     override fun apply(target: Project) {
         with(target) {
+            pluginManager.apply("app.quality")
             pluginManager.apply(libs.pluginId("kotlin-jvm"))
 
             extensions.configure<JavaPluginExtension> {

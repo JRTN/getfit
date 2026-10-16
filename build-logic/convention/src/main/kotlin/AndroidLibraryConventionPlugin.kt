@@ -32,6 +32,7 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
     /** Called by Gradle once when a module applies `app.android.library`. */
     override fun apply(target: Project) {
         with(target) {
+            pluginManager.apply("app.quality")
             pluginManager.apply(libs.pluginId("android-library"))
 
             extensions.configure<LibraryExtension> {

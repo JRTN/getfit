@@ -11,3 +11,20 @@ plugins {
     alias(libs.plugins.ktlint) apply false
     alias(libs.plugins.dependency.analysis) apply false
 }
+
+apply(plugin = libs.plugins.dependency.analysis.get().pluginId)
+
+configure<com.autonomousapps.DependencyAnalysisExtension> {
+    issues {
+        all {
+            onAny {
+                severity("fail")
+            }
+            // M0 only: feature modules are still empty, so the standard :core:* dependencies the
+            // feature convention adds are unused. Restore "fail" in M1.
+            onUnusedDependencies {
+                severity("warn")
+            }
+        }
+    }
+}
