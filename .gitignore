@@ -1,0 +1,14 @@
+.gradle/
+build/
+.kotlin/
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+*.keystore
+*.jks
+keystore.properties
+.superpowers/
+/.idea/*
+!/.idea/codeStyles/
+!/.idea/vcs.xml
