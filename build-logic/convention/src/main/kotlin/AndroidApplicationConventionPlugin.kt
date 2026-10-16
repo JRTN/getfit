@@ -2,6 +2,7 @@ import com.android.build.api.dsl.ApplicationExtension
 import com.jrussell.fitness.buildlogic.BASE_NAMESPACE
 import com.jrussell.fitness.buildlogic.TARGET_SDK
 import com.jrussell.fitness.buildlogic.configureAndroidCommon
+import com.jrussell.fitness.buildlogic.configureReleaseSigning
 import com.jrussell.fitness.buildlogic.gitCommitCount
 import com.jrussell.fitness.buildlogic.libs
 import com.jrussell.fitness.buildlogic.pluginId
@@ -18,7 +19,8 @@ import org.gradle.kotlin.dsl.configure
  * - sets `versionCode` from the git commit count and `versionName` by hand ([VERSION_NAME]);
  * - **debug** builds get the `.debug` suffix, so `com.jrussell.fitness.debug` installs beside
  *   the release app with its own separate database;
- * - **release** builds are shrunk and obfuscated by R8 from the first release onwards.
+ * - **release** builds are shrunk and obfuscated by R8 from the first release onwards, and are
+ *   signed with the release key when this machine has it (see `configureReleaseSigning`).
  *
  * ```
  * plugins {
@@ -57,6 +59,8 @@ class AndroidApplicationConventionPlugin : Plugin<Project> {
                         )
                     }
                 }
+
+                configureReleaseSigning(this)
 
                 buildFeatures {
                     compose = true
