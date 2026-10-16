@@ -70,7 +70,12 @@ class AndroidApplicationConventionPlugin : Plugin<Project> {
     }
 
     private companion object {
-        /** Semantic version shown to the user; bump by hand for each release. */
-        const val VERSION_NAME: String = "0.1.0"
+        /**
+         * Semantic version shown to the user. Bump it by hand in the commit that gets tagged
+         * `v<VERSION_NAME>` on `master` (see "Versioning and branching" in docs/initial_design.md):
+         * the minor version for each newly useful capability, the patch version for fixes, and
+         * 1.0.0 when the original design is complete.
+         */
+        const val VERSION_NAME: String = "0.0.1"
     }
 }

@@ -69,6 +69,7 @@ All ground-floor decisions are closed. Later sections give the detail behind eac
 | 33 | Test stack | JUnit 5 (pure modules), JUnit 4 + Robolectric (Android modules), AssertK, Turbine, hand-written fakes |
 | 34 | Multi-user readiness | `ownerId` on every user-owned row; `CurrentOwnerProvider` returns the single local profile |
 | 35 | Sync readiness | UUIDv7 keys, tombstones, global revision counter, per-remote cursor, `NoOpSyncGateway` |
+| 36 | Versioning and branching | Semver tags `vX.Y.Z` on `master`; trunk-based with short-lived branches; 0.x minor bump per newly useful capability; 1.0.0 = this design complete (added 2026-10-16) |
 
 ## Platform, SDK levels and tooling
 
@@ -181,6 +182,19 @@ Every module build file is about five lines because all configuration lives in c
 - Configuration cache and build cache enabled from the first commit.
 - Namespace convention: `com.jrussell.fitness.<module path with dots>`, e.g. `com.jrussell.fitness.feature.nutrition`.
 - `versionCode` derived from the git commit count in CI; `versionName` is semver set by hand.
+
+**Versioning and branching** (decision 36)
+
+- **Trunk:** `master` always builds and passes `check`. Work happens on short-lived branches cut from `master` (one per milestone task or fix, e.g. `m1-body-weight`), merged back when green, then deleted. No `develop` branch.
+- **Releases are annotated tags** on `master`, written `vX.Y.Z` (e.g. `v1.2.11`). `versionName` shows `X.Y.Z` and is bumped by hand in the tagged commit; `versionCode` stays the commit count, which only increases on `master`.
+- **Before 1.0:**
+  - `0.0.x` is the skeleton (M0 = `v0.0.1`).
+  - `0.1.0` is the first basic usable app, the M1 exit (enter weights, trend chart and table, backup and restore).
+  - Each further capability that becomes useful bumps the minor version (0.2.0, 0.3.0, …), roughly one per milestone.
+  - Fixes and small improvements bump the patch version.
+- **1.0.0** is this design fully implemented (M6 exit: GetFit replaces Cronometer and Strong).
+- **After 1.0:** the minor version is for new features, the patch version for fixes, and the major version for large shifts such as sync, multiple users or iOS.
+- **Release branches only on demand:** to fix an older release while `master` has moved on, branch `release/X.Y` from its tag, tag the fix `vX.Y.Z+1` there, and merge the fix back to `master`.
 
 **Custom static-analysis rules**
 
