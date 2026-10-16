@@ -12,7 +12,33 @@ import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 
+/**
+ * Convention plugin `app.jvm.library`: configures a pure-Kotlin (JVM) library module.
+ *
+ * Used by the modules that must never depend on Android — `:core:model`, `:core:domain`,
+ * `:core:projection`, `:core:importers` — plus `:core:testing`. Keeping them on plain
+ * Kotlin/JVM is what lets them become Kotlin Multiplatform modules later without rewrites;
+ * at that point this plugin is replaced by an `app.kmp.library` plugin.
+ *
+ * Applying it to a module:
+ * - applies the Kotlin/JVM Gradle plugin;
+ * - compiles Java and Kotlin to JVM 17 bytecode (the same target as the Android modules);
+ * - adds the shared test stack — JUnit 5 (Jupiter) and AssertK — and runs tests on the
+ *   JUnit Platform.
+ *
+ * A module's build file then needs only:
+ * ```
+ * plugins {
+ *     alias(libs.plugins.app.jvm.library)
+ * }
+ * ```
+ */
 class JvmLibraryConventionPlugin : Plugin<Project> {
+    /**
+     * Called by Gradle once when a module applies `app.jvm.library`.
+     *
+     * @param target the module (Gradle project) being configured.
+     */
     override fun apply(target: Project) {
         with(target) {
             pluginManager.apply(libs.pluginId("kotlin-jvm"))
@@ -27,6 +53,7 @@ class JvmLibraryConventionPlugin : Plugin<Project> {
                 }
             }
 
+            // Gradle 9 no longer supplies the JUnit Platform launcher implicitly, hence testRuntimeOnly.
             dependencies {
                 add("testImplementation", platform(libs.library("junit5-bom")))
                 add("testImplementation", libs.library("junit5-jupiter"))
