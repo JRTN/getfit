@@ -40,9 +40,11 @@ class HiltConventionPlugin : Plugin<Project> {
 
             // Hilt generates a unit-test component tree (generated/hilt/component_trees/*UnitTest)
             // even in modules with no tests. Gradle 9 sees those generated sources and fails the
-            // test task for "discovering no tests", so relax that check in Hilt modules only.
+            // test task for "discovering no tests". Relax that check only in modules with no
+            // hand-written tests; where src/test exists, finding zero tests is a real mistake.
+            val hasHandWrittenTests: Boolean = layout.projectDirectory.dir("src/test").asFile.exists()
             tasks.withType<Test>().configureEach {
-                failOnNoDiscoveredTests.set(false)
+                failOnNoDiscoveredTests.set(hasHandWrittenTests)
             }
         }
     }

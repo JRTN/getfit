@@ -42,7 +42,7 @@ class AndroidApplicationConventionPlugin : Plugin<Project> {
                 defaultConfig {
                     applicationId = BASE_NAMESPACE
                     targetSdk = TARGET_SDK
-                    versionCode = gitCommitCount().get()
+                    versionCode = gitCommitCount()
                     versionName = VERSION_NAME
                 }
 
