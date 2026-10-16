@@ -64,12 +64,13 @@ All ground-floor decisions are closed. Later sections give the detail behind eac
 | 28 | Trend weight | Exponential moving average with gap-adjusted smoothing factor |
 | 29 | Projection defaults | All parameters configurable with conservative defaults; glycogen transient deferred to v2 |
 | 30 | Navigation layout | Five bottom tabs: Today, Nutrition, Training, Body, Trends; Settings in the top bar |
-| 31 | Typeface | Inter or IBM Plex Sans, bundled, tabular figures for all numbers |
+| 31 | Typeface | Inter (chosen 2026-10-16), bundled, tabular figures for all numbers |
 | 32 | Charts | Vico, wrapped behind an app-owned `ChartSpec` abstraction |
 | 33 | Test stack | JUnit 5 (pure modules), JUnit 4 + Robolectric (Android modules), AssertK, Turbine, hand-written fakes |
 | 34 | Multi-user readiness | `ownerId` on every user-owned row; `CurrentOwnerProvider` returns the single local profile |
 | 35 | Sync readiness | UUIDv7 keys, tombstones, global revision counter, per-remote cursor, `NoOpSyncGateway` |
 | 36 | Versioning and branching | Semver tags `vX.Y.Z` on `master`; trunk-based with short-lived branches; 0.x minor bump per newly useful capability; 1.0.0 = this design complete (added 2026-10-16) |
+| 37 | Default accent and M1 split | Violet accent `#6941C6` (light) / `#C3B1FF` (dark), chosen from mockups; M1 delivered as four plans: M1a design system → M1b data foundation → M1c weight, metrics and charts → M1d backup; `v0.1.0` after M1d (added 2026-10-16) |
 
 ## Platform, SDK levels and tooling
 
@@ -741,7 +742,7 @@ Each palette has a separately tuned light and dark instance (6 `DataColors` inst
 
 | Palette | Purpose | Basis |
 | --- | --- | --- |
-| Default | Brand look | Neutral greys + one accent hue (chosen during M1) |
+| Default | Brand look | Neutral greys + violet accent (`#6941C6` light, `#C3B1FF` dark) |
 | Colour-vision-safe | Protanopia, deuteranopia, tritanopia | Okabe–Ito set; black entry replaced in dark mode |
 | High contrast | Low vision | Maximum luminance separation |
 
@@ -899,6 +900,5 @@ The largest risk is scope: an all-in-one app never reaching daily use. The miles
 
 ### Open questions
 
-- Accent hue for the default palette (decided during M1).
 - Exercise dataset licence to be verified before bundling (M3).
 - Exact Health Connect record types written by the Versa 4 (answered by the M2 inspector).

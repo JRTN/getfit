@@ -4,6 +4,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import com.jrussell.fitness.core.model.ColorPalette
 import com.jrussell.fitness.core.model.ThemeMode
 
 /**
@@ -28,6 +29,7 @@ fun ThemeMode.resolveDark(systemInDarkTheme: Boolean): Boolean {
  */
 @Composable
 fun GetFitTheme(themeMode: ThemeMode = ThemeMode.SYSTEM, content: @Composable () -> Unit) {
-    val colorScheme: ColorScheme = if (themeMode.resolveDark(isSystemInDarkTheme())) DarkColors else LightColors
+    val colorScheme: ColorScheme =
+        colorSchemeFor(ColorPalette.DEFAULT, dark = themeMode.resolveDark(isSystemInDarkTheme()))
     MaterialTheme(colorScheme = colorScheme, content = content)
 }
