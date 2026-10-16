@@ -4,6 +4,17 @@ plugins {
 }
 
 dependencies {
+    implementation(projects.feature.today)
+    implementation(projects.feature.nutrition)
+    implementation(projects.feature.training)
+    implementation(projects.feature.body)
+    implementation(projects.feature.trends)
+    implementation(projects.feature.settings)
+    implementation(projects.core.data)
+    implementation(projects.core.designsystem)
+    implementation(projects.core.sync)
+    implementation(projects.core.model)
+
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.material3)
