@@ -3,5 +3,6 @@ plugins {
 }
 
 dependencies {
+    api(projects.core.model)
     implementation(libs.androidx.compose.material3)
 }

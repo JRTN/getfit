@@ -4,6 +4,9 @@ plugins {
 }
 
 dependencies {
+    testImplementation(libs.junit4)
+    testImplementation(libs.assertk)
+
     implementation(projects.feature.today)
     implementation(projects.feature.nutrition)
     implementation(projects.feature.training)
@@ -22,4 +25,8 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.navigation3.runtime)
+    implementation(libs.androidx.navigation3.ui)
+    implementation(libs.androidx.lifecycle.viewmodel.navigation3)
+    implementation(libs.androidx.compose.material.icons.core)
 }

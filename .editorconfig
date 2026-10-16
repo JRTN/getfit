@@ -14,3 +14,5 @@ ij_kotlin_allow_trailing_comma = true
 ij_kotlin_allow_trailing_comma_on_call_site = true
 # Design decision #1 (explicit style) requires block bodies; ktlint would rewrite them as expression bodies.
 ktlint_standard_function-expression-body = disabled
+# Composable functions are PascalCase by convention.
+ktlint_function_naming_ignore_when_annotated_with = Composable
