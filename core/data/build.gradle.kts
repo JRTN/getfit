@@ -10,4 +10,10 @@ dependencies {
     implementation(projects.core.datastore)
     implementation(projects.core.healthconnect)
     implementation(projects.core.backup)
+    implementation(libs.room.runtime)
+
+    testImplementation(projects.core.testing)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.turbine)
+    testImplementation(libs.kotlinx.coroutines.test)
 }
