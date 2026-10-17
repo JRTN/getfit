@@ -16,7 +16,8 @@ import org.gradle.kotlin.dsl.dependencies
  * Applying it:
  * - applies KSP, which runs Room's code generator for `@Entity`, `@Dao` and `@Database` classes;
  * - applies the Room Gradle plugin and writes each database version's schema as JSON to the
- *   module's `schemas/` directory. Those files are committed, because migration tests compare
+ *   module's `schemas/` directory. Those files are committed: a test in each database module
+ *   checks the current version's JSON matches the compiled database, and migration tests compare
  *   every migration against them (the design allows explicit migrations only);
  * - adds the Room runtime and coroutine extensions, plus Room's migration-test helper and
  *   Robolectric so DAO and migration tests run on the JVM without a device.
