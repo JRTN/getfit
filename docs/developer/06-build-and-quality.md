@@ -68,7 +68,7 @@ Shared helpers live in [`com/jrussell/fitness/buildlogic/`](../../build-logic/co
 
 ## CI
 
-[`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) runs `check`, `buildHealth` and `assembleDebug` on every push. The repository is local-only for now, so the workflow is dormant; it has no effect on local builds. It checks out full history because `versionCode` is the commit count.
+[`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) runs `check`, `buildHealth` and `assembleDebug` on every push to [github.com/JRTN/getfit](https://github.com/JRTN/getfit), on Temurin JDK 25 (the same major version as Android Studio's JBR; Robolectric needs 21+). It checks out full history because `versionCode` is the commit count.
 
 ## Gradle performance settings
 

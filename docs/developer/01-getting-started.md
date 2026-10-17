@@ -82,6 +82,7 @@ If any of the four is missing (a fresh clone, or CI), release builds are still p
 Android modules run their unit tests on the JVM with Robolectric, with no device needed. Two details are already handled, but it helps to know about them:
 
 - Each module with Robolectric tests has `src/test/resources/robolectric.properties` containing `sdk=36`. Robolectric 4.17 emulates up to API 36, while the app compiles against 37.
+- Emulating API 36 needs **Java 21 or newer**, so Gradle must run on JDK 21+ (Android Studio's JBR 25 locally, Temurin 25 in CI). On JDK 17 every Robolectric test fails with "Android SDK 36 requires Java 21".
 - Every Android module's tests get the JVM flag `--add-exports=java.base/jdk.internal.access=ALL-UNNAMED`, which Robolectric needs on JDK 25. It is set in [`AndroidCommon.kt`](../../build-logic/convention/src/main/kotlin/com/jrussell/fitness/buildlogic/AndroidCommon.kt).
 
 Next: [Architecture](02-architecture.md).

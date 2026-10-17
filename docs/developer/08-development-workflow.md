@@ -43,6 +43,6 @@ Each plan's "Calls made in this plan" section, and the decision register in the 
 - Branch from `master` with a short-lived branch, keep commits small, and use conventional prefixes (`feat:`, `fix:`, `build:`, `docs:`).
 - Write the test first. Run `./gradlew check buildHealth assembleDebug assembleRelease` before merging.
 - If you change how something works, update this guide in the same change.
-- The repository is local-only for now. Nothing is pushed, and CI is dormant.
+- The repository is on GitHub ([JRTN/getfit](https://github.com/JRTN/getfit), private for now). CI runs on every push; push `master` after merging.
 
 Back to the [guide index](README.md), or on to [the stack](stack.md).
