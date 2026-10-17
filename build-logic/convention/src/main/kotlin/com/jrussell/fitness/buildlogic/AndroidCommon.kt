@@ -18,7 +18,7 @@ const val COMPILE_SDK: Int = 37
 /** Lowest API level the app installs on: Android 14, the first with Health Connect built in. */
 const val MIN_SDK: Int = 34
 
-/** API level whose runtime behaviours the app opts into. */
+/** API level whose runtime behaviors the app opts into. */
 const val TARGET_SDK: Int = 37
 
 /**

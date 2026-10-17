@@ -17,7 +17,7 @@ class SettingsViewModelTest {
     val mainDispatcherRule: MainDispatcherRule = MainDispatcherRule()
 
     private val repository: FakeUserPreferencesRepository =
-        FakeUserPreferencesRepository(UserPreferences(ThemeMode.DARK, ColorPalette.COLOUR_VISION_SAFE))
+        FakeUserPreferencesRepository(UserPreferences(ThemeMode.DARK, ColorPalette.COLOR_VISION_SAFE))
 
     @Test
     fun uiState_reflectsRepository() = runTest {
@@ -25,7 +25,7 @@ class SettingsViewModelTest {
 
         viewModel.uiState.test {
             assertThat(expectMostRecentItem())
-                .isEqualTo(UserPreferences(ThemeMode.DARK, ColorPalette.COLOUR_VISION_SAFE))
+                .isEqualTo(UserPreferences(ThemeMode.DARK, ColorPalette.COLOR_VISION_SAFE))
         }
     }
 

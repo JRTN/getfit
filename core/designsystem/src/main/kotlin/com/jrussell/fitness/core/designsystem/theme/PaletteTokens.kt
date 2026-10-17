@@ -20,9 +20,9 @@ internal data class SchemeTokens(
     val secondaryContainer: Color,
 )
 
-/** Data colours that differ per instance; the rest are derived from [SchemeTokens]. */
+/** Data colors that differ per instance; the rest are derived from [SchemeTokens]. */
 internal data class DataTokens(
-    /** Six series colours; `null` first entry means "use the accent". */
+    /** Six series colors; `null` first entry means "use the accent". */
     val series: List<Color?>,
     val macroProtein: Color,
     val macroCarbohydrate: Color,
@@ -125,7 +125,7 @@ internal val DefaultDarkData: DataTokens = DataTokens(
     projectionLine = null,
 )
 
-internal val ColourVisionSafeLightData: DataTokens = DataTokens(
+internal val ColorVisionSafeLightData: DataTokens = DataTokens(
     series = listOf(
         Color(0xFF0072B2),
         Color(0xFFD55E00),
@@ -145,7 +145,7 @@ internal val ColourVisionSafeLightData: DataTokens = DataTokens(
     projectionLine = Color(0xFFC76C9F),
 )
 
-internal val ColourVisionSafeDarkData: DataTokens = DataTokens(
+internal val ColorVisionSafeDarkData: DataTokens = DataTokens(
     series = listOf(
         Color(0xFF3D9BD6),
         Color(0xFFE36F1A),

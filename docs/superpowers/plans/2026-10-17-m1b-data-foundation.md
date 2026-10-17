@@ -154,7 +154,7 @@ architecture-tests/.../DaoOwnerScopingRulesTest.kt
 - [ ] **Step 5:** Run `./gradlew :core:datastore:testDebugUnitTest :app:assembleDebug`. Expected: 8/8 PASS, and the build succeeds (Hilt graph resolves).
 - [ ] **Step 6:** Commit: `feat: injected dispatcher/clock qualifiers; wrong-typed preference falls back to default`.
 
-### Task 3: detekt — dispatcher and migration rules, colour-rule gaps, scoped config
+### Task 3: detekt — dispatcher and migration rules, color-rule gaps, scoped config
 
 **Files:**
 - Create: `detekt-rules/.../{NoDirectDispatchers,NoDestructiveMigration}.kt` and their tests, plus `config/detekt/getfit.yml`
@@ -182,18 +182,18 @@ architecture-tests/.../DaoOwnerScopingRulesTest.kt
     - `androidParseColor_isReported` (`android.graphics.Color.parseColor("#6941C6")`);
     - `importAlias_isReported` (`import androidx.compose.ui.graphics.Color as Tint`).
   - The four existing tests must still pass. In particular, `Color.Unspecified`, `Color.Transparent` and `android.graphics.Color.TRANSPARENT` stay allowed.
-- [ ] **Step 2:** Run `./gradlew :detekt-rules:test`. Expected: FAIL (2 classes unresolved; the 4 new colour tests report 0).
+- [ ] **Step 2:** Run `./gradlew :detekt-rules:test`. Expected: FAIL (2 classes unresolved; the 4 new color tests report 0).
 - [ ] **Step 3: Implement.**
-  - Extend the colour rule with `visitDotQualifiedExpression`:
+  - Extend the color rule with `visitDotQualifiedExpression`:
     - a receiver of `Color` or `androidx.compose.ui.graphics.Color` is reported unless the selector is `Unspecified` or `Transparent`;
     - a receiver of `android.graphics.Color` is reported unless the selector is `TRANSPARENT`.
   - Add `visitImportDirective` for aliased imports of either `Color` class.
   - A single `Color(...)` must still produce exactly one finding.
   - Register both new rules in the provider.
-- [ ] **Step 4:** Run `./gradlew :detekt-rules:test`. Expected: all PASS (4 existing + 4 new colour tests + 8 new).
-- [ ] **Step 5:** Move the `getfit:` section into `getfit.yml`, activating all three rules. Remove `excludes` and wire `QualityConventionPlugin`. Add a typo key (`NoColourLiteral:`) to `getfit.yml` and run `./gradlew :feature:settings:detekt` (or the module's detekt task that `check` runs). Expected: FAILS on config validation. Remove the typo.
+- [ ] **Step 4:** Run `./gradlew :detekt-rules:test`. Expected: all PASS (4 existing + 4 new color tests + 8 new).
+- [ ] **Step 5:** Move the `getfit:` section into `getfit.yml`, activating all three rules. Remove `excludes` and wire `QualityConventionPlugin`. Add a typo key (`NoColorLiteral:`) to `getfit.yml` and run `./gradlew :feature:settings:detekt` (or the module's detekt task that `check` runs). Expected: FAILS on config validation. Remove the typo.
 - [ ] **Step 6:** Run `./gradlew check`. Expected: PASS. Task 2 already removed the only direct dispatcher use. Any new finding is a real violation: fix the code, don't suppress it.
-- [ ] **Step 7:** Commit: `build: detekt rules for direct dispatchers and destructive migration; close colour-rule gaps; validate getfit config everywhere`.
+- [ ] **Step 7:** Commit: `build: detekt rules for direct dispatchers and destructive migration; close color-rule gaps; validate getfit config everywhere`.
 
 ### Task 4: `user.db` infrastructure — converters, sync tables, profile, database factory
 

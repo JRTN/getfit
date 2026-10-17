@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.map
  * Reads and writes [UserPreferences] in a Preferences DataStore file.
  *
  * Nothing about this file can stop the app from starting:
- * - enums are stored by `name`, and a name the app doesn't recognise (renamed in a later version,
+ * - enums are stored by `name`, and a name the app doesn't recognize (renamed in a later version,
  *   or a restored backup from a newer one) falls back to that field's default;
  * - a value stored with the wrong type (only possible if a later version changes a key's type)
  *   is treated as absent, so it also falls back to the default;

@@ -31,7 +31,7 @@ spec (docs/initial_design.md)
 | Milestone | Plan | Delivered |
 | --- | --- | --- |
 | **M0 — Skeleton** (`v0.0.1`) | [m0-skeleton](../superpowers/plans/2026-10-16-m0-skeleton.md) | All modules, convention plugins, version catalog, Hilt, Navigation 3 with five empty tabs, crash log, CI workflow, release signing, quality tooling |
-| **M1a — Design system** | [m1a-design-system](../superpowers/plans/2026-10-16-m1a-design-system.md) | Palette matrix with contrast tests, Inter, Material Symbols, Settings → Appearance on DataStore, Settings as an overlay, the colour-literal detekt rule |
+| **M1a — Design system** | [m1a-design-system](../superpowers/plans/2026-10-16-m1a-design-system.md) | Palette matrix with contrast tests, Inter, Material Symbols, Settings → Appearance on DataStore, Settings as an overlay, the color-literal detekt rule |
 | **M1b — Data foundation** | [m1b-data-foundation](../superpowers/plans/2026-10-17-m1b-data-foundation.md) | `user.db` v1, revision-stamped writes, owner scoping, typed UUID IDs, day assignment, measurement and day-start repositories, the sync seam, injected dispatchers, the dispatcher and migration detekt rules |
 | M1c — Weight, metrics, charts | *next* | Metric registry, chart component with table toggle, manual weight entry, trend weight |
 | M1d — Backup | | Auto Backup rules, scheduled SQLite export, JSON export/import; `v0.1.0` |

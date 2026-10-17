@@ -7,15 +7,15 @@ import androidx.compose.ui.graphics.Color
 import com.jrussell.fitness.core.model.ColorPalette
 
 /**
- * App-specific semantic colours for data: chart series, macros, target states and deltas.
+ * App-specific semantic colors for data: chart series, macros, target states and deltas.
  * Material's `ColorScheme` covers surfaces, text and the accent; this covers everything a chart
  * or a nutrient total needs. Read it with `GetFitTheme.dataColors`.
  *
- * Colour never carries meaning alone: every use pairs it with an icon, a sign, a pattern or a label.
+ * Color never carries meaning alone: every use pairs it with an icon, a sign, a pattern or a label.
  */
 @Immutable
 data class DataColors(
-    /** Six distinct colours for plotted series, in assignment order. */
+    /** Six distinct colors for plotted series, in assignment order. */
     val seriesPalette: List<Color>,
     val macroProtein: Color,
     val macroCarbohydrate: Color,

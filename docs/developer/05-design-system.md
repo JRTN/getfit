@@ -1,33 +1,33 @@
 # 5. Design system
 
-[`:core:designsystem`](../../core/designsystem/) owns every colour, the type scale, shapes and icons. Screens never invent their own: they read from the theme. That is what lets one setting restyle the whole app, including into colour-vision-safe and high-contrast variants.
+[`:core:designsystem`](../../core/designsystem/) owns every color, the type scale, shapes and icons. Screens never invent their own: they read from the theme. That is what lets one setting restyle the whole app, including into color-vision-safe and high-contrast variants.
 
 ## The look
 
 - **Flat and dense, a data tool rather than a toy.** No tonal elevation (`tonalElevation = 0.dp`); surfaces are separated by hairline dividers ([`GetFitApp`](../../app/src/main/kotlin/com/jrussell/fitness/ui/GetFitApp.kt)'s bottom bar is the first example).
 - **Nearly square corners:** 2–4 dp ([`Shape.kt`](../../core/designsystem/src/main/kotlin/com/jrussell/fitness/core/designsystem/theme/Shape.kt)), where Material's defaults are 4–28 dp.
-- **Neutral greys with one accent:** violet, `#6941C6` in light and `#C3B1FF` in dark (decision #37, picked from mockups).
-- **No dynamic (wallpaper) colour.** Chart colours must mean the same thing on every phone.
+- **Neutral grays with one accent:** violet, `#6941C6` in light and `#C3B1FF` in dark (decision #37, picked from mockups).
+- **No dynamic (wallpaper) color.** Chart colors must mean the same thing on every phone.
 
 ## The palette matrix
 
-The user picks a theme mode (System, Light, Dark) and a palette (Default, Colour-vision-safe, High contrast), which gives **six instances** (three palettes × light/dark).
+The user picks a theme mode (System, Light, Dark) and a palette (Default, Color-vision-safe, High contrast), which gives **six instances** (three palettes × light/dark).
 
 | File | What it holds |
 | --- | --- |
-| [`PaletteTokens.kt`](../../core/designsystem/src/main/kotlin/com/jrussell/fitness/core/designsystem/theme/PaletteTokens.kt) | The raw hex values of all six instances. It is the only file with palette colour literals. Tokens use `null` to mean "use the accent", so each instance defines its accent once |
-| [`Palettes.kt`](../../core/designsystem/src/main/kotlin/com/jrussell/fitness/core/designsystem/theme/Palettes.kt) | `colorSchemeFor(palette, dark)` builds the Material `ColorScheme`; `dataColorsFor(palette, dark)` builds the app's own data colours |
-| [`DataColors.kt`](../../core/designsystem/src/main/kotlin/com/jrussell/fitness/core/designsystem/theme/DataColors.kt) | Colours Material has no slot for: six chart series, protein/carbs/fat, target met/under/over, positive/negative deltas, grid, axis label, projection and actual lines |
+| [`PaletteTokens.kt`](../../core/designsystem/src/main/kotlin/com/jrussell/fitness/core/designsystem/theme/PaletteTokens.kt) | The raw hex values of all six instances. It is the only file with palette color literals. Tokens use `null` to mean "use the accent", so each instance defines its accent once |
+| [`Palettes.kt`](../../core/designsystem/src/main/kotlin/com/jrussell/fitness/core/designsystem/theme/Palettes.kt) | `colorSchemeFor(palette, dark)` builds the Material `ColorScheme`; `dataColorsFor(palette, dark)` builds the app's own data colors |
+| [`DataColors.kt`](../../core/designsystem/src/main/kotlin/com/jrussell/fitness/core/designsystem/theme/DataColors.kt) | Colors Material has no slot for: six chart series, protein/carbs/fat, target met/under/over, positive/negative deltas, grid, axis label, projection and actual lines |
 | [`Theme.kt`](../../core/designsystem/src/main/kotlin/com/jrussell/fitness/core/designsystem/theme/Theme.kt) | `GetFitTheme(themeMode, palette) { … }` provides both, plus typography and shapes; `ThemeMode.resolveDark()` resolves System using the device setting |
 
-In a composable, colours come from two places:
+In a composable, colors come from two places:
 
 ```kotlin
 MaterialTheme.colorScheme.primary          // UI chrome: text, buttons, surfaces
 GetFitTheme.dataColors.macroProtein        // data: charts, macros, targets
 ```
 
-**The colour-vision-safe palette** keeps the violet UI accent and switches only the data colours to Okabe–Ito hues, adjusted in lightness to pass contrast. **High contrast** uses near-black and near-white neutrals with stricter thresholds.
+**The color-vision-safe palette** keeps the violet UI accent and switches only the data colors to Okabe–Ito hues, adjusted in lightness to pass contrast. **High contrast** uses near-black and near-white neutrals with stricter thresholds.
 
 ## Contrast is tested, not eyeballed
 
@@ -35,16 +35,16 @@ GetFitTheme.dataColors.macroProtein        // data: charts, macros, targets
 
 | Palette | Text | Graphics (chart lines, icons, outlines) |
 | --- | --- | --- |
-| Default, Colour-vision-safe | ≥ 4.5 : 1 | ≥ 3 : 1 |
+| Default, Color-vision-safe | ≥ 4.5 : 1 | ≥ 3 : 1 |
 | High contrast | ≥ 7 : 1 | ≥ 4.5 : 1 |
 
-[`PaletteContrastTest`](../../core/designsystem/src/test/kotlin/com/jrussell/fitness/core/designsystem/theme/PaletteContrastTest.kt) runs over all six instances. It checks every text token and every graphic token against both `background` and `surfaceContainer` (bars and cards sit on the latter), and it requires six distinct chart-series colours. **Change a hex value and the test tells you whether it still passes.** (In M1a it caught the `error` colour failing as text in two palettes.)
+[`PaletteContrastTest`](../../core/designsystem/src/test/kotlin/com/jrussell/fitness/core/designsystem/theme/PaletteContrastTest.kt) runs over all six instances. It checks every text token and every graphic token against both `background` and `surfaceContainer` (bars and cards sit on the latter), and it requires six distinct chart-series colors. **Change a hex value and the test tells you whether it still passes.** (In M1a it caught the `error` color failing as text in two palettes.)
 
-## Colour is never the only signal
+## Color is never the only signal
 
-Some users cannot tell certain colours apart. Every status shown in colour also carries a second cue: an icon, a sign, a label or a pattern. The spec's "Redundant encoding" table lists the pairings, and later screens must follow it.
+Some users cannot tell certain colors apart. Every status shown in color also carries a second cue: an icon, a sign, a label or a pattern. The spec's "Redundant encoding" table lists the pairings, and later screens must follow it.
 
-## No colour literals outside the design system
+## No color literals outside the design system
 
 The custom detekt rule [`NoColorLiteralOutsideDesignSystem`](../../detekt-rules/src/main/kotlin/com/jrussell/fitness/detekt/NoColorLiteralOutsideDesignSystem.kt) fails the build on any of these outside `com.jrussell.fitness.core.designsystem`:
 - `Color(0xFF…)`;
@@ -52,7 +52,7 @@ The custom detekt rule [`NoColorLiteralOutsideDesignSystem`](../../detekt-rules/
 - `android.graphics.Color.parseColor`/`rgb`;
 - an aliased import of `Color`.
 
-`Color.Unspecified` and `Color.Transparent` are allowed. A new colour is added to the tokens, gets a name in the scheme or in `DataColors`, and is covered by the contrast test.
+`Color.Unspecified` and `Color.Transparent` are allowed. A new color is added to the tokens, gets a name in the scheme or in `DataColors`, and is covered by the contrast test.
 
 ## Typography
 
@@ -76,7 +76,7 @@ The custom detekt rule [`NoColorLiteralOutsideDesignSystem`](../../detekt-rules/
 
 ## Theme mode and the system bars
 
-- The user's light/dark choice is applied through `UiModeManager.setApplicationNightMode` (in [`MainActivity`](../../app/src/main/kotlin/com/jrussell/fitness/MainActivity.kt)). Android then shows the right colours from the cold-start window onward.
+- The user's light/dark choice is applied through `UiModeManager.setApplicationNightMode` (in [`MainActivity`](../../app/src/main/kotlin/com/jrussell/fitness/MainActivity.kt)). Android then shows the right colors from the cold-start window onward.
 - The launch theme in `app/src/main/res/values{,-night}/themes.xml` is a DayNight theme whose window background matches the Default palette.
 - Status-bar and navigation-bar icons follow the app's resolved theme, not the system's, so forcing Light on a Dark phone still gives dark icons on light bars.
 

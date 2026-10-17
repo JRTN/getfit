@@ -37,7 +37,7 @@ class SettingsScreenSemanticsTest {
 
         val isRadioButton: SemanticsMatcher = SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.RadioButton)
         val selected: List<String> = listOf("Dark", "High contrast")
-        val notSelected: List<String> = listOf("System", "Light", "Default", "Colour-vision-safe")
+        val notSelected: List<String> = listOf("System", "Light", "Default", "Color-vision-safe")
         selected.forEach { label: String ->
             rule.onNodeWithText(label).assert(isRadioButton).assertIsSelected()
         }

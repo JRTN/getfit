@@ -24,9 +24,9 @@ fun ThemeMode.resolveDark(systemInDarkTheme: Boolean): Boolean {
 /**
  * The app's root theme. Wrap all UI in it once, at the top of `setContent`.
  *
- * Provides Material's colour scheme, the Inter type scale and 2–4 dp shapes, plus GetFit's
- * [DataColors] (read with [GetFitTheme.dataColors]). Dynamic (wallpaper-derived) colour is
- * deliberately never used, so chart colours stay predictable.
+ * Provides Material's color scheme, the Inter type scale and 2–4 dp shapes, plus GetFit's
+ * [DataColors] (read with [GetFitTheme.dataColors]). Dynamic (wallpaper-derived) color is
+ * deliberately never used, so chart colors stay predictable.
  *
  * @param themeMode the user's light/dark preference.
  * @param palette the user's palette preference.
@@ -50,7 +50,7 @@ fun GetFitTheme(
 
 /** Accessors for GetFit's own theme values, alongside `MaterialTheme`. */
 object GetFitTheme {
-    /** The current palette's data colours (chart series, macros, targets, deltas). */
+    /** The current palette's data colors (chart series, macros, targets, deltas). */
     val dataColors: DataColors
         @Composable
         @ReadOnlyComposable

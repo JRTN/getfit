@@ -36,7 +36,7 @@ Five constraints shaped every choice below:
 | --- | --- | --- | --- |
 | **Jetpack Compose + Material 3** | BOM 2026.09.00 | Google's current UI toolkit. Declarative state fits a data-dense app, and Material 3 gives accessible defaults that are then made flat and dense | Views/XML (legacy) |
 | **Navigation 3** | 1.2.0 | The back stack is a plain list the app owns ([`TopLevelBackStack`](../../app/src/main/kotlin/com/jrussell/fitness/navigation/TopLevelBackStack.kt)), which makes per-tab history and the Settings overlay easy to build and unit-test. Keys are `@Serializable` objects (decision #8) | Navigation Compose 2.x (graph DSL and route strings; harder to own the stack), Voyager or Decompose (third-party) |
-| **Inter** | 4.1, bundled | Highly legible at small sizes, with tabular figures (`tnum`) so numbers align; open licence (decision #31) | IBM Plex Sans (the other finalist), Roboto (the default) |
+| **Inter** | 4.1, bundled | Highly legible at small sizes, with tabular figures (`tnum`) so numbers align; open license (decision #31) | IBM Plex Sans (the other finalist), Roboto (the default) |
 | **Material Symbols** as vector drawables | | Consistent outlined and filled pairs. Importing only the icons used keeps the APK small, unlike the full icon font or the large `material-icons-extended` artifact | `material-icons-extended` |
 | **Vico** for charts *(arrives in M1c)* | | Compose-native, actively maintained. It will be wrapped behind an app-owned `ChartSpec`, so it can be replaced (decision #32) | MPAndroidChart (View-based, unmaintained), a custom Canvas |
 
@@ -68,7 +68,7 @@ Five constraints shaped every choice below:
 | **Robolectric** | 4.17 | Runs Room, Context and Compose semantics on the JVM in seconds, with no emulator needed for unit tests | Instrumented tests only (slow, need a device) |
 | **AssertK** | 0.28.1 | Kotlin-first fluent assertions with good failure messages, and Multiplatform-friendly | Truth, Hamcrest, kotlin.test |
 | **Turbine** | 1.2.1 | Readable testing of `Flow` emissions | Collecting into lists by hand |
-| **Hand-written fakes** | | Tests assert real behaviour; no mocking DSL to learn or maintain | MockK, Mockito |
+| **Hand-written fakes** | | Tests assert real behavior; no mocking DSL to learn or maintain | MockK, Mockito |
 
 ## Quality tooling
 
@@ -83,7 +83,7 @@ Five constraints shaped every choice below:
 ## What is deliberately *not* used
 
 - **A backend or cloud database.** Local-first by design; a sync seam exists for later (decision #35).
-- **Dynamic colour (Material You).** Chart colours must be stable and meaningful.
+- **Dynamic color (Material You).** Chart colors must be stable and meaningful.
 - **kapt, Gson and RxJava.** Superseded by KSP, kotlinx.serialization and coroutines.
 - **A mocking framework.** Fakes keep tests honest.
 - **`fallbackToDestructiveMigration`.** Banned by a custom detekt rule; a lost database is not acceptable.

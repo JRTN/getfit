@@ -6,7 +6,7 @@ import com.jrussell.fitness.core.designsystem.R
 /**
  * The app's icons: Material Symbols Outlined, 24 dp, from google/material-design-icons. Tabs
  * have a filled `…Selected` variant for the selected state. Draw them with
- * `Icon(painterResource(id), ...)`; their colour comes from `LocalContentColor`.
+ * `Icon(painterResource(id), ...)`; their color comes from `LocalContentColor`.
  */
 object GetFitIcons {
     @DrawableRes val Today: Int = R.drawable.ic_today

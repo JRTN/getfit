@@ -36,9 +36,9 @@ override fun now() = now
 | Injected dispatchers | Never name `Dispatchers.IO`; inject `@IoDispatcher` / `@DefaultDispatcher` (detekt enforces it) | [`CoroutineQualifiers`](../../core/data/src/main/kotlin/com/jrussell/fitness/core/data/di/CoroutineQualifiers.kt) |
 | Injected clock | Use `kotlin.time.Clock` from DI, never `Clock.System` in logic, so time is controllable in tests | [`UuidIdGenerator`](../../core/data/src/main/kotlin/com/jrussell/fitness/core/data/id/UuidIdGenerator.kt) |
 | Derived values are never stored | Trend weight, e1RM, daily totals and similar are computed at query time from raw rows, so changing a formula recomputes history | Spec, convention 11 |
-| Canonical units | Store kilograms (or kcal, ml, seconds, metres) at full precision, plus what the user typed (`enteredValue`, `enteredUnit`); display units are presentation only | [`ManualMeasurement`](../../core/domain/src/main/kotlin/com/jrussell/fitness/core/domain/ManualMeasurement.kt) |
+| Canonical units | Store kilograms (or kcal, ml, seconds, meters) at full precision, plus what the user typed (`enteredValue`, `enteredUnit`); display units are presentation only | [`ManualMeasurement`](../../core/domain/src/main/kotlin/com/jrussell/fitness/core/domain/ManualMeasurement.kt) |
 | Strings | Every user-visible string is a resource; numbers use locale-aware formatting | `res/values/strings.xml` in each module |
-| No colour literals | Colours come from the theme (detekt enforces it) | [Design system](05-design-system.md) |
+| No color literals | Colors come from the theme (detekt enforces it) | [Design system](05-design-system.md) |
 
 ## Testing
 
@@ -54,13 +54,13 @@ override fun now() = now
 
 ### Principles
 
-- **Test first.** Each behaviour starts as a failing test; the code is written to pass it. A test that passes before the code exists is testing nothing. Bug fixes start with a test that reproduces the bug (see [`MeasurementRepositoryBootstrapTest`](../../core/data/src/test/kotlin/com/jrussell/fitness/core/data/repository/MeasurementRepositoryBootstrapTest.kt), written to reproduce a review finding).
+- **Test first.** Each behavior starts as a failing test; the code is written to pass it. A test that passes before the code exists is testing nothing. Bug fixes start with a test that reproduces the bug (see [`MeasurementRepositoryBootstrapTest`](../../core/data/src/test/kotlin/com/jrussell/fitness/core/data/repository/MeasurementRepositoryBootstrapTest.kt), written to reproduce a review finding).
 - **Real code over mocks.** There is no mocking framework.
   - Database code is tested against a real in-memory Room database.
   - Collaborators are real classes, or hand-written fakes in [`:core:testing`](../../core/testing/): `FakeClock`, `FakeUserPreferencesRepository`, `MainDispatcherRule`.
   - Each repository interface gets one fake when the first ViewModel needs it.
 - **Test names** read `subject_condition_expectedResult`, for example `addManual_beforeDayStart_assignsPreviousLocalDate`.
-- **One behaviour per test,** asserting outcomes rather than calls.
+- **One behavior per test,** asserting outcomes rather than calls.
 
 ### Recipes
 

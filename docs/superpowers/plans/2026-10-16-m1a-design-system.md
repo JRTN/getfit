@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Replace the M0 theme stub with GetFit's real design system: a violet-accented neutral palette in three variants (Default, Colour-vision-safe, High contrast) × light/dark with WCAG contrast tests; Inter with tabular figures; 2–4 dp shapes; Material Symbols icons; and a Settings → Appearance screen whose choices persist in DataStore and restyle the app immediately.
+**Goal:** Replace the M0 theme stub with GetFit's real design system: a violet-accented neutral palette in three variants (Default, Color-vision-safe, High contrast) × light/dark with WCAG contrast tests; Inter with tabular figures; 2–4 dp shapes; Material Symbols icons; and a Settings → Appearance screen whose choices persist in DataStore and restyle the app immediately.
 
-**Architecture:** `:core:designsystem` owns every colour, the type scale, shapes and icons. It provides a Material `ColorScheme` plus an app-specific `DataColors` through `LocalDataColors`. The user's theme mode and palette are UI preferences: they are stored in Preferences DataStore (`:core:datastore`), exposed through a `UserPreferencesRepository` interface (`:core:domain`, implemented in `:core:data`, bound in `:app`), and read by `MainViewModel` and `SettingsViewModel`. A custom detekt rule enforces "no `Color(` outside `:core:designsystem`".
+**Architecture:** `:core:designsystem` owns every color, the type scale, shapes and icons. It provides a Material `ColorScheme` plus an app-specific `DataColors` through `LocalDataColors`. The user's theme mode and palette are UI preferences: they are stored in Preferences DataStore (`:core:datastore`), exposed through a `UserPreferencesRepository` interface (`:core:domain`, implemented in `:core:data`, bound in `:app`), and read by `MainViewModel` and `SettingsViewModel`. A custom detekt rule enforces "no `Color(` outside `:core:designsystem`".
 
 **Tech Stack:** Compose Material 3 (BOM 2026.09.00), Preferences DataStore 1.2.1, Inter 4.1 (static TTF, OFL), Material Symbols Outlined (Android vector drawables), detekt 2.0.0-alpha.6 API, Robolectric 4.17 + Compose UI test, Turbine 1.2.1, kotlinx-coroutines-test 1.11.0.
 
@@ -16,13 +16,13 @@
 - `minSdk` 34, `targetSdk` 37, `compileSdk` 37.
 - Kotlin explicit style: explicit types, block bodies, named classes. KDoc on every convention plugin and build-logic helper.
 - "No composable outside `:core:designsystem` uses a `Color(...)` literal; detekt enforces it."
-- "Dynamic colour: off by default ... so chart colours stay predictable."
+- "Dynamic color: off by default ... so chart colors stay predictable."
 - "Elevation: `tonalElevation = 0.dp` everywhere; separation by hairline dividers."
 - "Corners: 2–4 dp."
 - "Typeface: Inter ... bundled; `fontFeatureSettings = "tnum"` on all numeric text."
 - "Density: Compact visual rows; every interactive element keeps a ≥ 48 dp touch target via `minimumInteractiveComponentSize()`."
 - "A unit test computes the WCAG contrast ratio of every foreground/background token pair in all six instances and requires ≥ 4.5:1 for text and ≥ 3:1 for graphical elements."
-- Colour is never the only encoding (redundant-encoding table in the spec); this plan adds no colour-only signals.
+- Color is never the only encoding (redundant-encoding table in the spec); this plan adds no color-only signals.
 - Every user-visible string is a resource.
 - `:feature:*` depends only on `:core:domain`, `:core:model`, `:core:ui`, `:core:designsystem`. `:core:data` is the only module that depends on `:core:datastore`. `:app` is the only module that binds implementations to interfaces.
 - Run Gradle with `JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"`; in Git Bash set `MSYS_NO_PATHCONV=1` for `adb shell` paths.
@@ -36,8 +36,8 @@
 ## Calls made in this plan
 
 1. **High contrast uses stricter thresholds:** ≥ 7:1 for text and ≥ 4.5:1 for graphics. The spec's 4.5/3 is the floor for the other two palettes.
-2. **Contrast is checked against both `background` and `surfaceContainer`,** because nav bars, cards and sheets sit on the container colour.
-3. **The colour-vision-safe palette keeps the violet UI accent.** Only `DataColors` switches to Okabe–Ito hues, shifted in lightness to meet the thresholds. Status colours always carry a second cue.
+2. **Contrast is checked against both `background` and `surfaceContainer`,** because nav bars, cards and sheets sit on the container color.
+3. **The color-vision-safe palette keeps the violet UI accent.** Only `DataColors` switches to Okabe–Ito hues, shifted in lightness to meet the thresholds. Status colors always carry a second cue.
 4. **True-black dark mode stays deferred** (the spec marks it optional). Custom detekt rules for `Dispatchers.*` and `fallbackToDestructiveMigration` move to M1b, which creates the dispatcher module and Room code they guard.
 5. **Contrast tests run on JUnit 4** in `:core:designsystem`, an Android module (spec: "JUnit 4 + Robolectric (Android modules)"). The math is plain Kotlin with no Robolectric needed.
 6. **Settings becomes an overlay, not a tab-stack entry.** This fixes M0 review item M-1: it can no longer be duplicated, and switching tabs closes it.
@@ -46,7 +46,7 @@
 
 ## Review Focus
 
-1. **Unknown stored value.** A preference value the app no longer recognises (a renamed enum after an upgrade or downgrade, or a restored backup) must fall back to the default without crashing. Pinned in Task 4 (`userPreferences_unknownStoredValue_fallsBackToDefault`).
+1. **Unknown stored value.** A preference value the app no longer recognizes (a renamed enum after an upgrade or downgrade, or a restored backup) must fall back to the default without crashing. Pinned in Task 4 (`userPreferences_unknownStoredValue_fallsBackToDefault`).
 2. **First launch.** With no DataStore file, the app shows System theme with the Default palette. Pinned in Task 4 (`userPreferences_noFile_emitsDefaults`).
 3. **Choices apply and stick.** A theme or palette choice applies immediately and survives an app restart. Pinned in Task 4 (`setPalette_persistsAcrossNewDataStoreInstance`) and checked on the emulator in Task 5.
 4. **TalkBack.** The Appearance options announce as radio buttons with their selected state. Pinned in Task 5 (`appearanceOptions_exposeRadioRoleAndSelection`).
@@ -55,7 +55,7 @@
 ## File Structure
 
 ```
-core/model/.../core/model/ColorPalette.kt              enum DEFAULT, COLOUR_VISION_SAFE, HIGH_CONTRAST
+core/model/.../core/model/ColorPalette.kt              enum DEFAULT, COLOR_VISION_SAFE, HIGH_CONTRAST
 core/model/.../core/model/UserPreferences.kt           data class (themeMode, palette)
 core/designsystem/.../theme/Contrast.kt                WCAG luminance + contrast ratio
 core/designsystem/.../theme/DataColors.kt              data class + LocalDataColors
@@ -94,7 +94,7 @@ detekt-rules/                                           new JVM module: NoColorL
 
 **Interfaces:**
 - Produces:
-  - `enum class ColorPalette { DEFAULT, COLOUR_VISION_SAFE, HIGH_CONTRAST }` (in `com.jrussell.fitness.core.model`)
+  - `enum class ColorPalette { DEFAULT, COLOR_VISION_SAFE, HIGH_CONTRAST }` (in `com.jrussell.fitness.core.model`)
   - `fun relativeLuminance(color: Color): Double` and `fun contrastRatio(foreground: Color, background: Color): Double`
   - `@Immutable data class DataColors(seriesPalette: List<Color>, macroProtein, macroCarbohydrate, macroFat, targetMet, targetUnder, targetOver, deltaPositive, deltaNegative, chartGridLine, chartAxisLabel, projectionLine, actualLine: Color)`. The field list is exactly the spec's.
   - `val LocalDataColors: ProvidableCompositionLocal<DataColors>`, created with `staticCompositionLocalOf` and defaulting to `dataColorsFor(DEFAULT, dark = false)`.
@@ -107,16 +107,16 @@ detekt-rules/                                           new JVM module: NoColorL
 
 ```kotlin
 @Test fun blackOnWhite_is21() { assertThat(contrastRatio(Color.Black, Color.White)).isCloseTo(21.0, 0.01) }
-@Test fun sameColour_is1() { assertThat(contrastRatio(Color(0xFF6941C6), Color(0xFF6941C6))).isCloseTo(1.0, 0.01) }
+@Test fun sameColor_is1() { assertThat(contrastRatio(Color(0xFF6941C6), Color(0xFF6941C6))).isCloseTo(1.0, 0.01) }
 @Test fun isSymmetric() { assertThat(contrastRatio(Color(0xFF777777), Color.White)).isCloseTo(contrastRatio(Color.White, Color(0xFF777777)), 0.0001) }
-@Test fun grey777OnWhite_is4_48() { assertThat(contrastRatio(Color(0xFF777777), Color.White)).isCloseTo(4.48, 0.01) }
+@Test fun gray777OnWhite_is4_48() { assertThat(contrastRatio(Color(0xFF777777), Color.White)).isCloseTo(4.48, 0.01) }
 @Test fun violetOnDefaultLightBackground_is6_18() { assertThat(contrastRatio(Color(0xFF6941C6), Color(0xFFF7F7F8))).isCloseTo(6.18, 0.01) }
 ```
 
-- [ ] **Step 3: Write `PaletteContrastTest`.** It is parameterised (`@RunWith(Parameterized::class)`) over all six `(ColorPalette, dark)` pairs, and each test's failure message names the palette, mode and token.
+- [ ] **Step 3: Write `PaletteContrastTest`.** It is parameterized (`@RunWith(Parameterized::class)`) over all six `(ColorPalette, dark)` pairs, and each test's failure message names the palette, mode and token.
   - `textTokens_meetTextContrast`: checks `onBackground`, `onSurface` and `onSurfaceVariant` against both `background` and `surfaceContainer`; `primary` against `background`; `onPrimary` against `primary`; `onSecondaryContainer` against `secondaryContainer`; and `chartAxisLabel` against `background`. Each must be at least `contrastRequirementFor(palette).text`.
-  - `graphicTokens_meetGraphicContrast`: checks every `seriesPalette` entry, the three macro colours, the three target colours, both delta colours, `projectionLine`, `actualLine` and `outline` against both `background` and `surfaceContainer`. Each must be at least `.graphic`. `chartGridLine` is exempt because it is decorative.
-  - `seriesPalette_hasSixDistinctColours`: `seriesPalette.size == 6`, with 6 distinct values.
+  - `graphicTokens_meetGraphicContrast`: checks every `seriesPalette` entry, the three macro colors, the three target colors, both delta colors, `projectionLine`, `actualLine` and `outline` against both `background` and `surfaceContainer`. Each must be at least `.graphic`. `chartGridLine` is exempt because it is decorative.
+  - `seriesPalette_hasSixDistinctColors`: `seriesPalette.size == 6`, with 6 distinct values.
 
 - [ ] **Step 4: Run** `./gradlew :core:designsystem:testDebugUnitTest`. Expected: FAIL to compile (unresolved `contrastRatio`, `ColorPalette`).
 
@@ -126,7 +126,7 @@ detekt-rules/                                           new JVM module: NoColorL
   - `background` = `surface`
   - `surfaceContainer` covers all `surfaceContainer*` and `surfaceVariant`
   - `onBackground` = `onSurface`
-  - `onSurfaceVariant` is the muted text colour
+  - `onSurfaceVariant` is the muted text color
   - `outlineVariant` is the hairline
   - `primary` is the accent
   - `primaryContainer` = `secondaryContainer`; `onPrimaryContainer` = `onSecondaryContainer` = `onBackground`
@@ -325,10 +325,10 @@ detekt-rules/                                           new JVM module: NoColorL
 - [ ] **Step 2: Run** `./gradlew :app:testDebugUnitTest :feature:settings:testDebugUnitTest :architecture-tests:test`. Expected: FAIL.
 
 - [ ] **Step 3: Implement.**
-  - **Settings screen:** two labelled groups, "Theme" (System, Light, Dark) and "Colours" (Default, Colour-vision-safe, High contrast). Each row is `Modifier.selectable(selected, role = Role.RadioButton)`, contains a `RadioButton(onClick = null)`, and is at least 48 dp tall. Hairline dividers separate the groups. Every string is a resource. The stateless `AppearanceSettings(state, onThemeModeSelected, onPaletteSelected)` composable carries `@PreviewLightDark` and `@PreviewFontScale` previews, as the spec requires.
+  - **Settings screen:** two labeled groups, "Theme" (System, Light, Dark) and "Colors" (Default, Color-vision-safe, High contrast). Each row is `Modifier.selectable(selected, role = Role.RadioButton)`, contains a `RadioButton(onClick = null)`, and is at least 48 dp tall. Hairline dividers separate the groups. Every string is a resource. The stateless `AppearanceSettings(state, onThemeModeSelected, onPaletteSelected)` composable carries `@PreviewLightDark` and `@PreviewFontScale` previews, as the spec requires.
   - **MainActivity:** collects `userPreferences` with `collectAsStateWithLifecycle` and passes them into `GetFitTheme`. A `DisposableEffect(resolvedDark)` calls `enableEdgeToEdge(SystemBarStyle.auto(transparent, transparent) { resolvedDark })` so the status-bar icons follow the app theme.
   - **Shell:** opens Settings with `openOverlay(SettingsKey)` and shows the Back icon while the overlay is open. `onExit` calls `moveTaskToBack(true)`. Pass `tonalElevation = 0.dp` to `NavigationBar` and give it `containerColor = surfaceContainer`. Add a hairline `HorizontalDivider` (`outlineVariant`) above the bar.
-  - **Launch theme:** add `Theme.GetFit` with parent `android:Theme.DeviceDefault.DayNight`, `windowActionBar=false`, `windowNoTitle=true`, and `windowBackground=@color/window_background`. That colour is `#F7F7F8`, with `#111113` in `values-night`. Set it as the application theme. This fixes M0 review item M-7.
+  - **Launch theme:** add `Theme.GetFit` with parent `android:Theme.DeviceDefault.DayNight`, `windowActionBar=false`, `windowNoTitle=true`, and `windowBackground=@color/window_background`. That color is `#F7F7F8`, with `#111113` in `values-night`. Set it as the application theme. This fixes M0 review item M-7.
 
 - [ ] **Step 4: Run** `./gradlew check buildHealth assembleDebug`. Expected: PASS.
 
@@ -363,7 +363,7 @@ detekt-rules/                                           new JVM module: NoColorL
 
 - [ ] **Step 2: Run** `./gradlew :detekt-rules:test`. Expected: FAIL (unresolved rule).
 
-- [ ] **Step 3: Implement** the rule against detekt 2.0.0-alpha.6's `Rule` API (`visitCallExpression`, `report(Finding(Entity.from(expression), message))`). Read the exact constructor signatures from the `detekt-api` jar. The message is "Colours come from GetFitTheme / MaterialTheme; define new colours in :core:designsystem."
+- [ ] **Step 3: Implement** the rule against detekt 2.0.0-alpha.6's `Rule` API (`visitCallExpression`, `report(Finding(Entity.from(expression), message))`). Read the exact constructor signatures from the `detekt-api` jar. The message is "Colors come from GetFitTheme / MaterialTheme; define new colors in :core:designsystem."
 
 - [ ] **Step 4: Run** `./gradlew :detekt-rules:test check`. Expected: PASS, and `check` reports no findings in the codebase.
 

@@ -17,7 +17,7 @@ annotation class DefaultDispatcher
 
 /**
  * A process-lifetime `CoroutineScope` for work that must outlive any screen, such as first-launch
- * bootstrap. Its `SupervisorJob` keeps one failed child from cancelling the others.
+ * bootstrap. Its `SupervisorJob` keeps one failed child from canceling the others.
  */
 @Qualifier
 @Retention(AnnotationRetention.BINARY)

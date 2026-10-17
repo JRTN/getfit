@@ -13,7 +13,7 @@ import org.junit.runners.Parameterized
 /**
  * The spec's accessibility gate: every foreground/background token pair in all six palette
  * instances meets its WCAG contrast requirement, against both the page background and the
- * container colour that nav bars, cards and sheets sit on.
+ * container color that nav bars, cards and sheets sit on.
  */
 @RunWith(Parameterized::class)
 class PaletteContrastTest(private val palette: ColorPalette, private val dark: Boolean) {
@@ -75,7 +75,7 @@ class PaletteContrastTest(private val palette: ColorPalette, private val dark: B
     }
 
     @Test
-    fun seriesPalette_hasSixDistinctColours() {
+    fun seriesPalette_hasSixDistinctColors() {
         assertThat(data.seriesPalette, instance).hasSize(SERIES_COUNT)
         assertThat(data.seriesPalette.toSet(), instance).hasSize(SERIES_COUNT)
     }

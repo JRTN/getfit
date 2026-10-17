@@ -59,7 +59,7 @@ Follow a tap on Settings → Appearance → "High contrast" all the way to the r
 2. [`SettingsViewModel`](../../feature/settings/src/main/kotlin/com/jrussell/fitness/feature/settings/SettingsViewModel.kt) depends only on the interface [`UserPreferencesRepository`](../../core/domain/src/main/kotlin/com/jrussell/fitness/core/domain/UserPreferencesRepository.kt) from `:core:domain`, and calls `setPalette`.
 3. Hilt has bound that interface (in [`PreferencesModule`](../../app/src/main/kotlin/com/jrussell/fitness/di/PreferencesModule.kt)) to [`DefaultUserPreferencesRepository`](../../core/data/src/main/kotlin/com/jrussell/fitness/core/data/preferences/DefaultUserPreferencesRepository.kt) in `:core:data`.
 4. That delegates to [`UserPreferencesDataSource`](../../core/datastore/src/main/kotlin/com/jrussell/fitness/core/datastore/UserPreferencesDataSource.kt), which writes the enum's name into a Preferences DataStore file.
-5. DataStore emits the new preferences on its `Flow`. `MainViewModel.userPreferences` updates, `MainActivity` recomposes, and `GetFitTheme` supplies the high-contrast colour scheme to the whole tree.
+5. DataStore emits the new preferences on its `Flow`. `MainViewModel.userPreferences` updates, `MainActivity` recomposes, and `GetFitTheme` supplies the high-contrast color scheme to the whole tree.
 
 Nothing about the DataStore file can stop the app from starting. A corrupt file is replaced with defaults, a read error emits defaults, and an unknown or wrong-typed stored value falls back to that field's default (see the class KDoc and [`UserPreferencesDataSourceTest`](../../core/datastore/src/test/kotlin/com/jrussell/fitness/core/datastore/UserPreferencesDataSourceTest.kt)).
 

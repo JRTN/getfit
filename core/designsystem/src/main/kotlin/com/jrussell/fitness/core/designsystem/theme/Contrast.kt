@@ -15,14 +15,14 @@ private const val GREEN_WEIGHT: Double = 0.7152
 private const val BLUE_WEIGHT: Double = 0.0722
 private const val FLARE: Double = 0.05
 
-/** WCAG 2.x relative luminance of an opaque sRGB colour, from 0 (black) to 1 (white). */
+/** WCAG 2.x relative luminance of an opaque sRGB color, from 0 (black) to 1 (white). */
 fun relativeLuminance(color: Color): Double {
     return RED_WEIGHT * linearize(color.red) + GREEN_WEIGHT * linearize(color.green) +
         BLUE_WEIGHT * linearize(color.blue)
 }
 
 /**
- * WCAG 2.x contrast ratio between two opaque colours, from 1:1 (identical) to 21:1 (black on
+ * WCAG 2.x contrast ratio between two opaque colors, from 1:1 (identical) to 21:1 (black on
  * white). Order does not matter. Text needs at least 4.5 and graphics at least 3 (stricter for
  * the high-contrast palette, see [contrastRequirementFor]).
  */

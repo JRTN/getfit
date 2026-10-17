@@ -48,7 +48,7 @@ fun SettingsScreen(modifier: Modifier = Modifier, viewModel: SettingsViewModel =
 }
 
 /**
- * Theme (System / Light / Dark) and colour palette choices, as two radio groups. Each row is a
+ * Theme (System / Light / Dark) and color palette choices, as two radio groups. Each row is a
  * single selectable target at least 48 dp tall, announced by TalkBack as a radio button.
  */
 @Composable
@@ -129,7 +129,7 @@ private fun themeModeLabel(themeMode: ThemeMode): Int {
 private fun paletteLabel(palette: ColorPalette): Int {
     return when (palette) {
         ColorPalette.DEFAULT -> R.string.settings_palette_default
-        ColorPalette.COLOUR_VISION_SAFE -> R.string.settings_palette_colour_vision_safe
+        ColorPalette.COLOR_VISION_SAFE -> R.string.settings_palette_color_vision_safe
         ColorPalette.HIGH_CONTRAST -> R.string.settings_palette_high_contrast
     }
 }

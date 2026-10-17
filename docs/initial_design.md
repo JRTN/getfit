@@ -13,7 +13,7 @@ GetFit is a local-first Android app that replaces Cronometer, Strong and a body-
 - Biometrics and sleep imported from Health Connect (Fitbit Versa 4) or entered manually.
 - A projection engine: BMR/TDEE, required intake for a target weight and date, feasibility verdicts, and weight / fat mass / lean mass / expenditure trajectories.
 - Any metric charted against any other, with every chart also viewable as a table.
-- Light and dark themes, colour-vision-safe palettes and full TalkBack support from v1.
+- Light and dark themes, color-vision-safe palettes and full TalkBack support from v1.
 
 **Non-goals for v1**
 
@@ -85,7 +85,7 @@ The app targets Android 17 (API 37) and installs on Android 14 (API 34) and late
 | Debug `applicationId` | `com.jrussell.fitness.debug` | Debug installs never touch the release build's database |
 | Display name | GetFit / GetFit (Debug) | `app_name` string resource, changeable in any release |
 
-**API 36+ behaviours designed for from the start** (Android 17 behaviour changes to be reviewed as they affect features)
+**API 36+ behaviors designed for from the start** (Android 17 behavior changes to be reviewed as they affect features)
 
 - Edge-to-edge is mandatory: `enableEdgeToEdge()` in the activity, insets handled by `Scaffold` / `WindowInsets`, status-bar icon contrast flips with the theme.
 - `onBackPressed()` is no longer delivered: all back handling uses `BackHandler` / `PredictiveBackHandler`.
@@ -246,7 +246,7 @@ value class Mass private constructor(val kilograms: Double) {
 }
 ```
 
-Canonical units: kilograms (`Mass`), kilocalories (`Energy`), millilitres (`Volume`), seconds (`Duration`), metres (`Distance`). Nutrient amounts use `NutrientAmount(value: Double, unit: NutrientUnit)` because nutrient units vary (g, mg, µg, IU).
+Canonical units: kilograms (`Mass`), kilocalories (`Energy`), milliliters (`Volume`), seconds (`Duration`), meters (`Distance`). Nutrient amounts use `NutrientAmount(value: Double, unit: NutrientUnit)` because nutrient units vary (g, mg, µg, IU).
 
 **3. Layer separation.** Room `@Entity` classes live only in `:core:database` and `:core:reference`. Domain models in `:core:model` are plain data classes with no annotations. `:core:data` maps between them, mirroring the JPA-entity-versus-domain-object split.
 
@@ -565,7 +565,7 @@ Providers are contributed with Hilt multibinding (`@IntoSet`) from `:core:data`;
 ### Transforms (pure functions over `List<DataPoint>`)
 
 - Exponential moving average; rolling mean (n days); week-over-week delta; cumulative sum.
-- Normalisation to 0–1 or to percent of target.
+- Normalization to 0–1 or to percent of target.
 - Scatter pairing of two metrics by date, with optional lag (e.g. sleep on day *d* versus training volume on day *d + 1*).
 
 ### Charts
@@ -690,13 +690,13 @@ Each rule yields a specific, explainable verdict and the first day it fails.
 | --- | --- | --- |
 | Physically impossible | Required I < 0 | Even total fasting does not reach the target in time |
 | Below intake floor | Required I < `intakeFloorKcal` | Required intake is below your configured minimum |
-| Fat-mobilisation limit | On any day, \|ΔE\| > 68 kcal × F(t) (Alpert's ≈ 31 kcal/lb of fat per day) | Deficit exceeds what fat stores can supply; excess would come from lean tissue |
+| Fat-mobilization limit | On any day, \|ΔE\| > 68 kcal × F(t) (Alpert's ≈ 31 kcal/lb of fat per day) | Deficit exceeds what fat stores can supply; excess would come from lean tissue |
 | Body-fat floor | Final F / W < `minBodyFatFraction` | Target is below your minimum body-fat percentage |
 | Lean-loss tolerance | L(0) − L(T) > `maxLeanMassLossKg` | Projected lean-mass loss exceeds your tolerance |
 
 ### Adaptive calibration (v2)
 
-With at least 3–4 weeks of COMPLETE days and weigh-ins, the simulator is driven by actual logged intake, and PAL is fitted by minimising Σ(Wsim(d) − T(d))² against trend weight T. The fit is one-dimensional (golden-section search over PAL ∈ \[1.1, 2.5\]). The calibrated PAL replaces the population activity factor in new projections.
+With at least 3–4 weeks of COMPLETE days and weigh-ins, the simulator is driven by actual logged intake, and PAL is fitted by minimizing Σ(Wsim(d) − T(d))² against trend weight T. The fit is one-dimensional (golden-section search over PAL ∈ \[1.1, 2.5\]). The calibrated PAL replaces the population activity factor in new projections.
 
 ### Known limitations
 
@@ -706,12 +706,12 @@ With at least 3–4 weeks of COMPLETE days and weigh-ins, the simulator is drive
 
 ## Design system and accessibility
 
-The visual language is flat, dense and numeric: neutral greyscale surfaces, one accent hue, hairline dividers, tabular figures, and colour that always carries a redundant encoding.
+The visual language is flat, dense and numeric: neutral grayscale surfaces, one accent hue, hairline dividers, tabular figures, and color that always carries a redundant encoding.
 
 ### Theme structure (`:core:designsystem`)
 
 - **Theme mode:** System (default), Light, Dark, and an optional true-black Dark variant. Stored in DataStore; resolved at the root of `setContent`.
-- **Dynamic colour:** off by default (optional toggle later), so chart colours stay predictable.
+- **Dynamic color:** off by default (optional toggle later), so chart colors stay predictable.
 - **Layer 1, Material `ColorScheme`:** surfaces, text, primary accent, error, outline. Consumed automatically by Material components.
 - **Layer 2, `DataColors`:** app-specific semantic tokens provided through `LocalDataColors`.
 
@@ -742,8 +742,8 @@ Each palette has a separately tuned light and dark instance (6 `DataColors` inst
 
 | Palette | Purpose | Basis |
 | --- | --- | --- |
-| Default | Brand look | Neutral greys + violet accent (`#6941C6` light, `#C3B1FF` dark) |
-| Colour-vision-safe | Protanopia, deuteranopia, tritanopia | Okabe–Ito set; black entry replaced in dark mode |
+| Default | Brand look | Neutral grays + violet accent (`#6941C6` light, `#C3B1FF` dark) |
+| Color-vision-safe | Protanopia, deuteranopia, tritanopia | Okabe–Ito set; black entry replaced in dark mode |
 | High contrast | Low vision | Maximum luminance separation |
 
 A unit test computes the WCAG contrast ratio of every foreground/background token pair in all six instances and requires ≥ 4.5:1 for text and ≥ 3:1 for graphical elements.
@@ -758,7 +758,7 @@ A unit test computes the WCAG contrast ratio of every foreground/background toke
 | Density | Compact visual rows; every interactive element keeps a ≥ 48 dp touch target via `minimumInteractiveComponentSize()` |
 | Edge-to-edge | Mandatory since API 36; insets handled by `Scaffold` |
 
-### Redundant encoding (never colour alone)
+### Redundant encoding (never color alone)
 
 | Element | Second encoding |
 | --- | --- |
@@ -864,11 +864,11 @@ Version 1 is reached when the release build replaces Cronometer and Strong for d
 6. **M5 — Energy and projection.** BMR formulas, the four energy modes with side-by-side estimates, daily budget on Today, projection plan screen, simulator, solver and feasibility verdicts, plan-versus-actual charts.
    - Exit: the worked example reproduces in the UI; a 20-week plan shows trajectories and a correct verdict for an infeasible target.
 7. **M6 — Daily-driver release.** Today dashboard, Trends metric explorer (any metric versus any, transforms, overlays), accessibility pass at 200% font scale with TalkBack, R8 release build signed with the release key.
-   - Exit: the release build is installed as the daily app; Cronometer and Strong subscriptions can be cancelled.
+   - Exit: the release build is installed as the daily app; Cronometer and Strong subscriptions can be canceled.
 
 ## Risks and deferred items
 
-The largest risk is scope: an all-in-one app never reaching daily use. The milestone exits above are the defence; anything not listed in M0–M6 waits.
+The largest risk is scope: an all-in-one app never reaching daily use. The milestone exits above are the defense; anything not listed in M0–M6 waits.
 
 ### Risks
 
@@ -879,7 +879,7 @@ The largest risk is scope: an all-in-one app never reaching daily use. The miles
 | Lost release keystore | Cannot update without uninstalling (data wiped) | Keystore backed up outside the repo at creation |
 | Migration bug corrupts `user.db` | Partial or total data loss | Explicit migrations only, committed schema JSON, `MigrationTestHelper` tests, snapshot export before each release install |
 | Versa 4 writes fewer Health Connect types than expected | Missing HRV or other metrics | Inspector in M2 confirms actual coverage before dependent features are built |
-| Health Connect or Google Health behaviour changes | Import breaks | Import isolated in `:core:healthconnect`; inspector exposes failures |
+| Health Connect or Google Health behavior changes | Import breaks | Import isolated in `:core:healthconnect`; inspector exposes failures |
 | Branded foods lack micronutrients | Understated totals | Unknown ≠ zero; coverage shown with every total |
 | Learning curve (Kotlin, Compose, Android lifecycle) | Slow early milestones | M0–M1 deliberately small; pure-Kotlin modules use familiar JVM testing |
 | Forbes model overstates lean loss for lifters | Pessimistic projections | Documented limitation; v2 `leanPartitionMultiplier` |
@@ -896,9 +896,9 @@ The largest risk is scope: an all-in-one app never reaching daily use. The miles
 - Health Connect write-back.
 - Sync backend (Spring Boot), accounts, multiple users.
 - Kotlin Multiplatform extraction and an iOS client.
-- Play Store publication: privacy policy, data-safety form, Health Connect declaration, account deletion, Open Food Facts attribution, open-source licences screen.
+- Play Store publication: privacy policy, data-safety form, Health Connect declaration, account deletion, Open Food Facts attribution, open-source licenses screen.
 
 ### Open questions
 
-- Exercise dataset licence to be verified before bundling (M3).
+- Exercise dataset license to be verified before bundling (M3).
 - Exact Health Connect record types written by the Versa 4 (answered by the M2 inspector).

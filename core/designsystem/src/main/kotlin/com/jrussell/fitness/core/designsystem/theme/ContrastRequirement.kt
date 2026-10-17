@@ -19,7 +19,7 @@ private const val HIGH_CONTRAST_GRAPHIC: Double = 4.5
 fun contrastRequirementFor(palette: ColorPalette): ContrastRequirement {
     return when (palette) {
         ColorPalette.HIGH_CONTRAST -> ContrastRequirement(text = HIGH_CONTRAST_TEXT, graphic = HIGH_CONTRAST_GRAPHIC)
-        ColorPalette.DEFAULT, ColorPalette.COLOUR_VISION_SAFE ->
+        ColorPalette.DEFAULT, ColorPalette.COLOR_VISION_SAFE ->
             ContrastRequirement(text = STANDARD_TEXT, graphic = STANDARD_GRAPHIC)
     }
 }

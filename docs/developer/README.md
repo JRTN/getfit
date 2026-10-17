@@ -30,10 +30,10 @@ Then read [the stack](stack.md) whenever a library choice raises a question.
 
 ## A five-minute orientation
 
-- **What it is:** a local-first Android app that replaces Cronometer (nutrition), Strong (training) and a weight-projection spreadsheet. All data lives on the phone.
+- **What it is:** a local-first Android app that brings nutrition logging, strength training and weight projection into one place, replacing several separate apps that never shared data. All data lives on the phone.
 - **Shape:** a single-activity Jetpack Compose app. It is split into about 24 Gradle modules in five layers: `:app` → `:feature:*` → `:core:*` UI → `:core:*` data → pure Kotlin.
 - **Data:** Room (`user.db`) holds the user's data. Every write runs in one transaction that stamps a revision number, a timestamp and a device ID, so a future sync can be added without migrating anything. Preferences that only affect the UI live in DataStore.
-- **Rules enforced by machines, not memory:** layer boundaries (Gradle and Konsist), no colour literals outside the design system, no direct `Dispatchers.IO`, no destructive migrations (custom detekt rules), WCAG contrast for every palette (unit tests), and unused or misdeclared dependencies (Dependency Analysis).
+- **Rules enforced by machines, not memory:** layer boundaries (Gradle and Konsist), no color literals outside the design system, no direct `Dispatchers.IO`, no destructive migrations (custom detekt rules), WCAG contrast for every palette (unit tests), and unused or misdeclared dependencies (Dependency Analysis).
 - **Style:** explicit Kotlin (explicit types, block bodies), KDoc that explains *why*, and test-first development.
 
 ## Keeping this guide current

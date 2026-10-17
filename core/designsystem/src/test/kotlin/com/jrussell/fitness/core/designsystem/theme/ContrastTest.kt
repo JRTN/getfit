@@ -12,7 +12,7 @@ class ContrastTest {
     }
 
     @Test
-    fun sameColour_is1() {
+    fun sameColor_is1() {
         assertThat(contrastRatio(Color(0xFF6941C6), Color(0xFF6941C6))).isCloseTo(1.0, 0.01)
     }
 
@@ -24,7 +24,7 @@ class ContrastTest {
     }
 
     @Test
-    fun grey777OnWhite_is4_48() {
+    fun gray777OnWhite_is4_48() {
         assertThat(contrastRatio(Color(0xFF777777), Color.White)).isCloseTo(4.48, 0.01)
     }
 

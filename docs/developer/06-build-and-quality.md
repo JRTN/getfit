@@ -3,7 +3,7 @@
 ## Philosophy
 
 - **One place for build configuration.** Everything modules share lives in convention plugins in [`build-logic/`](../../build-logic/), so a module build file is usually one to five lines.
-- **Rules are automated.** If a convention matters, a tool checks it: a compiler error, a Konsist test, a detekt rule, a unit test or a Gradle check. Code review is for judgement, not policing.
+- **Rules are automated.** If a convention matters, a tool checks it: a compiler error, a Konsist test, a detekt rule, a unit test or a Gradle check. Code review is for judgment, not policing.
 - **The build explains itself.** Every convention plugin and build-logic helper has KDoc saying what it does and *why*. Read them; they are short.
 - **Versions are pinned in one file,** [`gradle/libs.versions.toml`](../../gradle/libs.versions.toml). Upgrades are deliberate commits, never drift.
 
@@ -55,7 +55,7 @@ Shared helpers live in [`com/jrussell/fitness/buildlogic/`](../../build-logic/co
 | GetFit rule config | [`GetFitConfigTest`](../../detekt-rules/src/test/kotlin/com/jrussell/fitness/detekt/GetFitConfigTest.kt) | `getfit.yml` names exactly the provided rules and activates each one. detekt does not validate plugin config, so a typo would otherwise silently disable a rule |
 | Android Lint | AGP, `abortOnError = true` | Android-specific problems (accessibility, API levels, resources). Version-freshness checks are off, since upgrades are deliberate |
 | Architecture | Konsist ([`:architecture-tests`](../../architecture-tests/)) | Layer rules, ViewModel dependencies, owner-scoped DAOs (see [Architecture](02-architecture.md)) |
-| Unit tests | JUnit 4/5, Robolectric | Behaviour (see [Conventions and testing](07-conventions-and-testing.md)) |
+| Unit tests | JUnit 4/5, Robolectric | Behavior (see [Conventions and testing](07-conventions-and-testing.md)) |
 | Contrast | [`PaletteContrastTest`](../../core/designsystem/src/test/kotlin/com/jrussell/fitness/core/designsystem/theme/PaletteContrastTest.kt) | WCAG ratios for all six palette instances |
 | Schema | [`SchemaJsonTest`](../../core/database/src/test/kotlin/com/jrussell/fitness/core/database/SchemaJsonTest.kt) | Committed schema JSON matches the compiled database |
 | Dependencies | Dependency Analysis Gradle Plugin (root [`build.gradle.kts`](../../build.gradle.kts)) | `implementation` that should be `api` (or the reverse), undeclared transitive use. Unused dependencies are only warnings while features are empty |

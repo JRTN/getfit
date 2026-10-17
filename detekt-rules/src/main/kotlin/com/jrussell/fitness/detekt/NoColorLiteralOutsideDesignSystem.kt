@@ -14,8 +14,8 @@ import org.jetbrains.kotlin.psi.KtNameReferenceExpression
 /**
  * Design rule: "no composable outside `:core:designsystem` uses a `Color(...)` literal".
  *
- * Colours must come from `MaterialTheme.colorScheme` or `GetFitTheme.dataColors`, so every
- * palette (including colour-vision-safe and high contrast) applies everywhere. Outside package
+ * Colors must come from `MaterialTheme.colorScheme` or `GetFitTheme.dataColors`, so every
+ * palette (including color-vision-safe and high contrast) applies everywhere. Outside package
  * `com.jrussell.fitness.core.designsystem` this reports:
  * - `Color(...)` constructor calls;
  * - members of Compose's `Color` other than `Color.Unspecified` and `Color.Transparent`
@@ -83,6 +83,6 @@ class NoColorLiteralOutsideDesignSystem(config: Config) : Rule(config, DESCRIPTI
         const val DESIGN_SYSTEM_PACKAGE: String = "com.jrussell.fitness.core.designsystem"
         const val DESCRIPTION: String = "Color literals are only allowed in :core:designsystem."
         const val MESSAGE: String =
-            "Colours come from GetFitTheme / MaterialTheme; define new colours in :core:designsystem."
+            "Colors come from GetFitTheme / MaterialTheme; define new colors in :core:designsystem."
     }
 }
