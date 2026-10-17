@@ -2,8 +2,6 @@ package com.jrussell.fitness.ui
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -14,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavKey
@@ -21,6 +20,7 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.jrussell.fitness.R
+import com.jrussell.fitness.core.designsystem.icon.GetFitIcons
 import com.jrussell.fitness.feature.body.bodyEntry
 import com.jrussell.fitness.feature.nutrition.nutritionEntry
 import com.jrussell.fitness.feature.settings.R as SettingsR
@@ -97,7 +97,7 @@ private fun GetFitTopBar(title: String, showSettingsAction: Boolean, onOpenSetti
             if (showSettingsAction) {
                 IconButton(onClick = onOpenSettings) {
                     Icon(
-                        imageVector = Icons.Filled.Settings,
+                        painter = painterResource(GetFitIcons.Settings),
                         contentDescription = stringResource(R.string.action_open_settings),
                     )
                 }
@@ -114,7 +114,13 @@ private fun GetFitBottomBar(currentDestination: TopLevelDestination, onSelect: (
                 selected = destination == currentDestination,
                 onClick = { onSelect(destination) },
                 // The label below already names the tab, so the icon is decorative for TalkBack.
-                icon = { Icon(imageVector = destination.icon, contentDescription = null) },
+                icon = {
+                    val selected: Boolean = destination == currentDestination
+                    Icon(
+                        painter = painterResource(if (selected) destination.selectedIcon else destination.icon),
+                        contentDescription = null,
+                    )
+                },
                 label = { Text(text = stringResource(destination.label)) },
             )
         }

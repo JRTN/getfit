@@ -1,14 +1,9 @@
 package com.jrussell.fitness.navigation
 
+import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation3.runtime.NavKey
+import com.jrussell.fitness.core.designsystem.icon.GetFitIcons
 import com.jrussell.fitness.feature.body.BodyKey
 import com.jrussell.fitness.feature.body.R as BodyR
 import com.jrussell.fitness.feature.nutrition.NutritionKey
@@ -21,15 +16,25 @@ import com.jrussell.fitness.feature.trends.R as TrendsR
 import com.jrussell.fitness.feature.trends.TrendsKey
 
 /**
- * The five bottom-bar tabs, in display order. Icons are M0 placeholders from
- * material-icons-core; proper Material Symbols arrive with the M1 design system.
+ * The five bottom-bar tabs, in display order, each with an outlined icon and a filled one for
+ * the selected state.
  */
-enum class TopLevelDestination(val key: NavKey, @param:StringRes val label: Int, val icon: ImageVector) {
-    TODAY(TodayKey, TodayR.string.feature_today_title, Icons.Filled.Home),
-    NUTRITION(NutritionKey, NutritionR.string.feature_nutrition_title, Icons.AutoMirrored.Filled.List),
-    TRAINING(TrainingKey, TrainingR.string.feature_training_title, Icons.Filled.PlayArrow),
-    BODY(BodyKey, BodyR.string.feature_body_title, Icons.Filled.Person),
-    TRENDS(TrendsKey, TrendsR.string.feature_trends_title, Icons.Filled.DateRange),
+enum class TopLevelDestination(
+    val key: NavKey,
+    @param:StringRes val label: Int,
+    @param:DrawableRes val icon: Int,
+    @param:DrawableRes val selectedIcon: Int,
+) {
+    TODAY(TodayKey, TodayR.string.feature_today_title, GetFitIcons.Today, GetFitIcons.TodaySelected),
+    NUTRITION(
+        NutritionKey,
+        NutritionR.string.feature_nutrition_title,
+        GetFitIcons.Nutrition,
+        GetFitIcons.NutritionSelected,
+    ),
+    TRAINING(TrainingKey, TrainingR.string.feature_training_title, GetFitIcons.Training, GetFitIcons.TrainingSelected),
+    BODY(BodyKey, BodyR.string.feature_body_title, GetFitIcons.Body, GetFitIcons.BodySelected),
+    TRENDS(TrendsKey, TrendsR.string.feature_trends_title, GetFitIcons.Trends, GetFitIcons.TrendsSelected),
     ;
 
     companion object {
