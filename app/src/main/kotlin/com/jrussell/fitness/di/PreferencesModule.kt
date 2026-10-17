@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
+import com.jrussell.fitness.core.data.di.IoDispatcher
 import com.jrussell.fitness.core.data.preferences.DefaultUserPreferencesRepository
 import com.jrussell.fitness.core.datastore.UserPreferencesDataSource
 import com.jrussell.fitness.core.datastore.createUserPreferencesDataStore
@@ -15,6 +16,9 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 
 /** Binds UI preferences: one DataStore file per install, wrapped by the repository features use. */
 @Module
@@ -30,8 +34,13 @@ abstract class PreferencesModule {
 
         @Provides
         @Singleton
-        fun provideUserPreferencesDataStore(@ApplicationContext context: Context): DataStore<Preferences> {
-            return createUserPreferencesDataStore { context.preferencesDataStoreFile(FILE_NAME) }
+        fun provideUserPreferencesDataStore(
+            @ApplicationContext context: Context,
+            @IoDispatcher ioDispatcher: CoroutineDispatcher,
+        ): DataStore<Preferences> {
+            return createUserPreferencesDataStore(scope = CoroutineScope(ioDispatcher + SupervisorJob())) {
+                context.preferencesDataStoreFile(FILE_NAME)
+            }
         }
 
         @Provides

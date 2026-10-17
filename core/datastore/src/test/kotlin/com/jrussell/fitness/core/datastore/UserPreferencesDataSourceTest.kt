@@ -4,6 +4,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import app.cash.turbine.test
 import assertk.assertThat
@@ -75,6 +76,19 @@ class UserPreferencesDataSourceTest {
         val result: UserPreferences = UserPreferencesDataSource(dataStore).userPreferences.first()
 
         assertThat(result).isEqualTo(UserPreferences(ThemeMode.DARK, ColorPalette.DEFAULT))
+    }
+
+    @Test
+    fun userPreferences_wrongTypedStoredValue_fallsBackToDefault() = runTest {
+        val dataStore: DataStore<Preferences> = dataStoreIn(backgroundScope)
+        dataStore.edit { preferences ->
+            preferences[intPreferencesKey("theme_mode")] = 2
+            preferences[stringPreferencesKey("color_palette")] = "HIGH_CONTRAST"
+        }
+
+        val result: UserPreferences = UserPreferencesDataSource(dataStore).userPreferences.first()
+
+        assertThat(result).isEqualTo(UserPreferences(UserPreferences.DEFAULT.themeMode, ColorPalette.HIGH_CONTRAST))
     }
 
     @Test

@@ -21,6 +21,8 @@ import kotlinx.coroutines.flow.map
  * Nothing about this file can stop the app from starting:
  * - enums are stored by `name`, and a name the app doesn't recognise (renamed in a later version,
  *   or a restored backup from a newer one) falls back to that field's default;
+ * - a value stored with the wrong type (only possible if a later version changes a key's type)
+ *   is treated as absent, so it also falls back to the default;
  * - a read that fails with an I/O error emits the defaults;
  * - a write that fails with an I/O error is dropped (the choice simply isn't saved);
  * - an unparseable file is replaced by [createUserPreferencesDataStore]'s corruption handler.
@@ -31,8 +33,8 @@ class UserPreferencesDataSource(private val dataStore: DataStore<Preferences>) {
         .catch { error: Throwable -> emitEmptyOnIoError(error) }
         .map { preferences: Preferences ->
             UserPreferences(
-                themeMode = enumOrDefault(preferences[THEME_MODE], UserPreferences.DEFAULT.themeMode),
-                palette = enumOrDefault(preferences[COLOR_PALETTE], UserPreferences.DEFAULT.palette),
+                themeMode = enumOrDefault(storedString(preferences, THEME_MODE), UserPreferences.DEFAULT.themeMode),
+                palette = enumOrDefault(storedString(preferences, COLOR_PALETTE), UserPreferences.DEFAULT.palette),
             )
         }
 
@@ -61,6 +63,11 @@ class UserPreferencesDataSource(private val dataStore: DataStore<Preferences>) {
         ) {
             // Intentionally empty; see above.
         }
+    }
+
+    /** The string stored under [key], or null when it is absent or was stored with another type. */
+    private fun storedString(preferences: Preferences, key: Preferences.Key<String>): String? {
+        return preferences.asMap()[key] as? String
     }
 
     private inline fun <reified T : Enum<T>> enumOrDefault(name: String?, default: T): T {

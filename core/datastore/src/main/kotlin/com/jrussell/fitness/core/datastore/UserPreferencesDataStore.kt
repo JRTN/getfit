@@ -7,8 +7,6 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import java.io.File
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 
 /**
  * Creates the DataStore that holds [UserPreferences][com.jrussell.fitness.core.model.UserPreferences].
@@ -18,13 +16,11 @@ import kotlinx.coroutines.SupervisorJob
  * backup restore) is replaced with empty preferences, so the app starts with defaults instead of
  * failing on every launch.
  *
- * @param scope where DataStore does its I/O; tests pass their own.
+ * @param scope where DataStore does its I/O: `:app` passes one on the injected IO dispatcher,
+ *   tests pass their own.
  * @param produceFile the preferences file, e.g. `context.preferencesDataStoreFile("user_preferences")`.
  */
-fun createUserPreferencesDataStore(
-    scope: CoroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
-    produceFile: () -> File,
-): DataStore<Preferences> {
+fun createUserPreferencesDataStore(scope: CoroutineScope, produceFile: () -> File): DataStore<Preferences> {
     return PreferenceDataStoreFactory.create(
         corruptionHandler = ReplaceFileCorruptionHandler { emptyPreferences() },
         scope = scope,
