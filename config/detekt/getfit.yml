@@ -1,0 +1,10 @@
+# GetFit's own detekt rules (rule set "getfit", built from :detekt-rules).
+# Loaded on top of detekt.yml by every module except :detekt-rules itself.
+
+getfit:
+  NoColorLiteralOutsideDesignSystem:
+    active: true
+  NoDirectDispatchers:
+    active: true
+  NoDestructiveMigration:
+    active: true

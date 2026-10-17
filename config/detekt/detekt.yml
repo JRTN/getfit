@@ -1,9 +1,6 @@
 # Overrides on top of detekt's default rule set (buildUponDefaultConfig = true).
-# GetFit's own rules live in :detekt-rules (rule set "getfit"); M1b adds dispatcher and migration rules.
-
-config:
-  # :detekt-rules runs detekt without its own rules loaded, so it cannot validate their keys.
-  excludes: ['getfit.*']
+# GetFit's own rules (rule set "getfit", built from :detekt-rules) are configured in getfit.yml,
+# which every module except :detekt-rules loads; that module cannot load its own rules.
 
 naming:
   FunctionNaming:
@@ -15,7 +12,3 @@ style:
     ignoreAnnotated: ['Composable', 'Preview']
   UnusedPrivateFunction:
     ignoreAnnotated: ['Preview']
-
-getfit:
-  NoColorLiteralOutsideDesignSystem:
-    active: true

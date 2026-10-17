@@ -63,4 +63,67 @@ class NoColorLiteralOutsideDesignSystemTest {
 
         assertThat(rule.lint(code)).isEmpty()
     }
+
+    @Test
+    fun importedAndroidColorTransparent_isAllowed() {
+        val code: String = """
+            package com.jrussell.fitness
+
+            import android.graphics.Color
+
+            val transparent: Int = Color.TRANSPARENT
+        """.trimIndent()
+
+        assertThat(rule.lint(code)).isEmpty()
+    }
+
+    @Test
+    fun namedColorConstant_isReported() {
+        val code: String = """
+            package com.jrussell.fitness.feature.today
+
+            import androidx.compose.ui.graphics.Color
+
+            val warning: Color = Color.Red
+        """.trimIndent()
+
+        assertThat(rule.lint(code)).hasSize(1)
+    }
+
+    @Test
+    fun hslCall_isReported() {
+        val code: String = """
+            package com.jrussell.fitness.feature.today
+
+            import androidx.compose.ui.graphics.Color
+
+            val accent: Color = Color.hsl(270f, 0.5f, 0.5f)
+        """.trimIndent()
+
+        assertThat(rule.lint(code)).hasSize(1)
+    }
+
+    @Test
+    fun androidParseColor_isReported() {
+        val code: String = """
+            package com.jrussell.fitness.feature.today
+
+            val accent: Int = android.graphics.Color.parseColor("#6941C6")
+        """.trimIndent()
+
+        assertThat(rule.lint(code)).hasSize(1)
+    }
+
+    @Test
+    fun importAlias_isReported() {
+        val code: String = """
+            package com.jrussell.fitness.feature.today
+
+            import androidx.compose.ui.graphics.Color as Tint
+
+            val accent: Tint = Tint.Unspecified
+        """.trimIndent()
+
+        assertThat(rule.lint(code)).hasSize(1)
+    }
 }

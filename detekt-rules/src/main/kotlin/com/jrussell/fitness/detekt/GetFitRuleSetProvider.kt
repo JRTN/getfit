@@ -10,7 +10,7 @@ import dev.detekt.api.RuleSetProvider
 /**
  * GetFit's own detekt rules, rule set id `getfit`. detekt discovers this class through
  * `META-INF/services/dev.detekt.api.RuleSetProvider`; rules are switched on in
- * `config/detekt/detekt.yml`. M1b adds the dispatcher and destructive-migration rules.
+ * `config/detekt/getfit.yml`, which every module except `:detekt-rules` loads.
  */
 class GetFitRuleSetProvider : RuleSetProvider {
     override val ruleSetId: RuleSetId = RuleSetId(RULE_SET_ID)
@@ -22,6 +22,8 @@ class GetFitRuleSetProvider : RuleSetProvider {
                 RuleName("NoColorLiteralOutsideDesignSystem") to { config: Config ->
                     NoColorLiteralOutsideDesignSystem(config) as Rule
                 },
+                RuleName("NoDirectDispatchers") to { config: Config -> NoDirectDispatchers(config) as Rule },
+                RuleName("NoDestructiveMigration") to { config: Config -> NoDestructiveMigration(config) as Rule },
             ),
         )
     }
