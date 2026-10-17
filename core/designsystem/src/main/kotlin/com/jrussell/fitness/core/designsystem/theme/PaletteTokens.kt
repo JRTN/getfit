@@ -4,7 +4,8 @@ import androidx.compose.ui.graphics.Color
 
 // The raw values of the six palette instances. Every pair is checked by PaletteContrastTest; when
 // changing a value here, run it. Values were derived by keeping each hue and moving lightness
-// until the WCAG thresholds pass (design doc: "Palette matrix").
+// until the WCAG thresholds pass (design doc: "Palette matrix"). `targetOver` doubles as Material's
+// `error`, so it must also pass as text and under white `onError` text.
 
 /** Neutral and accent values that become a Material `ColorScheme`. */
 internal data class SchemeTokens(
@@ -138,7 +139,7 @@ internal val ColourVisionSafeLightData: DataTokens = DataTokens(
     macroFat = Color(0xFFD55E00),
     targetMet = Color(0xFF0072B2),
     targetUnder = Color(0xFFB87F00),
-    targetOver = Color(0xFFD55E00),
+    targetOver = Color(0xFFB44F00),
     deltaPositive = Color(0xFF0072B2),
     deltaNegative = Color(0xFFD55E00),
     projectionLine = Color(0xFFC76C9F),
@@ -178,7 +179,7 @@ internal val HighContrastLightData: DataTokens = DataTokens(
     macroFat = Color(0xFFC83269),
     targetMet = Color(0xFF1E7B34),
     targetUnder = Color(0xFF9E5F00),
-    targetOver = Color(0xFFB42318),
+    targetOver = Color(0xFF9D1F15),
     deltaPositive = Color(0xFF1E7B34),
     deltaNegative = Color(0xFFB42318),
     projectionLine = null,

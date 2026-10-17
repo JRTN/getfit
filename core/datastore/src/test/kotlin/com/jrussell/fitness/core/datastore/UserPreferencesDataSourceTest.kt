@@ -12,11 +12,14 @@ import com.jrussell.fitness.core.model.ColorPalette
 import com.jrussell.fitness.core.model.ThemeMode
 import com.jrussell.fitness.core.model.UserPreferences
 import java.io.File
+import java.io.IOException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
@@ -72,6 +75,39 @@ class UserPreferencesDataSourceTest {
         val result: UserPreferences = UserPreferencesDataSource(dataStore).userPreferences.first()
 
         assertThat(result).isEqualTo(UserPreferences(ThemeMode.DARK, ColorPalette.DEFAULT))
+    }
+
+    @Test
+    fun userPreferences_corruptFile_emitsDefaults() = runTest {
+        file.writeBytes(byteArrayOf(0x13, 0x37, 0x00, 0x7F, 0x42))
+
+        val dataStore: DataStore<Preferences> = createUserPreferencesDataStore(scope = backgroundScope) { file }
+
+        assertThat(UserPreferencesDataSource(dataStore).userPreferences.first()).isEqualTo(UserPreferences.DEFAULT)
+    }
+
+    @Test
+    fun userPreferences_readFailure_emitsDefaults() = runTest {
+        val dataSource: UserPreferencesDataSource = UserPreferencesDataSource(FailingDataStore())
+
+        assertThat(dataSource.userPreferences.first()).isEqualTo(UserPreferences.DEFAULT)
+    }
+
+    @Test
+    fun setPalette_writeFailure_doesNotThrow() = runTest {
+        val dataSource: UserPreferencesDataSource = UserPreferencesDataSource(FailingDataStore())
+
+        dataSource.setPalette(ColorPalette.HIGH_CONTRAST)
+        dataSource.setThemeMode(ThemeMode.DARK)
+    }
+
+    /** A DataStore whose disk always fails, as on an I/O error. */
+    private class FailingDataStore : DataStore<Preferences> {
+        override val data: Flow<Preferences> = flow { throw IOException("disk read failed") }
+
+        override suspend fun updateData(transform: suspend (t: Preferences) -> Preferences): Preferences {
+            throw IOException("disk write failed")
+        }
     }
 
     private fun TestScope.scopeWith(job: Job): CoroutineScope {

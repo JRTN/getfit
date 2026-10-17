@@ -149,9 +149,9 @@ detekt-rules/                                           new JVM module: NoColorL
   |---|---|---|---|---|
   | Default light | 0F8B8D, BD7C03, D1477A, 3A7BD5, 6B8E23 | 0F8B8D / BD7C03 / D1477A | 1E7B34 / C77700 / B42318 | 1E7B34 / B42318 |
   | Default dark | 4CC9C0, F2B33D, F27CA6, 7FB0FF, A8C66C | 4CC9C0 / F2B33D / F27CA6 | 6FCF8A / F5B547 / FF8A80 | 6FCF8A / FF8A80 |
-  | CVS light (series 0–5) | 0072B2, D55E00, 009B71, C76C9F, B87F00, 1B90D2 | 009B71 / 0072B2 / D55E00 | 0072B2 / B87F00 / D55E00 | 0072B2 / D55E00 |
+  | CVS light (series 0–5) | 0072B2, D55E00, 009B71, C76C9F, B87F00, 1B90D2 | 009B71 / 0072B2 / D55E00 | 0072B2 / B87F00 / B44F00 (darkened in final review: doubles as `error` text) | 0072B2 / D55E00 |
   | CVS dark (series 0–5) | 3D9BD6, E36F1A, 009E73, CC79A7, E69F00, 56B4E9 | 009E73 / 3D9BD6 / E36F1A | 3D9BD6 / E69F00 / E36F1A | 3D9BD6 / E36F1A |
-  | High contrast light | 0D7B7D, 986303, C83269, 2B6DC8, 5A771D | 0D7B7D / 986303 / C83269 | 1E7B34 / 9E5F00 / B42318 | 1E7B34 / B42318 |
+  | High contrast light | 0D7B7D, 986303, C83269, 2B6DC8, 5A771D | 0D7B7D / 986303 / C83269 | 1E7B34 / 9E5F00 / 9D1F15 (darkened in final review) | 1E7B34 / B42318 |
   | High contrast dark | same as Default dark | same as Default dark | same as Default dark | same as Default dark |
 
   CVS `projectionLine`: C76C9F (light) / CC79A7 (dark).

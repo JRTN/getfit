@@ -2,11 +2,11 @@ package com.jrussell.fitness.di
 
 import android.content.Context
 import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import com.jrussell.fitness.core.data.preferences.DefaultUserPreferencesRepository
 import com.jrussell.fitness.core.datastore.UserPreferencesDataSource
+import com.jrussell.fitness.core.datastore.createUserPreferencesDataStore
 import com.jrussell.fitness.core.domain.UserPreferencesRepository
 import dagger.Binds
 import dagger.Module
@@ -31,7 +31,7 @@ abstract class PreferencesModule {
         @Provides
         @Singleton
         fun provideUserPreferencesDataStore(@ApplicationContext context: Context): DataStore<Preferences> {
-            return PreferenceDataStoreFactory.create(produceFile = { context.preferencesDataStoreFile(FILE_NAME) })
+            return createUserPreferencesDataStore { context.preferencesDataStoreFile(FILE_NAME) }
         }
 
         @Provides

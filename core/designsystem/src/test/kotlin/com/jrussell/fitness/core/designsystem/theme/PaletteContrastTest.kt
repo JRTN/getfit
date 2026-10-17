@@ -35,6 +35,11 @@ class PaletteContrastTest(private val palette: ColorPalette, private val dark: B
             Triple("onPrimary/primary", scheme.onPrimary, scheme.primary),
             Triple("onSecondaryContainer/secondaryContainer", scheme.onSecondaryContainer, scheme.secondaryContainer),
             Triple("chartAxisLabel/background", data.chartAxisLabel, scheme.background),
+            // Material draws error text in `error` (e.g. TextField supporting text) and badge or
+            // button text in `onError` on `error`, so both are text pairs.
+            Triple("onError/error", scheme.onError, scheme.error),
+            Triple("error/background", scheme.error, scheme.background),
+            Triple("error/surfaceContainer", scheme.error, scheme.surfaceContainer),
         )
         pairs.forEach { (name: String, foreground: Color, background: Color) ->
             assertThat(contrastRatio(foreground, background), "$instance $name")
