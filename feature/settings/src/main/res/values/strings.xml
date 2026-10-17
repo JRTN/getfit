@@ -1,4 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="feature_settings_title">Settings</string>
+
+    <string name="settings_theme_title">Theme</string>
+    <string name="settings_theme_system">System</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+
+    <string name="settings_palette_title">Colours</string>
+    <string name="settings_palette_default">Default</string>
+    <string name="settings_palette_colour_vision_safe">Colour-vision-safe</string>
+    <string name="settings_palette_high_contrast">High contrast</string>
 </resources>

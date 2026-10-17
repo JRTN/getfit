@@ -2,4 +2,5 @@
 <resources>
     <string name="app_name">GetFit</string>
     <string name="action_open_settings">Settings</string>
+    <string name="action_back">Back</string>
 </resources>

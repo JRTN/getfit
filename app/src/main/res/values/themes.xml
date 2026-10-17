@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Launch theme: the window shown before Compose draws. Follows light/dark so a cold start
+         never flashes the wrong background. Colours match the palette's background token. -->
+    <style name="Theme.GetFit" parent="@android:style/Theme.DeviceDefault.DayNight">
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowBackground">@color/window_background</item>
+    </style>
+</resources>

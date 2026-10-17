@@ -4,6 +4,7 @@ import assertk.assertThat
 import assertk.assertions.containsExactly
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
+import assertk.assertions.isNull
 import assertk.assertions.isTrue
 import org.junit.Test
 
@@ -64,5 +65,43 @@ class TopLevelBackStackTest {
         stack.push("detail")
         stack.switchTo("today")
         assertThat(stack.backStack.toList()).containsExactly("today", "detail")
+    }
+
+    @Test
+    fun openOverlay_appendsOnTop() {
+        val stack: TopLevelBackStack<String> = TopLevelBackStack("today")
+        stack.switchTo("body")
+        stack.openOverlay("settings")
+        assertThat(stack.backStack.toList()).containsExactly("today", "body", "settings")
+        assertThat(stack.overlay).isEqualTo("settings")
+    }
+
+    @Test
+    fun openOverlay_twice_doesNotDuplicate() {
+        val stack: TopLevelBackStack<String> = TopLevelBackStack("today")
+        stack.openOverlay("settings")
+        stack.openOverlay("settings")
+        assertThat(stack.backStack.toList()).containsExactly("today", "settings")
+    }
+
+    @Test
+    fun switchTo_closesOverlay() {
+        val stack: TopLevelBackStack<String> = TopLevelBackStack("today")
+        stack.switchTo("body")
+        stack.openOverlay("settings")
+        stack.switchTo("nutrition")
+        assertThat(stack.backStack.toList()).containsExactly("today", "nutrition")
+        assertThat(stack.overlay).isNull()
+    }
+
+    @Test
+    fun removeLast_closesOverlayFirst() {
+        val stack: TopLevelBackStack<String> = TopLevelBackStack("today")
+        stack.switchTo("body")
+        stack.push("detail")
+        stack.openOverlay("settings")
+        assertThat(stack.removeLast()).isTrue()
+        assertThat(stack.overlay).isNull()
+        assertThat(stack.backStack.toList()).containsExactly("today", "body", "detail")
     }
 }
