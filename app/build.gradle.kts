@@ -17,6 +17,8 @@ dependencies {
     implementation(projects.core.designsystem)
     implementation(projects.core.sync)
     implementation(projects.core.model)
+    implementation(projects.core.domain)
+    implementation(projects.core.datastore)
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)

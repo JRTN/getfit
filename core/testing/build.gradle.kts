@@ -3,5 +3,7 @@ plugins {
 }
 
 dependencies {
-    implementation(projects.core.model)
+    api(projects.core.domain)
+    api(libs.kotlinx.coroutines.test)
+    api(libs.junit4)
 }
