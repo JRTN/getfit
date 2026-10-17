@@ -1,6 +1,9 @@
 # Overrides on top of detekt's default rule set (buildUponDefaultConfig = true).
-# Custom project rules (no Color literals outside :core:designsystem, injected dispatchers,
-# no destructive migrations) arrive in M1.
+# GetFit's own rules live in :detekt-rules (rule set "getfit"); M1b adds dispatcher and migration rules.
+
+config:
+  # :detekt-rules runs detekt without its own rules loaded, so it cannot validate their keys.
+  excludes: ['getfit.*']
 
 naming:
   FunctionNaming:
@@ -12,3 +15,7 @@ style:
     ignoreAnnotated: ['Composable', 'Preview']
   UnusedPrivateFunction:
     ignoreAnnotated: ['Preview']
+
+getfit:
+  NoColorLiteralOutsideDesignSystem:
+    active: true

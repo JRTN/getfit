@@ -16,6 +16,7 @@ import org.gradle.kotlin.dsl.getByType
  *   `.editorconfig`. `./gradlew ktlintFormat` fixes most findings automatically.
  * - **detekt**: code smells and complexity (long methods, magic numbers, swallowed exceptions),
  *   using detekt's defaults plus the overrides in `config/detekt/detekt.yml`.
+ *   Includes GetFit's own rules from `:detekt-rules` (e.g. no `Color(` outside the design system).
  * - **Android Lint** (Android modules only): Android-specific problems such as missing
  *   translations, accessibility issues and wrong API-level usage. Any error fails the build.
  *
@@ -33,6 +34,12 @@ class QualityConventionPlugin : Plugin<Project> {
                 config.from(rootProject.file("config/detekt/detekt.yml"))
                 buildUponDefaultConfig.set(true)
                 parallel.set(true)
+            }
+
+            // GetFit's own rules (rule set "getfit"), built from :detekt-rules. That module
+            // cannot load its own rules while it is being compiled, so it is skipped.
+            if (path != DETEKT_RULES_PROJECT) {
+                dependencies.add("detektPlugins", dependencies.project(mapOf("path" to DETEKT_RULES_PROJECT)))
             }
 
             pluginManager.withPlugin(libs.pluginId("android-application")) {
@@ -54,3 +61,5 @@ class QualityConventionPlugin : Plugin<Project> {
         }
     }
 }
+
+private const val DETEKT_RULES_PROJECT: String = ":detekt-rules"

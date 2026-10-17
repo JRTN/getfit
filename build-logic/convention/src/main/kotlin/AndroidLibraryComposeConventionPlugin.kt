@@ -4,6 +4,8 @@ import com.jrussell.fitness.buildlogic.library
 import com.jrussell.fitness.buildlogic.pluginId
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.artifacts.MinimalExternalModuleDependency
+import org.gradle.api.provider.Provider
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
 
@@ -38,7 +40,7 @@ class AndroidLibraryComposeConventionPlugin : Plugin<Project> {
             }
 
             dependencies {
-                val composeBom = platform(libs.library("androidx-compose-bom"))
+                val composeBom: Provider<MinimalExternalModuleDependency> = platform(libs.library("androidx-compose-bom"))
                 add("implementation", composeBom)
                 add("implementation", libs.library("androidx-compose-ui"))
                 add("implementation", libs.library("androidx-compose-ui-tooling-preview"))
