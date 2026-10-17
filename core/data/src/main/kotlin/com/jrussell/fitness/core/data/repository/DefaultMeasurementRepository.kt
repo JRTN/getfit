@@ -1,6 +1,7 @@
 package com.jrussell.fitness.core.data.repository
 
 import com.jrussell.fitness.core.data.owner.CurrentOwnerProvider
+import com.jrussell.fitness.core.data.seed.ReferenceSeeder
 import com.jrussell.fitness.core.data.write.StampedWriter
 import com.jrussell.fitness.core.data.write.WriteStamp
 import com.jrussell.fitness.core.database.GetFitDatabase
@@ -22,9 +23,12 @@ import com.jrussell.fitness.core.model.ids.MeasurementId
 import com.jrussell.fitness.core.model.ids.OwnerId
 import javax.inject.Inject
 import kotlin.uuid.Uuid
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.toLocalDateTime
@@ -35,27 +39,39 @@ class DefaultMeasurementRepository @Inject constructor(
     private val ownerProvider: CurrentOwnerProvider,
     private val stampedWriter: StampedWriter,
     private val idGenerator: IdGenerator,
+    private val referenceSeeder: ReferenceSeeder,
 ) : MeasurementRepository {
     private val measurementDao: MeasurementDao = database.measurementDao()
     private val typeDao: MeasurementTypeDao = database.measurementTypeDao()
     private val dayBoundaryDao: DayBoundarySettingDao = database.dayBoundarySettingDao()
 
+    /**
+     * Seeds reference rows first (the startup bootstrap may still be running), then follows the
+     * type reactively: if the type does not exist yet, this emits an empty list and switches to
+     * its readings as soon as it is created.
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun observeMeasurements(typeKey: String, from: LocalDate, to: LocalDate): Flow<List<Measurement>> {
         return flow {
+            referenceSeeder.seed()
             val ownerId: OwnerId = ownerProvider.currentOwnerId()
-            val type: MeasurementTypeEntity? = typeDao.findByKey(ownerId.value, typeKey)
-            if (type == null) {
-                emit(emptyList())
-            } else {
-                emitAll(
-                    measurementDao.observeByTypeAndDates(ownerId.value, type.id, from, to)
-                        .map { rows: List<MeasurementEntity> -> rows.map { row: MeasurementEntity -> row.toDomain() } },
-                )
-            }
+            emitAll(
+                typeDao.observeByKey(ownerId.value, typeKey).flatMapLatest { type: MeasurementTypeEntity? ->
+                    if (type == null) {
+                        flowOf(emptyList())
+                    } else {
+                        measurementDao.observeByTypeAndDates(ownerId.value, type.id, from, to)
+                            .map { rows: List<MeasurementEntity> ->
+                                rows.map { row: MeasurementEntity -> row.toDomain() }
+                            }
+                    }
+                },
+            )
         }
     }
 
     override suspend fun addManual(entry: ManualMeasurement): Outcome<MeasurementId> {
+        referenceSeeder.seed()
         val ownerId: OwnerId = ownerProvider.currentOwnerId()
         val type: MeasurementTypeEntity? = typeDao.findByKey(ownerId.value, entry.typeKey)
         return when {

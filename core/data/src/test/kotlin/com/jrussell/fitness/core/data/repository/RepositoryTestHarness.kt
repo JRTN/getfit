@@ -30,7 +30,7 @@ class RepositoryTestHarness {
     val dayBoundaryRepository: DefaultDayBoundaryRepository =
         DefaultDayBoundaryRepository(database, ownerProvider, stampedWriter, idGenerator)
     val measurementRepository: DefaultMeasurementRepository =
-        DefaultMeasurementRepository(database, ownerProvider, stampedWriter, idGenerator)
+        DefaultMeasurementRepository(database, ownerProvider, stampedWriter, idGenerator, seeder)
 
     fun close() {
         database.close()
