@@ -3,7 +3,13 @@ package com.jrussell.fitness.core.database
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import com.jrussell.fitness.core.database.dao.DayBoundarySettingDao
+import com.jrussell.fitness.core.database.dao.MeasurementDao
+import com.jrussell.fitness.core.database.dao.MeasurementTypeDao
 import com.jrussell.fitness.core.database.entity.DatasetVersionEntity
+import com.jrussell.fitness.core.database.entity.DayBoundarySettingEntity
+import com.jrussell.fitness.core.database.entity.MeasurementEntity
+import com.jrussell.fitness.core.database.entity.MeasurementTypeEntity
 import com.jrussell.fitness.core.database.entity.SyncCursorEntity
 import com.jrussell.fitness.core.database.entity.SyncSequenceEntity
 import com.jrussell.fitness.core.database.entity.UserProfileEntity
@@ -22,6 +28,9 @@ import com.jrussell.fitness.core.database.infrastructure.SyncSequenceDao
         SyncSequenceEntity::class,
         SyncCursorEntity::class,
         DatasetVersionEntity::class,
+        DayBoundarySettingEntity::class,
+        MeasurementTypeEntity::class,
+        MeasurementEntity::class,
     ],
     version = 1,
     exportSchema = true,
@@ -33,4 +42,10 @@ abstract class GetFitDatabase : RoomDatabase() {
     abstract fun datasetVersionDao(): DatasetVersionDao
 
     abstract fun localProfileDao(): LocalProfileDao
+
+    abstract fun dayBoundarySettingDao(): DayBoundarySettingDao
+
+    abstract fun measurementTypeDao(): MeasurementTypeDao
+
+    abstract fun measurementDao(): MeasurementDao
 }
