@@ -20,7 +20,7 @@ class LayerRulesTest {
         Konsist.scopeFromProduction()
             .files
             .filter { file: KoFileDeclaration -> normalizedModuleName(file) in pureModules }
-            .assertFalse(strict = false) { file: KoFileDeclaration ->
+            .assertFalse(strict = true) { file: KoFileDeclaration ->
                 file.imports.any { import: KoImportDeclaration -> isAndroidImport(import.name) }
             }
     }
@@ -34,7 +34,7 @@ class LayerRulesTest {
                 .map { other: String -> "com.jrussell.fitness.feature.$other" }
             Konsist.scopeFromModule("feature/$feature")
                 .files
-                .assertFalse(strict = false) { file: KoFileDeclaration ->
+                .assertFalse(strict = true) { file: KoFileDeclaration ->
                     file.imports.any { import: KoImportDeclaration ->
                         otherFeaturePackages.any { prefix: String -> import.name.startsWith(prefix) }
                     }

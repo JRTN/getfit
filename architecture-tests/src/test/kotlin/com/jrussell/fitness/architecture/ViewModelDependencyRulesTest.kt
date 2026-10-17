@@ -20,7 +20,7 @@ class ViewModelDependencyRulesTest {
                 declaration.name.endsWith("ViewModel") &&
                     declaration.resideInPackage("com.jrussell.fitness.feature..")
             }
-            .assertTrue(strict = false) { viewModel: KoClassDeclaration ->
+            .assertTrue(strict = true) { viewModel: KoClassDeclaration ->
                 val parameters: List<KoParameterDeclaration> = viewModel.primaryConstructor?.parameters.orEmpty()
                 parameters.all { parameter: KoParameterDeclaration ->
                     val domainInterface: KoInterfaceDeclaration? =
