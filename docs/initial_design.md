@@ -312,7 +312,7 @@ Every table belongs to exactly one category, and the category determines its col
 | `updatedAt` | `Instant` → INTEGER | Last modification; last-writer-wins key for future sync |
 | `deletedAt` | `Instant?` → INTEGER NULL | Tombstone; DAOs filter `deletedAt IS NULL` |
 | `localRevision` | `Long` → INTEGER | Value of the global sequence at the last write |
-| `originDeviceId` | `Uuid` → TEXT | Device that made the last write; sync tie-breaker |
+| `originDeviceId` | `Uuid` → TEXT | Device that made the last write; sync tie-breaker. The device ID lives in a file in `noBackupFilesDir`, never in `user.db` or DataStore, so a restored backup gets a fresh ID |
 
 ### Revision stamping
 
@@ -349,7 +349,7 @@ The tables below list only columns beyond the standard set (`id`, `ownerId`, `cr
 
 | Table | Cat. | Columns | Keys and indexes |
 | --- | --- | --- | --- |
-| `UserProfile` | U | `displayName`, `sex` (MALE, FEMALE), `birthDate` (epoch day), `heightM` | one row in v1 |
+| `UserProfile` | U | `displayName`, `sex` (MALE, FEMALE), `birthDate` (epoch day), `heightM` | one row in v1, created silently at first launch; its `id` is the owner ID and `ownerId` equals `id`; personal fields are null until entered |
 | `DayBoundarySetting` | U | `dayStartMinutes` (0–1439), `effectiveFrom` (epoch day) | `(ownerId, effectiveFrom)` unique |
 | `EnergyAccountingSetting` | U | `mode` (ADAPTIVE, STATIC\_FORMULA, FORMULA\_PLUS\_EXERCISE, WEARABLE\_TOTAL), `exerciseCreditFraction`, `bmrFormula` (MIFFLIN\_ST\_JEOR, KATCH\_MCARDLE), `activityFactor`, `effectiveFrom` | `(ownerId, effectiveFrom)` unique |
 | `MetricTarget` | U | `metricId`, `kind` (MIN, MAX, RANGE), `minValue`, `maxValue`, `formulaType` (FIXED, PER\_KG\_BODY\_WEIGHT, PER\_KG\_LEAN\_MASS, PERCENT\_OF\_ENERGY), `formulaParamsJson`, `effectiveFrom` | `(ownerId, metricId, effectiveFrom)` unique |
@@ -397,8 +397,8 @@ Every set is written to Room the moment it is entered, so process death mid-work
 
 | Table | Cat. | Columns | Keys and indexes |
 | --- | --- | --- | --- |
-| `MeasurementType` | M | `key`, `displayName`, `canonicalUnit`, `category` (BODY, VITAL, ACTIVITY, LAB, CUSTOM), `dailyAggregation` (SUM, MEAN, LAST, MIN, MAX), `hasSecondaryValue`, `referenceRangeLow`, `referenceRangeHigh`, `decimals`, `healthConnectRecordType` | `key` unique where `ownerId` is null; `(ownerId, key)` |
-| `Measurement` | U | `measurementTypeId`, `value`, `secondaryValue` (e.g. diastolic), `startTime`, `endTime`, `timeZone`, `localDate`, `source` (MANUAL, HEALTH\_CONNECT, IMPORT), `sourcePackage`, `externalId`, `enteredValue`, `enteredUnit`, `note` | `(ownerId, measurementTypeId, startTime)`; `(ownerId, source, externalId)` unique |
+| `MeasurementType` | M | `key`, `displayName`, `canonicalUnit`, `category` (BODY, VITAL, ACTIVITY, LAB, CUSTOM), `dailyAggregation` (SUM, MEAN, LAST, MIN, MAX), `hasSecondaryValue`, `referenceRangeLow`, `referenceRangeHigh`, `decimals`, `healthConnectRecordType` | `key` unique where `ownerId` is null (enforced by built-ins using UUIDv5 IDs from `measurement-type:<key>`; built-ins have `localRevision` 0 and null `originDeviceId`); `(ownerId, key)` unique |
+| `Measurement` | U | `measurementTypeId`, `value`, `secondaryValue` (e.g. diastolic), `startTime`, `endTime`, `timeZone`, `localDate`, `source` (MANUAL, HEALTH\_CONNECT, IMPORT), `sourcePackage`, `externalId`, `enteredValue`, `enteredUnit`, `note` | `(ownerId, measurementTypeId, startTime)`; `(ownerId, measurementTypeId, localDate)`; `(ownerId, source, externalId)` unique |
 | `SleepSession` | U | `startTime`, `endTime`, `timeZone`, `wakeDate`, `source`, `sourcePackage`, `externalId`, `note` | `(ownerId, wakeDate)`; `(ownerId, source, externalId)` unique |
 | `SleepStage` | U (child) | `sessionId`, `stage` (AWAKE, LIGHT, DEEP, REM, SLEEPING, OUT\_OF\_BED, UNKNOWN), `startTime`, `endTime` | `(sessionId, startTime)` |
 | `DayLog` | U | `localDate`, `completeness` (UNKNOWN, COMPLETE, PARTIAL, UNTRACKED), `note` | `(ownerId, localDate)` unique |
