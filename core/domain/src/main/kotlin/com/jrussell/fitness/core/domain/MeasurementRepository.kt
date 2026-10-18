@@ -15,7 +15,8 @@ interface MeasurementRepository {
 
     /**
      * Records a reading the user typed in. Fails with [DomainError.Validation] for a value that
-     * is not a finite number, and [DomainError.NotFound] for an unknown type key.
+     * (or an entered value) that is not a finite number, and [DomainError.NotFound] for an unknown
+     * type key. A [ManualMeasurement.localDateOverride] files the reading under that date.
      */
     suspend fun addManual(entry: ManualMeasurement): Outcome<MeasurementId>
 

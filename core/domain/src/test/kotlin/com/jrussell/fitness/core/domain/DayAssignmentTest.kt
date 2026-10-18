@@ -48,6 +48,15 @@ class DayAssignmentTest {
             .isInstanceOf<IllegalArgumentException>()
     }
 
+    @Test
+    fun localDateFor_fallBackRepeatedHour_bothBeforeStartArePreviousDay() {
+        val firstOneThirty: Instant = Instant.parse("2026-11-01T05:30:00Z")
+        val secondOneThirty: Instant = Instant.parse("2026-11-01T06:30:00Z")
+
+        assertThat(localDateFor(firstOneThirty, toronto, 240)).isEqualTo(LocalDate(2026, 10, 31))
+        assertThat(localDateFor(secondOneThirty, toronto, 240)).isEqualTo(LocalDate(2026, 10, 31))
+    }
+
     private fun at(local: String): Instant {
         return LocalDateTime.parse(local).toInstant(toronto)
     }

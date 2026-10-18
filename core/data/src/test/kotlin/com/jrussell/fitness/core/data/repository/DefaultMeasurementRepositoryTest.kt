@@ -154,6 +154,41 @@ class DefaultMeasurementRepositoryTest {
         return repository.observeMeasurements(MeasurementTypeKeys.WEIGHT, from, to).first()
     }
 
+    @Test
+    fun addManual_localDateOverride_winsOverDayStart() = runTest {
+        harness.dayBoundaryRepository.setDayStart(240, LocalDate(2026, 1, 1))
+
+        repository.addManual(weight(82.4, at("2026-10-10T01:30")).copy(localDateOverride = LocalDate(2026, 10, 10)))
+
+        assertThat(observeOctober().single().localDate).isEqualTo(LocalDate(2026, 10, 10))
+    }
+
+    @Test
+    fun addManual_nonFiniteEnteredValue_returnsValidation() = runTest {
+        val entry: ManualMeasurement = weight(
+            82.4,
+            at("2026-10-17T08:00"),
+        ).copy(enteredValue = Double.NaN, enteredUnit = "lb")
+
+        val outcome: Outcome<MeasurementId> = repository.addManual(entry)
+
+        val error: DomainError? = (outcome as? Outcome.Failure)?.error
+        assertThat((error as? DomainError.Validation)?.field).isEqualTo("enteredValue")
+        assertThat(harness.database.count("SELECT COUNT(*) FROM Measurement")).isEqualTo(0)
+    }
+
+    @Test
+    fun addManual_dayStartChangedOnCalendarDate_usesSettingInForceThatDay() = runTest {
+        harness.dayBoundaryRepository.setDayStart(0, LocalDate(2026, 1, 1))
+        harness.dayBoundaryRepository.setDayStart(240, LocalDate(2026, 10, 17))
+
+        repository.addManual(weight(82.4, at("2026-10-17T02:00")))
+        repository.addManual(weight(82.6, at("2026-10-16T02:00")))
+
+        assertThat(observeOctober().map { measurement: Measurement -> measurement.localDate })
+            .containsExactly(LocalDate(2026, 10, 16), LocalDate(2026, 10, 16))
+    }
+
     private fun at(local: String): Instant {
         return LocalDateTime.parse(local).toInstant(toronto)
     }

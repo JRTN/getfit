@@ -76,6 +76,8 @@ class DefaultMeasurementRepository @Inject constructor(
         val type: MeasurementTypeEntity? = typeDao.findByKey(ownerId.value, entry.typeKey)
         return when {
             !entry.value.isFinite() -> Outcome.Failure(DomainError.Validation("value", "must be a finite number"))
+            entry.enteredValue?.isFinite() == false ->
+                Outcome.Failure(DomainError.Validation("enteredValue", "must be a finite number"))
             type == null -> Outcome.Failure(DomainError.NotFound("MeasurementType", entry.typeKey))
             else -> Outcome.Success(insertManual(ownerId, type, entry))
         }
@@ -105,8 +107,12 @@ class DefaultMeasurementRepository @Inject constructor(
         return MeasurementId(id)
     }
 
-    /** The day [entry] counts toward, using the day start in force on its calendar date. */
+    /**
+     * The day [entry] counts toward: the date the user picked, if any; otherwise the day-start rule,
+     * using the day start in force on the entry's calendar date.
+     */
     private suspend fun localDateOf(ownerId: OwnerId, entry: ManualMeasurement): LocalDate {
+        entry.localDateOverride?.let { picked: LocalDate -> return picked }
         val calendarDate: LocalDate = entry.takenAt.toLocalDateTime(entry.timeZone).date
         val dayStartMinutes: Int =
             dayBoundaryDao.findInForce(ownerId.value, calendarDate)?.dayStartMinutes ?: DEFAULT_DAY_START_MINUTES

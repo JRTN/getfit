@@ -1,5 +1,6 @@
 package com.jrussell.fitness.core.data.repository
 
+import app.cash.turbine.test
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isGreaterThan
@@ -78,6 +79,22 @@ class DefaultDayBoundaryRepositoryTest {
         harness.database.dayBoundarySettingDao().insert(aDayBoundaryFor(Uuid.random(), LocalDate(2026, 1, 1), 240))
 
         assertThat(repository.observeDayStartMinutes(LocalDate(2026, 10, 17)).first()).isEqualTo(0)
+    }
+
+    @Test
+    fun observeDayStartMinutes_identicalWrites_doNotReEmit() = runTest {
+        val day: LocalDate = LocalDate(2026, 1, 1)
+
+        repository.observeDayStartMinutes(LocalDate(2026, 10, 17)).test {
+            assertThat(awaitItem()).isEqualTo(0)
+            repository.setDayStart(240, day)
+            assertThat(awaitItem()).isEqualTo(240)
+            repository.setDayStart(240, day)
+            // A later, different value must be the very next emission: no repeated 240 in between.
+            repository.setDayStart(300, day)
+            assertThat(awaitItem()).isEqualTo(300)
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
     private suspend fun currentRow(day: LocalDate): DayBoundarySettingEntity {

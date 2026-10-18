@@ -14,6 +14,7 @@ import com.jrussell.fitness.core.domain.Outcome
 import com.jrussell.fitness.core.model.ids.OwnerId
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
@@ -33,6 +34,8 @@ class DefaultDayBoundaryRepository @Inject constructor(
             val ownerId: OwnerId = ownerProvider.currentOwnerId()
             emitAll(dao.observeInForce(ownerId.value, on))
         }.map { setting: DayBoundarySettingEntity? -> setting?.dayStartMinutes ?: DEFAULT_DAY_START_MINUTES }
+            // Room re-runs the query on every write to the table; only a changed value is news.
+            .distinctUntilChanged()
     }
 
     override suspend fun setDayStart(dayStartMinutes: Int, effectiveFrom: LocalDate): Outcome<Unit> {
