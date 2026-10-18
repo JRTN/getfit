@@ -32,19 +32,24 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jrussell.fitness.core.designsystem.theme.GetFitTheme
 import com.jrussell.fitness.core.model.ColorPalette
+import com.jrussell.fitness.core.model.MassUnit
 import com.jrussell.fitness.core.model.ThemeMode
 import com.jrussell.fitness.core.model.UserPreferences
 
 /** The Settings screen. M1a has the Appearance section; later milestones add more sections. */
 @Composable
 fun SettingsScreen(modifier: Modifier = Modifier, viewModel: SettingsViewModel = hiltViewModel()) {
-    val state: UserPreferences by viewModel.uiState.collectAsStateWithLifecycle()
-    Column(modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-        AppearanceSettings(
-            state = state,
-            onThemeModeSelected = viewModel::onThemeModeSelected,
-            onPaletteSelected = viewModel::onPaletteSelected,
-        )
+    val state: UserPreferences? by viewModel.uiState.collectAsStateWithLifecycle()
+    // Nothing is drawn until the saved choices load (a few ms), so no default flashes first.
+    state?.let { loaded: UserPreferences ->
+        Column(modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+            AppearanceSettings(
+                state = loaded,
+                onThemeModeSelected = viewModel::onThemeModeSelected,
+                onPaletteSelected = viewModel::onPaletteSelected,
+            )
+            UnitsSettings(state = loaded, onMassUnitSelected = viewModel::onMassUnitSelected)
+        }
     }
 }
 
@@ -74,6 +79,21 @@ fun AppearanceSettings(
             selected = state.palette,
             label = ::paletteLabel,
             onSelect = onPaletteSelected,
+        )
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+    }
+}
+
+/** The unit weights are shown and typed in. Stored values are always kilograms, so switching is safe. */
+@Composable
+fun UnitsSettings(state: UserPreferences, onMassUnitSelected: (MassUnit) -> Unit, modifier: Modifier = Modifier) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        OptionGroup(
+            title = R.string.settings_weight_unit_title,
+            options = MassUnit.entries,
+            selected = state.massUnit,
+            label = ::massUnitLabel,
+            onSelect = onMassUnitSelected,
         )
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
     }
@@ -132,6 +152,14 @@ private fun paletteLabel(palette: ColorPalette): Int {
         ColorPalette.DEFAULT -> R.string.settings_palette_default
         ColorPalette.COLOR_VISION_SAFE -> R.string.settings_palette_color_vision_safe
         ColorPalette.HIGH_CONTRAST -> R.string.settings_palette_high_contrast
+    }
+}
+
+@StringRes
+private fun massUnitLabel(unit: MassUnit): Int {
+    return when (unit) {
+        MassUnit.POUND -> R.string.settings_weight_unit_pounds
+        MassUnit.KILOGRAM -> R.string.settings_weight_unit_kilograms
     }
 }
 

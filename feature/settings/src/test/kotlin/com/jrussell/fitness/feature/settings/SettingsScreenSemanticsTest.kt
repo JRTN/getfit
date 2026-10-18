@@ -11,6 +11,7 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import com.jrussell.fitness.core.designsystem.theme.GetFitTheme
 import com.jrussell.fitness.core.model.ColorPalette
+import com.jrussell.fitness.core.model.MassUnit
 import com.jrussell.fitness.core.model.ThemeMode
 import com.jrussell.fitness.core.model.UserPreferences
 import org.junit.Rule
@@ -45,5 +46,18 @@ class SettingsScreenSemanticsTest {
         notSelected.forEach { label: String ->
             rule.onNodeWithText(label).assert(isRadioButton).assertIsNotSelected()
         }
+    }
+
+    @Test
+    fun units_exposeRadioRoleAndSelection() {
+        rule.setContent {
+            GetFitTheme {
+                UnitsSettings(state = UserPreferences.DEFAULT.copy(massUnit = MassUnit.POUND), onMassUnitSelected = {})
+            }
+        }
+
+        val isRadioButton: SemanticsMatcher = SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.RadioButton)
+        rule.onNodeWithText("Pounds").assert(isRadioButton).assertIsSelected()
+        rule.onNodeWithText("Kilograms").assert(isRadioButton).assertIsNotSelected()
     }
 }

@@ -2,6 +2,7 @@ package com.jrussell.fitness.core.testing
 
 import com.jrussell.fitness.core.domain.UserPreferencesRepository
 import com.jrussell.fitness.core.model.ColorPalette
+import com.jrussell.fitness.core.model.MassUnit
 import com.jrussell.fitness.core.model.ThemeMode
 import com.jrussell.fitness.core.model.UserPreferences
 import kotlinx.coroutines.flow.Flow
@@ -26,5 +27,9 @@ class FakeUserPreferencesRepository(initial: UserPreferences = UserPreferences.D
 
     override suspend fun setPalette(palette: ColorPalette) {
         state.update { preferences: UserPreferences -> preferences.copy(palette = palette) }
+    }
+
+    override suspend fun setMassUnit(unit: MassUnit) {
+        state.update { preferences: UserPreferences -> preferences.copy(massUnit = unit) }
     }
 }

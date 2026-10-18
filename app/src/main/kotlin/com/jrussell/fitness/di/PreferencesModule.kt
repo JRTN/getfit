@@ -9,12 +9,14 @@ import com.jrussell.fitness.core.data.preferences.DefaultUserPreferencesReposito
 import com.jrussell.fitness.core.datastore.UserPreferencesDataSource
 import com.jrussell.fitness.core.datastore.createUserPreferencesDataStore
 import com.jrussell.fitness.core.domain.UserPreferencesRepository
+import com.jrussell.fitness.core.model.MassUnit
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import java.util.Locale
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -32,6 +34,14 @@ abstract class PreferencesModule {
     companion object {
         private const val FILE_NAME: String = "user_preferences"
 
+        /** Countries that customarily weigh people in pounds; everyone else gets kilograms. */
+        private val POUND_COUNTRIES: Set<String> = setOf("US", "LR", "MM")
+
+        /** The weight unit a fresh install shows, from the device locale (the user can change it). */
+        fun customaryMassUnit(locale: Locale): MassUnit {
+            return if (locale.country in POUND_COUNTRIES) MassUnit.POUND else MassUnit.KILOGRAM
+        }
+
         @Provides
         @Singleton
         fun provideUserPreferencesDataStore(
@@ -46,7 +56,7 @@ abstract class PreferencesModule {
         @Provides
         @Singleton
         fun provideUserPreferencesDataSource(dataStore: DataStore<Preferences>): UserPreferencesDataSource {
-            return UserPreferencesDataSource(dataStore)
+            return UserPreferencesDataSource(dataStore, defaultMassUnit = customaryMassUnit(Locale.getDefault()))
         }
     }
 }

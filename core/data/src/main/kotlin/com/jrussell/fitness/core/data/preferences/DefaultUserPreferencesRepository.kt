@@ -3,6 +3,7 @@ package com.jrussell.fitness.core.data.preferences
 import com.jrussell.fitness.core.datastore.UserPreferencesDataSource
 import com.jrussell.fitness.core.domain.UserPreferencesRepository
 import com.jrussell.fitness.core.model.ColorPalette
+import com.jrussell.fitness.core.model.MassUnit
 import com.jrussell.fitness.core.model.ThemeMode
 import com.jrussell.fitness.core.model.UserPreferences
 import javax.inject.Inject
@@ -19,5 +20,9 @@ class DefaultUserPreferencesRepository @Inject constructor(private val dataSourc
 
     override suspend fun setPalette(palette: ColorPalette) {
         dataSource.setPalette(palette)
+    }
+
+    override suspend fun setMassUnit(unit: MassUnit) {
+        dataSource.setMassUnit(unit)
     }
 }

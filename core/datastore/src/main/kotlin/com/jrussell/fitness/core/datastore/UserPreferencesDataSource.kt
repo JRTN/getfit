@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.jrussell.fitness.core.model.ColorPalette
+import com.jrussell.fitness.core.model.MassUnit
 import com.jrussell.fitness.core.model.ThemeMode
 import com.jrussell.fitness.core.model.UserPreferences
 import java.io.IOException
@@ -26,8 +27,14 @@ import kotlinx.coroutines.flow.map
  * - a read that fails with an I/O error emits the defaults;
  * - a write that fails with an I/O error is dropped (the choice simply isn't saved);
  * - an unparseable file is replaced by [createUserPreferencesDataStore]'s corruption handler.
+ *
+ * @param defaultMassUnit the weight unit used until the user picks one (`:app` passes the
+ *   locale's customary unit: pounds in the US).
  */
-class UserPreferencesDataSource(private val dataStore: DataStore<Preferences>) {
+class UserPreferencesDataSource(
+    private val dataStore: DataStore<Preferences>,
+    private val defaultMassUnit: MassUnit = UserPreferences.DEFAULT.massUnit,
+) {
     /** The current preferences; emits again whenever they change. */
     val userPreferences: Flow<UserPreferences> = dataStore.data
         .catch { error: Throwable -> emitEmptyOnIoError(error) }
@@ -35,6 +42,7 @@ class UserPreferencesDataSource(private val dataStore: DataStore<Preferences>) {
             UserPreferences(
                 themeMode = enumOrDefault(storedString(preferences, THEME_MODE), UserPreferences.DEFAULT.themeMode),
                 palette = enumOrDefault(storedString(preferences, COLOR_PALETTE), UserPreferences.DEFAULT.palette),
+                massUnit = enumOrDefault(storedString(preferences, MASS_UNIT), defaultMassUnit),
             )
         }
 
@@ -44,6 +52,10 @@ class UserPreferencesDataSource(private val dataStore: DataStore<Preferences>) {
 
     suspend fun setPalette(palette: ColorPalette) {
         editIgnoringIoErrors { preferences: MutablePreferences -> preferences[COLOR_PALETTE] = palette.name }
+    }
+
+    suspend fun setMassUnit(unit: MassUnit) {
+        editIgnoringIoErrors { preferences: MutablePreferences -> preferences[MASS_UNIT] = unit.name }
     }
 
     private suspend fun FlowCollector<Preferences>.emitEmptyOnIoError(error: Throwable) {
@@ -77,5 +89,6 @@ class UserPreferencesDataSource(private val dataStore: DataStore<Preferences>) {
     private companion object {
         val THEME_MODE: Preferences.Key<String> = stringPreferencesKey("theme_mode")
         val COLOR_PALETTE: Preferences.Key<String> = stringPreferencesKey("color_palette")
+        val MASS_UNIT: Preferences.Key<String> = stringPreferencesKey("mass_unit")
     }
 }

@@ -17,6 +17,12 @@
     <string name="chart_trend_decreasing">decreasing %1$s %2$s per week</string>
     <string name="chart_trend_steady">steady</string>
 
+    <!-- Units: symbols next to numbers, spoken words for TalkBack -->
+    <string name="unit_symbol_pound">lb</string>
+    <string name="unit_symbol_kilogram">kg</string>
+    <string name="unit_spoken_pound">pounds</string>
+    <string name="unit_spoken_kilogram">kilograms</string>
+
     <!-- Range chips -->
     <string name="range_today">Today</string>
     <string name="range_7_days">7 days</string>

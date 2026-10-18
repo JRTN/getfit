@@ -28,6 +28,7 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.jrussell.fitness.R
 import com.jrussell.fitness.core.designsystem.icon.GetFitIcons
+import com.jrussell.fitness.feature.body.BodyKey
 import com.jrussell.fitness.feature.body.bodyEntry
 import com.jrussell.fitness.feature.home.homeEntry
 import com.jrussell.fitness.feature.nutrition.nutritionEntry
@@ -84,7 +85,7 @@ fun GetFitApp(navigation: TopLevelBackStack<NavKey>, onExit: () -> Unit) {
                 rememberViewModelStoreNavEntryDecorator(),
             ),
             entryProvider = entryProvider {
-                homeEntry()
+                homeEntry(onOpenBody = { navigation.switchTo(BodyKey) })
                 nutritionEntry()
                 trainingEntry()
                 bodyEntry()

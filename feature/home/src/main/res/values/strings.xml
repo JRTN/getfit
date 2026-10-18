@@ -1,4 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="feature_home_title">Home</string>
+
+    <string name="home_empty">Your summary appears here as you log.</string>
+
+    <!-- Body card -->
+    <string name="home_body_weight">Weight</string>
+    <string name="home_body_weight_trend">Weight trend</string>
+    <string name="home_body_today">today</string>
+    <!-- Trend line under the latest weight: value, unit symbol. -->
+    <string name="home_body_trend">Trend %1$s %2$s</string>
+    <!-- Range change: start, end, unit symbol. -->
+    <string name="home_body_change">%1$s → %2$s %3$s</string>
+    <!-- Rate: signed change, unit symbol. -->
+    <string name="home_body_rate">%1$s %2$s/week</string>
+    <string name="home_body_not_enough">Not enough data yet</string>
+    <!-- Spoken: latest, unit, trend, unit (then ", date" when not today). -->
+    <string name="home_body_spoken_today">Weight %1$s %2$s, trend %3$s %4$s</string>
+    <!-- Spoken: start, end, unit, signed change, unit. -->
+    <string name="home_body_spoken_range">Weight trend %1$s to %2$s %3$s, %4$s %5$s per week</string>
+    <string name="home_body_spoken_not_enough">Weight trend, not enough data yet</string>
 </resources>

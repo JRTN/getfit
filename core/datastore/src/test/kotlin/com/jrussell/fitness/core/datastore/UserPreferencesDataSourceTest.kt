@@ -10,6 +10,7 @@ import app.cash.turbine.test
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import com.jrussell.fitness.core.model.ColorPalette
+import com.jrussell.fitness.core.model.MassUnit
 import com.jrussell.fitness.core.model.ThemeMode
 import com.jrussell.fitness.core.model.UserPreferences
 import java.io.File
@@ -89,6 +90,24 @@ class UserPreferencesDataSourceTest {
         val result: UserPreferences = UserPreferencesDataSource(dataStore).userPreferences.first()
 
         assertThat(result).isEqualTo(UserPreferences(UserPreferences.DEFAULT.themeMode, ColorPalette.HIGH_CONTRAST))
+    }
+
+    @Test
+    fun massUnit_absent_usesInjectedDefault() = runTest {
+        val dataSource: UserPreferencesDataSource =
+            UserPreferencesDataSource(dataStoreIn(backgroundScope), defaultMassUnit = MassUnit.POUND)
+
+        assertThat(dataSource.userPreferences.first().massUnit).isEqualTo(MassUnit.POUND)
+    }
+
+    @Test
+    fun setMassUnit_persists() = runTest {
+        val dataSource: UserPreferencesDataSource =
+            UserPreferencesDataSource(dataStoreIn(backgroundScope), defaultMassUnit = MassUnit.POUND)
+
+        dataSource.setMassUnit(MassUnit.KILOGRAM)
+
+        assertThat(dataSource.userPreferences.first().massUnit).isEqualTo(MassUnit.KILOGRAM)
     }
 
     @Test
