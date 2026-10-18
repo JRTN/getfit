@@ -14,9 +14,9 @@ GetFit is a single-activity Jetpack Compose app split into about 23 Gradle modul
    │
  :core:data ──implements──▶ :core:domain           repositories, stamping, owner, seeding
    │  uses                    ▲
- :core:database  :core:datastore  :core:sync  (:core:reference  :core:healthconnect  :core:backup)
+ :core:database  :core:datastore  :core:sync  :core:backup  (:core:reference  :core:healthconnect)
    │
- :core:model  :core:domain  (:core:projection  :core:importers)     pure Kotlin, no Android
+ :core:model  :core:domain  :core:importers  (:core:projection)     pure Kotlin, no Android
 ```
 
 Dependencies point downward. The one upward arrow is the important one: `:core:data` **implements** the repository interfaces declared in `:core:domain`. Features depend on those interfaces, so a ViewModel never learns that Room or DataStore exists.
@@ -28,7 +28,7 @@ From the spec ("Module architecture"):
 1. **Pure-Kotlin modules** (`:core:model`, `:core:domain`, `:core:projection`, `:core:importers`) depend on no Android module and use only multiplatform APIs: the Kotlin standard library and kotlinx libraries, never `java.*` or `javax.*`. That keeps them portable to Kotlin Multiplatform later.
 2. **`:feature:*`** depends only on `:core:domain`, `:core:model`, `:core:ui` and `:core:designsystem`. ViewModels receive repository *interfaces* through Hilt.
 3. **No feature depends on another feature.** Cross-feature navigation goes through callbacks supplied by `:app`.
-4. **`:core:data`** is the only module (besides `:app`) that depends on the storage modules (`:core:database`, `:core:datastore`, and later `:core:reference`, `:core:healthconnect`, `:core:backup`).
+4. **`:core:data`** is the only module (besides `:app`) that depends on the storage modules (`:core:database`, `:core:datastore`, `:core:backup`, and later `:core:reference` and `:core:healthconnect`).
 5. **`:app`** depends on everything and is the only module that binds implementations to interfaces (Hilt `@Binds` / `@Provides`).
 
 ### How each rule is enforced
@@ -57,7 +57,7 @@ The Konsist rules run with `strict = true`: a rule that matches no code fails in
 | [`:feature:nutrition`](../../feature/nutrition/) | Diary, food search, recipes, targets, hydration | Placeholder screen |
 | [`:feature:training`](../../feature/training/) | Live workout, templates, exercise library | Placeholder screen |
 | [`:feature:body`](../../feature/body/) | Measurements, sleep, Health Connect inspector, projection plans (M5) | Weight: Log (add, history, delete) and Trends (chart), sharing one remembered range |
-| [`:feature:settings`](../../feature/settings/) | Settings | Appearance (theme mode, palette) and weight unit |
+| [`:feature:settings`](../../feature/settings/) | Settings | Appearance (theme mode, palette), weight unit, and Backup (daily folder, back up now, export, restore) |
 
 Each feature exposes the same three files: a Navigation 3 key (`HomeKey`), a screen composable (`HomeScreen`), and an entry function (`homeEntry()`) that registers the screen with the app's navigation. See [`HomeEntry.kt`](../../feature/home/src/main/kotlin/com/jrussell/fitness/feature/home/HomeEntry.kt). Each work tab (Nutrition, Training, Body) has **Log** and **Trends** views; Body gains a **Plan** view in M5. There is no Trends tab and no Today tab: Home and each tab's Trends view replaced them (decision #38).
 
@@ -78,16 +78,16 @@ Each feature exposes the same three files: a Navigation 3 key (`HomeKey`), a scr
 | [`:core:sync`](../../core/sync/) | `SyncGateway` seam and `NoOpSyncGateway` | Seam only |
 | [`:core:reference`](../../core/reference/) | Bundled read-only USDA food catalog (`reference.db`) | Empty (M3) |
 | [`:core:healthconnect`](../../core/healthconnect/) | Health Connect client and import worker | Empty (M2) |
-| [`:core:backup`](../../core/backup/) | Snapshot and JSON export/import | Empty (M1d) |
+| [`:core:backup`](../../core/backup/) | Backup files, no Room types: `VACUUM INTO` snapshots and their checks, staged restore, the Storage Access Framework document store, and the daily WorkManager worker and scheduler | In use (M1d) |
 
 ### Core: pure Kotlin
 
 | Module | Responsibility | Status |
 | --- | --- | --- |
-| [`:core:model`](../../core/model/) | Domain types: typed IDs, `Measurement`, enums, `UserPreferences` | Growing per milestone |
+| [`:core:model`](../../core/model/) | Domain types: typed IDs, `Measurement`, enums, `UserPreferences`, stored unit codes (`MeasurementUnit`, `DisplayUnit`), the `Logger` interface | Growing per milestone |
 | [`:core:domain`](../../core/domain/) | Repository interfaces, `Outcome`/`DomainError`, `IdGenerator`, `localDateFor`, `observeToday`, `WallClock`, the metric contract and transforms (best-fit trend, trend weight), date ranges | Growing per milestone |
 | [`:core:projection`](../../core/projection/) | Weight projection simulator and solver | Empty (M5) |
-| [`:core:importers`](../../core/importers/) | Strong and Cronometer CSV parsers, JSON export format | Empty (M1d/M3/M4) |
+| [`:core:importers`](../../core/importers/) | The JSON export format (`ExportBundle` v1: records, decoding, row checks); later the Strong and Cronometer CSV parsers | Export format (M1d); CSV parsers M3/M4 |
 
 ### Support modules (not part of the app)
 

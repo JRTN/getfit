@@ -20,8 +20,8 @@ configure<com.autonomousapps.DependencyAnalysisExtension> {
             onAny {
                 severity("fail")
             }
-            // M0 only: feature modules are still empty, so the standard :core:* dependencies the
-            // feature convention adds are unused. Restore "fail" in M1.
+            // Nutrition and Training are still placeholder screens, so some of the standard :core:*
+            // dependencies the feature convention adds are unused there. Restore "fail" once they have code.
             onUnusedDependencies {
                 severity("warn")
             }

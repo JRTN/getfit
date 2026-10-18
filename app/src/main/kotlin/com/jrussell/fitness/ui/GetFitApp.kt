@@ -135,7 +135,7 @@ private fun GetFitBottomBar(currentDestination: TopLevelDestination, onSelect: (
                         )
                     },
                     label = {
-                        // Five labels can't fit side by side at very large font scales, and
+                        // Four labels can't fit side by side at very large font scales, and
                         // breaking a word across lines is worse than a slightly smaller label. Cap
                         // the scale for these labels only; screen content keeps the full scale and
                         // TalkBack reads the full label.

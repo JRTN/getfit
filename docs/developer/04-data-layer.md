@@ -6,9 +6,9 @@ GetFit is local-first: the phone holds the only copy of the data. This chapter e
 
 | Store | Module | Holds | Status |
 | --- | --- | --- | --- |
-| `user.db` (Room/SQLite) | [`:core:database`](../../core/database/) | Everything the user owns, plus seeded reference rows | Schema v1 |
-| Preferences DataStore | [`:core:datastore`](../../core/datastore/) | UI-only preferences: theme mode, palette, weight unit, and each screen's remembered date range | In use |
-| `reference.db` (read-only) | `:core:reference` | Bundled USDA food catalog, replaced wholesale with each dataset version | M4 |
+| `user.db` (Room/SQLite) | [`:core:database`](../../core/database/) | Everything the user owns, plus seeded reference rows | Schema v1, pinned |
+| Preferences DataStore | [`:core:datastore`](../../core/datastore/) | UI-only preferences: theme mode, palette, weight unit, each screen's remembered date range, and the daily backup's folder and status | In use |
+| `reference.db` (read-only) | `:core:reference` | Bundled USDA food catalog, replaced wholesale with each dataset version | M3 |
 
 **Rule of thumb:** a setting that changes how *past* data is evaluated (day start, energy mode, targets) is a **versioned row in `user.db`** with an effective date, never a DataStore preference. Changing it then never re-dates history, and it travels with backups and sync.
 
@@ -126,11 +126,15 @@ Home and Body each remember their range choice across restarts, separately. Home
 
 - `MeasurementType` is a *mixed catalog*: built-in rows have no owner; user-defined rows belong to an owner.
 - Built-ins get deterministic UUIDv5 IDs, `localRevision = 0` (a first sync push, which sends `> 0`, skips them) and no origin device.
-- [`ReferenceSeeder`](../../core/data/src/main/kotlin/com/jrussell/fitness/core/data/seed/ReferenceSeeder.kt) inserts them once per dataset version, recorded in the `DatasetVersion` table. To ship more built-ins, raise the version constant and add rows; existing rows are never overwritten.
+- [`ReferenceSeeder`](../../core/data/src/main/kotlin/com/jrussell/fitness/core/data/seed/ReferenceSeeder.kt) applies them once per dataset version, recorded in the `DatasetVersion` table. Rows are upserted by ID through the owner-less [`ReferenceCatalogDao`](../../core/database/src/main/kotlin/com/jrussell/fitness/core/database/infrastructure/ReferenceCatalogDao.kt). To ship more built-ins, or to correct one (its decimals, name, Health Connect record type), raise the version constant and change the list. User-owned types have their own IDs and are never touched.
+- **Stored codes are permanent.** `canonicalUnit` holds a [`MeasurementUnit`](../../core/model/src/main/kotlin/com/jrussell/fitness/core/model/MeasurementUnit.kt) code, and `enteredUnit` holds a [`DisplayUnit`](../../core/model/src/main/kotlin/com/jrussell/fitness/core/model/DisplayUnit.kt) code.
+  - The meanings are fixed: masses in kilograms, lengths in meters, percentages as fractions from 0 to 1, durations in seconds.
+  - User-defined lab markers use `custom:<label>`.
+  - Enums are stored by constant name, and [`StoredEnumNamesTest`](../../core/model/src/test/kotlin/com/jrussell/fitness/core/model/StoredEnumNamesTest.kt) fails CI if a stored enum is renamed.
 
 ## The device ID
 
-[`FileDeviceIdProvider`](../../core/data/src/main/kotlin/com/jrussell/fitness/core/data/write/FileDeviceIdProvider.kt) keeps a random UUID in `no_backup/device_id`. Android never backs that folder up. A backup restored onto a new phone, or after a reinstall, therefore gets a fresh device ID, and two devices never share a sync tie-breaker.
+[`FileDeviceIdProvider`](../../core/data/src/main/kotlin/com/jrussell/fitness/core/data/write/FileDeviceIdProvider.kt) keeps a random UUID in `no_backup/device_id`. Android never backs that folder up. A backup restored onto a new phone, or after a reinstall, therefore gets a fresh device ID, and two devices never share a sync tie-breaker. A file that can't be read is treated as missing.
 
 ## The sync seam
 
@@ -141,10 +145,60 @@ Everything sync needs is already being recorded on every row: UUID keys, tombsto
 ## Schema and migrations
 
 - The schema is exported to [`core/database/schemas/`](../../core/database/schemas/) on every build and committed. [`SchemaJsonTest`](../../core/database/src/test/kotlin/com/jrussell/fitness/core/database/SchemaJsonTest.kt) checks that the committed JSON matches the compiled database.
-- **Version 1 can still change** until `v0.1.0` is tagged at the end of M1, because no real data exists before then.
-- From `v0.1.0` on:
-  - every schema change is a numbered `Migration`, tested with Room's `MigrationTestHelper`;
-  - `fallbackToDestructiveMigration` is forbidden, and a custom detekt rule fails the build if anyone writes it.
+- **The schema is pinned** (from M1d, ahead of `v0.1.0`). [`DatabaseFactory.kt`](../../core/database/src/main/kotlin/com/jrussell/fitness/core/database/DatabaseFactory.kt) holds `USER_DATABASE_VERSION` and `USER_DATABASE_IDENTITY_HASHES`, which maps every shipped version to Room's identity hash, and `SchemaJsonTest` fails when the compiled schema stops matching the current entry. To change the schema:
+  1. bump the version;
+  2. write a numbered `Migration` with a `MigrationTestHelper` test;
+  3. add the new version's hash to the map. Never remove an entry: snapshot restore uses the map to accept backups from every older version.
+- `fallbackToDestructiveMigration` is forbidden, and a custom detekt rule fails the build if anyone writes it.
+- **A corrupt `user.db` is kept.** SQLite's default handling deletes a corrupt file. [`CorruptionPreservingCallback`](../../core/database/src/main/kotlin/com/jrussell/fitness/core/database/CorruptionPreservingCallback.kt) first copies it to `files/corrupt/user-<millis>.db`.
+- **A time zone the device doesn't know** (a row written with newer time-zone data) reads as UTC instead of failing the whole query.
+
+## Backup and restore
+
+The phone holds the only copy of the data, so three layers ship in M1 (spec: "Backup, export and the sync seam"). Settings › Backup ([`BackupSettings`](../../feature/settings/src/main/kotlin/com/jrussell/fitness/feature/settings/BackupSettings.kt)) talks to one domain interface, [`BackupRepository`](../../core/domain/src/main/kotlin/com/jrussell/fitness/core/domain/backup/BackupRepository.kt), implemented by [`DefaultBackupRepository`](../../core/data/src/main/kotlin/com/jrussell/fitness/core/data/backup/DefaultBackupRepository.kt).
+
+| Layer | How | What it holds |
+| --- | --- | --- |
+| **Auto Backup** | Android, to the user's Google account, under [`data_extraction_rules.xml`](../../app/src/main/res/xml/data_extraction_rules.xml) | `user.db` with its WAL file and `files/datastore/` (preferences). Nothing else: no logs, crash logs, restore staging or device ID |
+| **Daily snapshot** | [`ScheduledExportWorker`](../../core/backup/src/main/kotlin/com/jrussell/fitness/core/backup/work/ScheduledExportWorker.kt) on WorkManager, daily while charging ([`WorkManagerBackupScheduler`](../../core/backup/src/main/kotlin/com/jrussell/fitness/core/backup/work/WorkManagerBackupScheduler.kt)), into a folder chosen once with the system picker | A `VACUUM INTO` copy named `getfit-snapshot-<UTC yyyyMMdd-HHmm>Z.db`; the newest 14 are kept |
+| **Manual export / restore** | Settings › Backup | A JSON export (`ExportBundle` v1) or a database copy |
+
+**How the parts divide:**
+- [`:core:backup`](../../core/backup/) handles the files and has no Room types:
+  - [`writeSnapshot`](../../core/backup/src/main/kotlin/com/jrussell/fitness/core/backup/snapshot/SnapshotWriter.kt) (`VACUUM INTO`);
+  - [`inspectSnapshot`](../../core/backup/src/main/kotlin/com/jrussell/fitness/core/backup/snapshot/SnapshotCheck.kt), which checks the SQLite header, `quick_check`, the version and its identity hash, day starts, time zones and unit codes;
+  - [`PendingRestore`](../../core/backup/src/main/kotlin/com/jrussell/fitness/core/backup/snapshot/PendingRestore.kt);
+  - [`ContentResolverDocumentStore`](../../core/backup/src/main/kotlin/com/jrussell/fitness/core/backup/documents/ContentResolverDocumentStore.kt), over the Storage Access Framework;
+  - the worker and the scheduler.
+- [`:core:importers`](../../core/importers/) owns the JSON format: the [`ExportBundle`](../../core/importers/src/main/kotlin/com/jrussell/fitness/core/importers/export/ExportBundle.kt) records, [`decodeExportBundle`](../../core/importers/src/main/kotlin/com/jrussell/fitness/core/importers/export/BundleDecode.kt) (a newer `formatVersion` is reported before anything else is parsed) and [`validateExportBundle`](../../core/importers/src/main/kotlin/com/jrussell/fitness/core/importers/export/BundleProblem.kt).
+- `:core:data` maps rows to records ([`BundleExporter`](../../core/data/src/main/kotlin/com/jrussell/fitness/core/data/backup/BundleExporter.kt)) and merges them back ([`BundleMerger`](../../core/data/src/main/kotlin/com/jrussell/fitness/core/data/backup/BundleMerger.kt)).
+
+**The JSON export** holds the profile, day-start settings, user-defined measurement types and measurements, tombstones included. It leaves out built-in types (every install seeds them), device tables, `localRevision` and preferences (Auto Backup carries those).
+
+**Restoring a JSON export merges** it, in one stamped transaction and only after every row passes validation:
+- every row is adopted into the current owner, so a fresh install that already made its own empty profile ends up with one profile;
+- an unknown ID is inserted;
+- a known row is replaced only if the file's `updatedAt` is later;
+- rows with a natural key match by it when the ID differs: day starts by `effectiveFrom`, imported measurements by `(source, externalId)`;
+- imported rows keep their times and origin device, so importing the same file twice changes nothing.
+
+**Restoring a database copy replaces** everything:
+1. The file is inspected.
+2. The current data is copied to `files/restore/before-restore.db`.
+3. The file is staged at `files/restore/staged.db`, written to a temporary file first so a half-copied file is never installed.
+4. The app restarts through [`RestartActivity`](../../app/src/main/kotlin/com/jrussell/fitness/restart/RestartActivity.kt), which runs in its own process.
+5. On the next start, `DatabaseModule` calls [`installPendingRestore`](../../core/data/src/main/kotlin/com/jrussell/fitness/core/data/backup/BackupFiles.kt) before Room opens `user.db`.
+
+An older version's snapshot is accepted and migrated by Room; a newer one is refused.
+
+**Status and logs:**
+- The daily backup's folder, last success and last failure live in the preferences DataStore ([`BackupSettingsDataSource`](../../core/datastore/src/main/kotlin/com/jrussell/fitness/core/datastore/BackupSettingsDataSource.kt)). A folder that can no longer be reached shows "Can't reach the backup folder. Choose it again."
+- At every start, [`BackupStartup`](../../core/data/src/main/kotlin/com/jrussell/fitness/core/data/backup/BackupStartup.kt) re-ensures the schedule, and runs a catch-up snapshot if the last one is more than 36 hours old.
+- Background work logs through [`Logger`](../../core/model/src/main/kotlin/com/jrussell/fitness/core/model/logging/Logger.kt) to `files/logs/` ([`FileLogger`](../../core/data/src/main/kotlin/com/jrussell/fitness/core/data/logging/FileLogger.kt): one file a day, 7 days kept, 512 KiB cap).
+
+**Try it on an emulator:**
+- **Force the daily job:** `adb shell cmd jobscheduler run -f -n androidx.work.systemjobscheduler com.jrussell.fitness.debug 0`.
+- **Exercise Auto Backup:** `adb shell bmgr enable true`, select `com.android.localtransport/.LocalTransport`, then `bmgr backupnow` (with the app in the background, not force-stopped: Android refuses stopped apps), `pm clear`, and `bmgr restore 1 com.jrussell.fitness.debug`.
 
 ## Checklist: adding a user-owned table
 
@@ -154,6 +208,7 @@ Everything sync needs is already being recorded on every row: UUID keys, tombsto
 4. **Repository implementation** in `:core:data`: get the owner from `CurrentOwnerProvider`, write only through `StampedWriter`, and map entities with a mapper.
 5. **Binding** in `:app`'s `DataModule`.
 6. **Tests:** DAO tests (in-memory Room under Robolectric) and repository tests including a two-owner case.
-7. **Schema:** commit the regenerated JSON (and, after `v0.1.0`, a migration plus its test).
+7. **Schema:** commit the regenerated JSON, a numbered migration with its `MigrationTestHelper` test, and the new version's hash in `USER_DATABASE_IDENTITY_HASHES`.
+8. **Backup:** add the table to `ExportBundle` (a new array, optional so older files still decode), to `BundleExporter` and `BundleMerger` (including any natural key), and to the snapshot row checks if a column has rules.
 
 Next: [Design system](05-design-system.md).

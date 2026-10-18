@@ -1,5 +1,5 @@
 # Continuous integration: runs on GitHub's servers for every push and pull request.
-# Dormant until the repository is pushed to GitHub; it has no effect on local builds.
+# It has no effect on local builds.
 name: CI
 
 on:

@@ -90,7 +90,7 @@ Cards whose data does not exist yet (e.g. Nutrition before M3) are hidden, not s
 
 - **Presets:** Today (the default), 7 days, 30 days, and "From…", which opens a date picker for the start date. The end is always today.
 - **Days follow the user's day start** (`localDateFor`).
-- **The choice is not persisted.** Home opens on Today every time *(builder's call: it matches "today by default")*.
+- **The choice is not persisted.** Home opens on Today every time *(builder's call: it matches "today by default")*. *(Superseded 2026-10-18: ranges are remembered per screen; see "Ranges: the Log filters too, All clears, and choices are remembered" below.)*
 - **Charts on Today show the last 7 days** (owner decision, 2026-10-17). A one-day chart would show almost nothing, so pinned charts on Home, and charts in a Trends view set to Today, draw the 7 days ending today. Every other range applies to charts as chosen.
 
 ### Range summary rules

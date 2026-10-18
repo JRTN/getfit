@@ -45,6 +45,7 @@ Five constraints shaped every choice below:
 | Choice | Version | Why | Main alternatives |
 | --- | --- | --- | --- |
 | **Hilt** | 2.60.1 | Compile-time-checked DI with first-class ViewModel, WorkManager and Navigation integration. Missing bindings fail the build, not the user | Koin (runtime resolution: errors only at runtime), manual DI (boilerplate at this module count) |
+| **hilt-work** | 1.4.0 | `@HiltWorker` and `HiltWorkerFactory`, so the backup worker gets its dependencies like any other class | A hand-written `WorkerFactory` |
 | **Fine-grained modules** | ~24 | Compiled layer boundaries, incremental builds, portable pure modules (decision #4; see [Architecture](02-architecture.md)) | A single module, or modules split by layer only |
 | **Lifecycle ViewModel + StateFlow** | 2.11.0 | The standard Android state holder; survives rotation; `collectAsStateWithLifecycle` stops work in the background | |
 
@@ -57,8 +58,11 @@ Five constraints shaped every choice below:
 | **kotlin.uuid.Uuid**, UUIDv7 and v5 | stdlib | Merge-safe IDs that need no server (decision #35). v7 is time-ordered and index-friendly; v5 is deterministic across devices. Standard-library, so no extra dependency | Auto-increment `Long` (collides across devices when syncing), a UUID library |
 | **kotlin.time.Clock / Instant** | stdlib | Stable since Kotlin 2.3; injectable for tests | `java.time` (not Multiplatform), `kotlinx.datetime.Instant` (superseded by the stdlib type) |
 | **kotlinx-datetime** | 0.8.0 | `LocalDate`, `TimeZone` and conversions in pure Kotlin modules (decision #5) | `java.time` (JVM-only, which blocks Multiplatform) |
-| **kotlinx.serialization** | 1.11.0 | Navigation keys today; the JSON export format and parameter blobs later (convention 8) | Moshi, Gson (reflection-based) |
+| **kotlinx.serialization** | 1.11.0 | Navigation keys and the JSON export format (`ExportBundle`, with the built-in `Uuid` and `Instant` serializers); parameter blobs later (convention 8) | Moshi, Gson (reflection-based) |
 | **Coroutines and Flow** | 1.11.0 | The Android standard for async work; Room and DataStore speak it natively | RxJava |
+| **WorkManager** | 2.12.0 | The daily backup snapshot (spec: "Daily, while charging"): persisted, constraint-aware periodic work that survives restarts and reboots, scheduled by `WorkManagerBackupScheduler` | `JobScheduler` directly (no persistence or unique-work API), `AlarmManager` (exact alarms are restricted and drain battery) |
+| **androidx.sqlite** | 2.6.2 | The SupportSQLite helper Room runs on; used directly to keep a copy of a corrupt `user.db` and to write `VACUUM INTO` snapshots | |
+| **Storage Access Framework** | platform | The backup folder and export/restore documents are picked by the user once with the system picker, so GetFit needs no storage permission and works with any provider, including Google Drive | Direct file paths (need broad storage permissions), the Drive REST API (needs sign-in and a cloud project) |
 
 ## Testing
 

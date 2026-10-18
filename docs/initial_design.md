@@ -54,7 +54,7 @@ All ground-floor decisions are closed. Later sections give the detail behind eac
 | 18 | Biometric types | Data table, user-definable, with reference ranges |
 | 19 | Exercise identity | Separate definitions per variant, grouped by `movementPatternId` |
 | 20 | Effort metric | RIR stored; displayed as RPE or RIR per preference |
-| 21 | Export | `VACUUM INTO` SQLite copy (scheduled) plus versioned JSON (manual) |
+| 21 | Export | `VACUUM INTO` SQLite copy (scheduled) plus versioned JSON (manual) (amended 2026-10-18: manual restore auto-detects JSON (merge) vs SQLite (replace, app restarts); 14 daily snapshots kept) |
 | 22 | Food catalog | Bundle USDA Foundation, SR Legacy, FNDDS; network lookup for branded/barcode items, cached on use |
 | 23 | Nutrient set | Store every nutrient a source provides; display a configurable subset |
 | 24 | Energy accounting | Four modes plus exercise-credit fraction, versioned by effective date; all estimates always displayed |

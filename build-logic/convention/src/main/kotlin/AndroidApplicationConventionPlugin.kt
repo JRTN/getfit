@@ -80,6 +80,6 @@ class AndroidApplicationConventionPlugin : Plugin<Project> {
          * the minor version for each newly useful capability, the patch version for fixes, and
          * 1.0.0 when the original design is complete.
          */
-        const val VERSION_NAME: String = "0.0.1"
+        const val VERSION_NAME: String = "0.1.0"
     }
 }

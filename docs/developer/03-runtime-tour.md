@@ -16,7 +16,9 @@ This chapter follows the running app through four journeys. Open each linked fil
 
 Because the UI does not wait for the bootstrap, any repository that needs seeded rows calls `ReferenceSeeder.seed()` itself first. After the first success the seeder returns immediately. This is why a screen opened in the first milliseconds still finds the Weight type.
 
-The database itself opens lazily on first use. [`DatabaseModule`](../../app/src/main/kotlin/com/jrussell/fitness/di/DatabaseModule.kt) provides it once per process via [`createGetFitDatabase`](../../core/database/src/main/kotlin/com/jrussell/fitness/core/database/DatabaseFactory.kt).
+After the bootstrap, [`BackupStartup`](../../core/data/src/main/kotlin/com/jrussell/fitness/core/data/backup/BackupStartup.kt) keeps the daily backup scheduled, and asks for a catch-up snapshot if the last one is stale. Both steps run through [`runGuarded`](../../app/src/main/kotlin/com/jrussell/fitness/BootstrapGuard.kt): a failure is written to the log (`files/logs/`) instead of crashing, because a crash here would repeat on every launch. The application also gives WorkManager the Hilt worker factory (`Configuration.Provider`), which is why the manifest removes WorkManager's default initializer.
+
+The database itself opens lazily on first use. [`DatabaseModule`](../../app/src/main/kotlin/com/jrussell/fitness/di/DatabaseModule.kt) provides it once per process via [`createGetFitDatabase`](../../core/database/src/main/kotlin/com/jrussell/fitness/core/database/DatabaseFactory.kt). Before that, it installs any restore staged before the last restart (see Journey 5).
 
 ### 2. `MainActivity.onCreate`
 
@@ -98,6 +100,25 @@ To watch this happen, run [`DefaultMeasurementRepositoryTest`](../../core/data/s
 - On Trends, [`MetricChart`](../../core/ui/src/main/kotlin/com/jrussell/fitness/core/ui/chart/MetricChart.kt) gets only the daily weights. It draws them as the solid main line, adds the dotted best-fit trend itself, and builds the spoken summary and the table.
 - "Today" comes from [`observeToday`](../../core/domain/src/main/kotlin/com/jrussell/fitness/core/domain/Today.kt), which re-reads the [`WallClock`](../../core/domain/src/main/kotlin/com/jrussell/fitness/core/domain/time/WallClock.kt) every minute, so a screen left open past the day start moves to the new day.
 
+## Journey 5: a restore, end to end
+
+The user opens Settings › Backup, taps **Restore from a file…** and picks `getfit-backup-2026-10-18.db`.
+
+1. **Picking.** [`BackupSettings`](../../feature/settings/src/main/kotlin/com/jrussell/fitness/feature/settings/BackupSettings.kt) launches the system picker (`OpenDocument`) and hands the chosen content URI to [`BackupViewModel.onRestoreFileChosen`](../../feature/settings/src/main/kotlin/com/jrussell/fitness/feature/settings/BackupViewModel.kt). One action runs at a time, so a double tap is ignored.
+2. **Inspecting.** [`DefaultBackupRepository.inspect`](../../core/data/src/main/kotlin/com/jrussell/fitness/core/data/backup/DefaultBackupRepository.kt) copies the document to the cache and reads its first 16 bytes:
+   - A SQLite header means a database copy. [`inspectSnapshot`](../../core/backup/src/main/kotlin/com/jrussell/fitness/core/backup/snapshot/SnapshotCheck.kt) opens it read-only and checks:
+     - `quick_check`;
+     - the schema version against `USER_DATABASE_IDENTITY_HASHES`;
+     - the rows: day starts, time zones and unit codes.
+   - Anything else is decoded as a JSON export and validated.
+   - Either way, nothing has changed yet.
+3. **Confirming.** The ViewModel shows the preview: "Replace all data? Everything on this phone is replaced with this backup (4 entries, last changed Oct 18). GetFit will restart." For a JSON file it shows "Restore from this file?" instead.
+4. **Replacing.** On confirm, the repository writes a safety copy of the current data with `VACUUM INTO` (`files/restore/before-restore.db`), then [`PendingRestore.stage`](../../core/backup/src/main/kotlin/com/jrussell/fitness/core/backup/snapshot/PendingRestore.kt) copies the file to `staged.db.tmp`, flushes it, and renames it to `staged.db`. The result is `RestoreResult.RestartRequired`.
+5. **Restarting.** The ViewModel calls [`AppRestarter`](../../app/src/main/kotlin/com/jrussell/fitness/restart/ProcessAppRestarter.kt). It starts [`RestartActivity`](../../app/src/main/kotlin/com/jrussell/fitness/restart/RestartActivity.kt) in the separate `:restart` process, which kills the main process, launches the app again, and exits.
+6. **Installing.** In the new process, the first injection of the database runs `DatabaseModule`. It calls `installPendingRestore`, which deletes the old `-wal`/`-shm` files and moves `staged.db` over `user.db`, and only then opens Room. The log records "staged a database restore" and "installed the staged database".
+
+A JSON file takes a different path at step 4: [`BundleMerger`](../../core/data/src/main/kotlin/com/jrussell/fitness/core/data/backup/BundleMerger.kt) merges it in one stamped transaction, Room's flows emit, and Body and Home update with no restart. Settings shows "Restored: 3 added, 1 updated".
+
 ## Where the wiring lives
 
 Every binding is in `:app`'s [`di/`](../../app/src/main/kotlin/com/jrussell/fitness/di/) package:
@@ -105,7 +126,8 @@ Every binding is in `:app`'s [`di/`](../../app/src/main/kotlin/com/jrussell/fitn
 | Module | Provides or binds |
 | --- | --- |
 | [`CoroutinesModule`](../../app/src/main/kotlin/com/jrussell/fitness/di/CoroutinesModule.kt) | `@IoDispatcher`, `@DefaultDispatcher`, `@ApplicationScope`, `Clock`, `IdGenerator` |
-| [`DatabaseModule`](../../app/src/main/kotlin/com/jrussell/fitness/di/DatabaseModule.kt) | `GetFitDatabase` (`user.db`) |
+| [`BackupModule`](../../app/src/main/kotlin/com/jrussell/fitness/di/BackupModule.kt) | `BackupRepository` and the worker's `SnapshotJob` (both `DefaultBackupRepository`), `BackupScheduler`, `DocumentStore`, `AppRestarter`, `BackupFiles`, `BackupSettingsDataSource`, `AppVersion`, `Logger` (`FileLogger`) |
+| [`DatabaseModule`](../../app/src/main/kotlin/com/jrussell/fitness/di/DatabaseModule.kt) | `GetFitDatabase` (`user.db`), after installing a staged restore |
 | [`DataModule`](../../app/src/main/kotlin/com/jrussell/fitness/di/DataModule.kt) | `CurrentOwnerProvider`, `DeviceIdProvider`, `DayBoundaryRepository`, `MeasurementRepository`, `WallClock` |
 | [`MetricsModule`](../../app/src/main/kotlin/com/jrussell/fitness/di/MetricsModule.kt) | `MetricRegistry`, and each `MetricSeriesProvider` into a set (`BodyMetricProvider` so far) |
 | [`PreferencesModule`](../../app/src/main/kotlin/com/jrussell/fitness/di/PreferencesModule.kt) | The preferences DataStore, `UserPreferencesRepository` and `DateRangeRepository` |

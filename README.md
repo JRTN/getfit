@@ -2,9 +2,9 @@
 
 **A local-first Android app for nutrition, training and body tracking, in one place.**
 
-> **Status:** early development, pre-`v0.1.0`.
-> - **Built:** the design system, theming and settings, the local data foundation, and weight logging with a Home summary and trend charts.
-> - **Next:** backup and export, then `v0.1.0`.
+> **Status:** `v0.1.0`, the first usable release (M1 complete).
+> - **Built:** the design system, theming and settings, the local data foundation, weight logging with a Home summary and trend charts, and three backup layers (Auto Backup, daily snapshots to a folder of my choosing, JSON and database export and restore).
+> - **Next:** M2, Body and Health Connect.
 >
 > The roadmap is [below](#roadmap).
 
@@ -86,8 +86,8 @@ Versioning is semantic: `0.1.0` is the first usable release, each new capability
 | M1a | Design system: palettes and contrast tests, typography, icons, appearance settings | Done |
 | M1b | Data foundation: `user.db`, stamped writes, owner scoping, day assignment, sync seam | Done |
 | M1c | Four-tab layout with a read-only Home, weight entry, metric registry, charts with a best-fit trend and table view | Done |
-| M1d | Backup: Auto Backup, scheduled snapshots, JSON export/import | Next (**`v0.1.0`**) |
-| M2 | Body and Health Connect | |
+| M1d | Backup: Auto Backup, scheduled snapshots, JSON and database export and restore | Done (**`v0.1.0`**) |
+| M2 | Body and Health Connect | Next |
 | M3 | Nutrition, including saved meals | |
 | M4 | Training, including training blocks | |
 | M5 | Energy accounting, weight projection and the cross-domain chart builder on Home | |

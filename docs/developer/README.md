@@ -2,7 +2,7 @@
 
 This guide is a walkthrough for a developer joining GetFit. It explains what each part of the codebase does, where the important classes live, and why things are built the way they are. Every chapter links straight to source files, so you can read with the code open beside you.
 
-> **Where things stand:** written after milestone **M1c** (weight, metrics, charts) merged to `master`. The app has its design system, four tabs (a read-only Home, then Nutrition, Training and Body), Settings, the local database, and its first real feature: logging weight, with a Home summary and a trend chart. Nutrition and Training are still empty. The guide is updated with every merge to `master`.
+> **Where things stand:** written after milestone **M1d** (backup and restore) merged to `master`, completing M1 (`v0.1.0`). The app has its design system, four tabs (a read-only Home, then Nutrition, Training and Body), Settings, the local database, weight logging with a Home summary and a trend chart, and three backup layers: Auto Backup, a daily snapshot to a folder of your choosing, and manual export and restore. Nutrition and Training are still empty. The guide is updated with every merge to `master`.
 
 ## How this guide relates to the other docs
 

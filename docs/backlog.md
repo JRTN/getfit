@@ -67,6 +67,8 @@ Milestone order (decision #39): M2 Body and Health Connect → M3 Nutrition → 
 - **App icon:** GetFit has none yet.
 - **Launch window and High contrast:** the launch window uses the Default palette background, so High contrast sees a brief tone shift on cold start. (M1c)
 - **Back stack after process death:** returning lands on Home rather than where the user was. (review §6.4)
+- **Restore counts don't match the preview.** The preview counts live entries ("4 entries"), but "Restored: 5 added" counts every merged row, including tombstones and the day-start setting. Count the same thing in both. (M1d drill)
+- **The folder-unavailable message appears twice.** After a failed Back up now, "Can't reach the backup folder. Choose it again." shows as both the result line and the status line, so TalkBack reads it twice. (M1d drill)
 - **Value and unit through a resource:** "212.4 lb" is built by string concatenation in `HomeScreen.kt`, not through a resource. (review §5.4)
 - **Small cleanups:**
   - a formatting nit in `MetricChart`;
