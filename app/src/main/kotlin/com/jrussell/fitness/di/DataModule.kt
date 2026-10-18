@@ -6,10 +6,12 @@ import com.jrussell.fitness.core.data.owner.CurrentOwnerProvider
 import com.jrussell.fitness.core.data.owner.SingleLocalOwnerProvider
 import com.jrussell.fitness.core.data.repository.DefaultDayBoundaryRepository
 import com.jrussell.fitness.core.data.repository.DefaultMeasurementRepository
+import com.jrussell.fitness.core.data.time.SystemWallClock
 import com.jrussell.fitness.core.data.write.DeviceIdProvider
 import com.jrussell.fitness.core.data.write.FileDeviceIdProvider
 import com.jrussell.fitness.core.domain.DayBoundaryRepository
 import com.jrussell.fitness.core.domain.MeasurementRepository
+import com.jrussell.fitness.core.domain.time.WallClock
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -35,6 +37,9 @@ abstract class DataModule {
 
     @Binds
     abstract fun bindMeasurementRepository(implementation: DefaultMeasurementRepository): MeasurementRepository
+
+    @Binds
+    abstract fun bindWallClock(implementation: SystemWallClock): WallClock
 
     companion object {
         @Provides

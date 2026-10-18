@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Metric display names (MetricDescriptor.displayNameResource). -->
+    <string name="metric_body_weight">Weight</string>
+    <string name="metric_body_trend_weight">Trend weight</string>
+</resources>
