@@ -6,7 +6,7 @@ import com.jrussell.fitness.core.model.ThemeMode
 import com.jrussell.fitness.core.model.UserPreferences
 import kotlinx.coroutines.flow.Flow
 
-/** The user's UI preferences (theme mode, palette, weight unit, trend lines). Implemented in `:core:data`. */
+/** The user's UI preferences (theme mode, palette, weight unit). Implemented in `:core:data`. */
 interface UserPreferencesRepository {
     /** The current preferences; emits again whenever they change. Never fails on a bad stored value. */
     val userPreferences: Flow<UserPreferences>
@@ -16,7 +16,4 @@ interface UserPreferencesRepository {
     suspend fun setPalette(palette: ColorPalette)
 
     suspend fun setMassUnit(unit: MassUnit)
-
-    /** Turns the dotted trend line on the built-in charts on or off. */
-    suspend fun setShowTrendLines(show: Boolean)
 }

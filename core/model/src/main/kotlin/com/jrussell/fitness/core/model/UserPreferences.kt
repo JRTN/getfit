@@ -1,16 +1,14 @@
 package com.jrussell.fitness.core.model
 
 /**
- * UI preferences: how the app looks, which units it shows and how charts are drawn (display
- * only; storage is always canonical). Settings that change how past data is evaluated (day
- * start, energy mode, targets) are not here; they are versioned rows in `user.db`.
+ * UI preferences: how the app looks and which units it shows (display only; storage is always
+ * canonical). Settings that change how past data is evaluated (day start, energy mode, targets)
+ * are not here; they are versioned rows in `user.db`.
  */
 data class UserPreferences(
     val themeMode: ThemeMode,
     val palette: ColorPalette,
     val massUnit: MassUnit = MassUnit.KILOGRAM,
-    /** Whether the built-in Nutrition, Training and Body charts draw their dotted trend line. */
-    val showTrendLines: Boolean = true,
 ) {
     companion object {
         /**

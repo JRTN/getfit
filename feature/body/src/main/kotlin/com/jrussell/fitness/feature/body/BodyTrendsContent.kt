@@ -50,7 +50,6 @@ internal fun BodyTrendsContent(
             ),
             range = state.chartRange,
             formatValue = { value: Double -> formatOneDecimal(value) },
-            showTrend = state.showTrend,
         )
     }
 }

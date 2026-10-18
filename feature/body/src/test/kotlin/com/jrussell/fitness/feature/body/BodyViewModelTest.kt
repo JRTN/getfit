@@ -139,16 +139,6 @@ class BodyViewModelTest {
     }
 
     @Test
-    fun trends_showTrend_followsTheChartsSetting() = runTest {
-        val viewModel: BodyViewModel = loadedViewModel()
-        assertThat(loaded(viewModel).showTrend).isEqualTo(true)
-
-        preferences.setShowTrendLines(false)
-
-        assertThat(viewModel.uiState.filterNotNull().first { !it.showTrend }.showTrend).isEqualTo(false)
-    }
-
-    @Test
     fun latest_ratePerWeek_isBestFitOverLastThirtyDays() = runTest {
         weights.value = listOf(point(9, 1, 95.0), point(10, 3, 83.0), point(10, 17, 82.0))
 

@@ -7,16 +7,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 
 /**
- * Back stack for bottom-tab navigation: each tab keeps its own history, and an overlay screen
- * (Settings, with any of its sub-pages) can sit on top of whichever tab is showing.
+ * Back stack for bottom-tab navigation: each tab keeps its own history, and one overlay screen
+ * (Settings) can sit on top of whichever tab is showing.
  *
  * Navigation 3's `NavDisplay` shows a single list of keys, [backStack]. This class builds that
- * list as "start tab's stack, then the current tab's stack, then the overlay and its sub-pages". So
+ * list as "start tab's stack, then the current tab's stack, then the overlay". As a result,
  * pressing back at the root of any other tab returns to the start tab (Home) instead of
  * leaving the app, and switching back to a tab restores where you were inside it.
  *
- * The overlay belongs to no tab: it appears at most once, closes (with its sub-pages) when you
- * switch tabs, and back closes its top sub-page first, then the overlay itself.
+ * The overlay belongs to no tab: it appears at most once, closes when you switch tabs, and is
+ * the first thing back closes.
  *
  * [topLevelKey], [overlay] and [backStack] are Compose state, so the UI recomposes when they change.
  *
@@ -30,14 +30,9 @@ class TopLevelBackStack<K : Any>(private val startKey: K) {
     var topLevelKey: K by mutableStateOf(startKey)
         private set
 
-    /** The overlay (first) and its open sub-pages, in order. */
-    private val overlays: SnapshotStateList<K> = mutableStateListOf()
-
-    /** The visible overlay screen (a sub-page if one is open), or `null`. */
-    val overlay: K?
-        get() {
-            return overlays.lastOrNull()
-        }
+    /** The screen shown over the current tab, or `null`. */
+    var overlay: K? by mutableStateOf(null)
+        private set
 
     /** The flattened list of keys for `NavDisplay`; the last entry is the visible screen. */
     val backStack: SnapshotStateList<K> = mutableStateListOf(startKey)
@@ -47,7 +42,7 @@ class TopLevelBackStack<K : Any>(private val startKey: K) {
      * Selecting the current tab only closes the overlay.
      */
     fun switchTo(key: K) {
-        overlays.clear()
+        overlay = null
         if (key != topLevelKey) {
             tabStacks.getOrPut(key) { mutableListOf(key) }
             topLevelKey = key
@@ -57,41 +52,34 @@ class TopLevelBackStack<K : Any>(private val startKey: K) {
 
     /** Opens [key] on top of the current tab's history, closing any overlay. */
     fun push(key: K) {
-        overlays.clear()
+        overlay = null
         currentStack().add(key)
         rebuild()
     }
 
-    /** Shows [key] over the current tab, closing any sub-pages. Opening the shown overlay again changes nothing. */
+    /** Shows [key] over the current tab. Opening the overlay that is already shown does nothing. */
     fun openOverlay(key: K) {
-        overlays.clear()
-        overlays.add(key)
+        overlay = key
         rebuild()
     }
 
-    /** Closes the top overlay screen: a sub-page returns to its parent, the overlay to the tab. */
+    /** Hides the overlay, if any. */
     fun closeOverlay() {
-        overlays.removeLastOrNull()
-        rebuild()
-    }
-
-    /** Opens [key] as a sub-page of the overlay (Settings › Charts). Back returns to the overlay. */
-    fun pushOverlay(key: K) {
-        overlays.add(key)
+        overlay = null
         rebuild()
     }
 
     /**
-     * Handles a back press: closes the top overlay screen first, then pops the current tab, then
-     * returns to the start tab.
+     * Handles a back press: closes the overlay first, then pops the current tab, then returns to
+     * the start tab.
      *
      * @return `false` only when the start tab's root is the sole entry, meaning the app should
      *   leave the foreground; `true` when something was closed or popped.
      */
     fun removeLast(): Boolean {
         val current: MutableList<K> = currentStack()
-        if (overlays.isNotEmpty()) {
-            overlays.removeAt(overlays.lastIndex)
+        if (overlay != null) {
+            overlay = null
         } else if (current.size > 1) {
             current.removeAt(current.lastIndex)
         } else if (topLevelKey != startKey) {
@@ -113,7 +101,7 @@ class TopLevelBackStack<K : Any>(private val startKey: K) {
         if (topLevelKey != startKey) {
             flattened.addAll(currentStack())
         }
-        flattened.addAll(overlays)
+        overlay?.let { key: K -> flattened.add(key) }
         backStack.clear()
         backStack.addAll(flattened)
     }

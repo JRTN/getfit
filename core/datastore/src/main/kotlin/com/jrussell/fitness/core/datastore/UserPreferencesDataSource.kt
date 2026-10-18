@@ -3,7 +3,6 @@ package com.jrussell.fitness.core.datastore
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -44,8 +43,6 @@ class UserPreferencesDataSource(
                 themeMode = enumOrDefault(storedString(preferences, THEME_MODE), UserPreferences.DEFAULT.themeMode),
                 palette = enumOrDefault(storedString(preferences, COLOR_PALETTE), UserPreferences.DEFAULT.palette),
                 massUnit = enumOrDefault(storedString(preferences, MASS_UNIT), defaultMassUnit),
-                showTrendLines = preferences.asMap()[SHOW_TREND_LINES] as? Boolean
-                    ?: UserPreferences.DEFAULT.showTrendLines,
             )
         }
 
@@ -59,10 +56,6 @@ class UserPreferencesDataSource(
 
     suspend fun setMassUnit(unit: MassUnit) {
         editIgnoringIoErrors { preferences: MutablePreferences -> preferences[MASS_UNIT] = unit.name }
-    }
-
-    suspend fun setShowTrendLines(show: Boolean) {
-        editIgnoringIoErrors { preferences: MutablePreferences -> preferences[SHOW_TREND_LINES] = show }
     }
 
     private suspend fun FlowCollector<Preferences>.emitEmptyOnIoError(error: Throwable) {
@@ -97,6 +90,5 @@ class UserPreferencesDataSource(
         val THEME_MODE: Preferences.Key<String> = stringPreferencesKey("theme_mode")
         val COLOR_PALETTE: Preferences.Key<String> = stringPreferencesKey("color_palette")
         val MASS_UNIT: Preferences.Key<String> = stringPreferencesKey("mass_unit")
-        val SHOW_TREND_LINES: Preferences.Key<Boolean> = booleanPreferencesKey("show_trend_lines")
     }
 }

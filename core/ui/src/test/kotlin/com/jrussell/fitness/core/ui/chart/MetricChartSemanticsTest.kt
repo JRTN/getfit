@@ -41,32 +41,39 @@ class MetricChartSemanticsTest {
     }
 
     @Test
-    fun trendOn_legendNamesTheTrendLine() {
-        show(listOf(weighIns), showTrend = true)
+    fun trendLine_isShownByDefault() {
+        show(listOf(weighIns))
 
+        rule.onNodeWithText("Trend").assertIsDisplayed()
+        rule.onNodeWithText("Hide trend line").assertIsDisplayed()
+    }
+
+    @Test
+    fun hideTrendLine_removesItAndOffersToShowIt() {
+        show(listOf(weighIns))
+
+        rule.onNodeWithText("Hide trend line").performClick()
+
+        rule.onNodeWithText("Trend").assertDoesNotExist()
+        rule.onNodeWithText("Show trend line").performClick()
         rule.onNodeWithText("Trend").assertIsDisplayed()
     }
 
     @Test
-    fun trendOff_noTrendLine() {
-        show(listOf(weighIns), showTrend = false)
+    fun hiddenTrendLine_summaryStillGivesTheRate() {
+        show(listOf(weighIns))
 
-        rule.onNodeWithText("Weight").assertIsDisplayed()
-        rule.onNodeWithText("Trend").assertDoesNotExist()
-    }
-
-    @Test
-    fun singleDate_noTrendLine() {
-        show(listOf(weighIns.copy(points = weighIns.points.take(1))), showTrend = true)
-
-        rule.onNodeWithText("Trend").assertDoesNotExist()
-    }
-
-    @Test
-    fun trendOff_summaryStillGivesTheRate() {
-        show(listOf(weighIns), showTrend = false)
+        rule.onNodeWithText("Hide trend line").performClick()
 
         rule.onNodeWithContentDescription("decreasing 0.6 pounds per week", substring = true).assertIsDisplayed()
+    }
+
+    @Test
+    fun singleDate_hasNoTrendLineOrToggle() {
+        show(listOf(weighIns.copy(points = weighIns.points.take(1))))
+
+        rule.onNodeWithText("Trend").assertDoesNotExist()
+        rule.onNodeWithText("Hide trend line").assertDoesNotExist()
     }
 
     @Test
@@ -99,7 +106,7 @@ class MetricChartSemanticsTest {
         rule.onNodeWithText("No data in this range").assertIsDisplayed()
     }
 
-    private fun show(series: List<ChartSeries>, showTrend: Boolean = true) {
+    private fun show(series: List<ChartSeries>) {
         rule.setContent {
             GetFitTheme {
                 MetricChart(
@@ -107,7 +114,6 @@ class MetricChartSemanticsTest {
                     series = series,
                     range = range,
                     formatValue = { value: Double -> String.format(Locale.US, "%.1f", value) },
-                    showTrend = showTrend,
                 )
             }
         }

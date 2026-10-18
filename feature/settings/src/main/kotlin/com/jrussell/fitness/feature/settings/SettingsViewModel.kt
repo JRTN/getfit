@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-/** State and actions for the Settings screen (Appearance, Units) and its Charts page. */
+/** State and actions for the Settings screen's Appearance and Units sections. */
 @HiltViewModel
 class SettingsViewModel @Inject constructor(private val repository: UserPreferencesRepository) : ViewModel() {
     /**
@@ -42,12 +42,6 @@ class SettingsViewModel @Inject constructor(private val repository: UserPreferen
     fun onMassUnitSelected(unit: MassUnit) {
         viewModelScope.launch {
             repository.setMassUnit(unit)
-        }
-    }
-
-    fun onShowTrendLinesChanged(show: Boolean) {
-        viewModelScope.launch {
-            repository.setShowTrendLines(show)
         }
     }
 

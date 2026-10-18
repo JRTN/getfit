@@ -25,8 +25,4 @@ class DefaultUserPreferencesRepository @Inject constructor(private val dataSourc
     override suspend fun setMassUnit(unit: MassUnit) {
         dataSource.setMassUnit(unit)
     }
-
-    override suspend fun setShowTrendLines(show: Boolean) {
-        dataSource.setShowTrendLines(show)
-    }
 }

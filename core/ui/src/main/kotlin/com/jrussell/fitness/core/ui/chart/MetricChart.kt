@@ -4,6 +4,7 @@ import android.text.format.DateFormat
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
@@ -76,16 +77,18 @@ private const val VALUE_LABELS: Int = 5
  * draws [series] over [range] with Vico. Every chart follows the same rules:
  * - each series is its recorded values connected by a solid line, with a dot on each point, in
  *   the next palette color; this is the main line;
- * - with [showTrend], each series also gets its trend: the dotted least-squares line through its
+ * - each series also gets its trend: the dotted least-squares line through its
  *   points ([trendLine]), in the same color, drawn under the main line;
  * - the spoken summary (the chart's content description) reads the first series: first and last
  *   values and the trend per week, whether or not the trend line is drawn;
  * - "View as table" lists the recorded values, with the summary above them;
  * - a legend tells lines apart by label and shape (solid vs dotted), never by color alone.
  *
+ * Next to "View as table", "Hide trend line" / "Show trend line" turns the dotted lines off and on
+ * for this chart (kept across rotation; the trend line is on whenever the chart is first shown).
+ *
  * @param series values already in display units; the first is the one summarized.
  * @param formatValue formats a value for axis labels, the table and the summary (locale-aware).
- * @param showTrend whether to draw the dotted trend lines (Settings › Charts for built-in charts).
  */
 @Composable
 fun MetricChart(
@@ -94,9 +97,9 @@ fun MetricChart(
     range: LocalDateRange,
     formatValue: (Double) -> String,
     modifier: Modifier = Modifier,
-    showTrend: Boolean = true,
 ) {
     var showTable: Boolean by rememberSaveable { mutableStateOf(false) }
+    var showTrend: Boolean by rememberSaveable { mutableStateOf(true) }
     val drawable: List<ChartSeries> = series.filter { one: ChartSeries -> one.points.isNotEmpty() }
     Column(modifier = modifier.fillMaxWidth()) {
         if (drawable.isEmpty()) {
@@ -117,8 +120,31 @@ fun MetricChart(
                 VicoChart(lines = lines, range = range, summary = summary, formatValue = formatValue)
             }
             Legend(lines = lines)
-            TextButton(onClick = { showTable = !showTable }) {
-                Text(text = stringResource(if (showTable) R.string.chart_view_chart else R.string.chart_view_table))
+            val hasTrend: Boolean = drawable.any { one: ChartSeries -> trendLine(one.points).isNotEmpty() }
+            ChartActions(
+                showTable = showTable,
+                onToggleTable = { showTable = !showTable },
+                // The table never shows trend lines, so the toggle only appears with the chart.
+                trendToggle = if (hasTrend && !showTable) TrendToggle(showTrend) { showTrend = !showTrend } else null,
+            )
+        }
+    }
+}
+
+/** The trend-line button's state: whether the line is [shown], and what a tap does. */
+private class TrendToggle(val shown: Boolean, val onToggle: () -> Unit)
+
+/** "View as table" / "View as chart", then (when there is a trend to toggle) "Hide/Show trend line". */
+@Composable
+private fun ChartActions(showTable: Boolean, onToggleTable: () -> Unit, trendToggle: TrendToggle?) {
+    // Wraps instead of clipping when large fonts make the two buttons wider than the screen.
+    FlowRow {
+        TextButton(onClick = onToggleTable) {
+            Text(text = stringResource(if (showTable) R.string.chart_view_chart else R.string.chart_view_table))
+        }
+        trendToggle?.let { toggle: TrendToggle ->
+            TextButton(onClick = toggle.onToggle) {
+                Text(text = stringResource(if (toggle.shown) R.string.chart_hide_trend else R.string.chart_show_trend))
             }
         }
     }

@@ -150,7 +150,7 @@ class BodyViewModel @Inject constructor(
                 dialog: WeightEntryState?,
                 prefs: UserPreferences,
             ->
-            Controls(selected, dialog, prefs.massUnit, prefs.showTrendLines)
+            Controls(selected, dialog, prefs.massUnit)
         }
         return combine(
             controls,
@@ -176,7 +176,6 @@ class BodyViewModel @Inject constructor(
                 selection = controls.selection,
                 chartRange = chartRange,
                 chartWeighIns = weights.inRange(chartRange, unit),
-                showTrend = controls.showTrend,
                 entry = controls.entry,
             )
         }
@@ -186,7 +185,6 @@ class BodyViewModel @Inject constructor(
         val selection: DateRangeSelection,
         val entry: WeightEntryState?,
         val unit: MassUnit,
-        val showTrend: Boolean,
     )
 
     private companion object {

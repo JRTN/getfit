@@ -3,6 +3,8 @@
     <!-- Chart component -->
     <string name="chart_view_table">View as table</string>
     <string name="chart_view_chart">View as chart</string>
+    <string name="chart_hide_trend">Hide trend line</string>
+    <string name="chart_show_trend">Show trend line</string>
     <string name="chart_no_data">No data in this range</string>
     <string name="chart_table_date">Date</string>
     <plurals name="chart_days">

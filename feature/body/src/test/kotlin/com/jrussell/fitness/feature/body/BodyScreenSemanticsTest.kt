@@ -84,7 +84,6 @@ class BodyScreenSemanticsTest {
             selection = DateRangeSelection.Today,
             chartRange = LocalDate(2026, 10, 11)..today,
             chartWeighIns = emptyList(),
-            showTrend = true,
             entry = entry,
         )
     }
