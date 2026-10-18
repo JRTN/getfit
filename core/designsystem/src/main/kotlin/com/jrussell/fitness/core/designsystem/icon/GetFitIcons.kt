@@ -31,6 +31,8 @@ object GetFitIcons {
 
     @DrawableRes val Check: Int = R.drawable.ic_check
 
+    @DrawableRes val Delete: Int = R.drawable.ic_delete
+
     /** Every icon with its name, for tests and previews. */
     val all: List<Pair<String, Int>> = listOf(
         "Home" to Home,
@@ -44,5 +46,6 @@ object GetFitIcons {
         "Settings" to Settings,
         "Back" to Back,
         "Check" to Check,
+        "Delete" to Delete,
     )
 }

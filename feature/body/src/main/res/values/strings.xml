@@ -1,4 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="feature_body_title">Body</string>
+
+    <!-- Log / Trends switch -->
+    <string name="body_view_log">Log</string>
+    <string name="body_view_trends">Trends</string>
+
+    <!-- Log view -->
+    <string name="body_latest_label">Latest weight</string>
+    <string name="body_today">today</string>
+    <!-- Latest weight: value, unit symbol, date ("today" or a date). -->
+    <string name="body_latest_value">%1$s %2$s · %3$s</string>
+    <!-- Spoken latest weight: value, unit spoken, date. -->
+    <string name="body_latest_spoken">Latest weight %1$s %2$s, %3$s</string>
+    <string name="body_add_weight">Add weight</string>
+    <string name="body_history_title">History</string>
+    <string name="body_history_empty">No weigh-ins yet. Add your first one above.</string>
+    <!-- History row: date, time. -->
+    <string name="body_row_when">%1$s · %2$s</string>
+    <!-- Spoken history row: value, unit spoken, date, time. -->
+    <string name="body_row_spoken">%1$s %2$s, %3$s at %4$s</string>
+    <string name="body_delete">Delete</string>
+    <!-- Delete button: value, unit spoken, date. -->
+    <string name="body_delete_described">Delete %1$s %2$s, %3$s</string>
+    <string name="body_delete_title">Delete this weigh-in?</string>
+    <!-- Delete confirmation: value, unit symbol, date, time. -->
+    <string name="body_delete_text">%1$s %2$s from %3$s at %4$s will be removed.</string>
+    <string name="body_cancel">Cancel</string>
+
+    <!-- Add-weight dialog -->
+    <string name="body_entry_title">Add weight</string>
+    <!-- Field label: unit symbol. -->
+    <string name="body_entry_field">Weight (%1$s)</string>
+    <string name="body_entry_date">Date</string>
+    <string name="body_entry_time">Time</string>
+    <string name="body_entry_now">Now</string>
+    <string name="body_entry_save">Save</string>
+    <string name="body_picker_ok">OK</string>
+    <string name="body_error_empty">Enter a weight</string>
+    <string name="body_error_not_a_number">Enter the weight as a number</string>
+    <!-- Out of range: lowest, highest, unit symbol. -->
+    <string name="body_error_out_of_range">Enter a weight between %1$d and %2$d %3$s</string>
+
+    <!-- Trends view -->
+    <string name="body_chart_title">Body weight</string>
+    <string name="body_series_weight">Weight</string>
+    <string name="body_series_trend">Trend</string>
 </resources>

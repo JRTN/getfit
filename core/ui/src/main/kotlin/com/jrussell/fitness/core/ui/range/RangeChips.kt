@@ -76,7 +76,7 @@ fun RangeChips(
         RangeChip(label = fromLabel, selected = selection is DateRangeSelection.From) { pickingStart = true }
     }
     if (pickingStart) {
-        StartDatePicker(
+        PastDatePickerDialog(
             today = today,
             onPicked = { start: LocalDate ->
                 pickingStart = false
@@ -97,9 +97,18 @@ private fun RangeChip(label: String, selected: Boolean, onClick: () -> Unit) {
     )
 }
 
+/**
+ * A Material 3 date picker dialog where nothing after [today] can be picked (no future range
+ * starts or backfilled entries). It opens on [initial].
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun StartDatePicker(today: LocalDate, onPicked: (LocalDate) -> Unit, onDismiss: () -> Unit) {
+fun PastDatePickerDialog(
+    today: LocalDate,
+    onPicked: (LocalDate) -> Unit,
+    onDismiss: () -> Unit,
+    initial: LocalDate = today,
+) {
     val todayMillis: Long = today.toEpochDays() * MILLIS_PER_DAY
     val notAfterToday: SelectableDates = remember(todayMillis) {
         object : SelectableDates {
@@ -109,7 +118,7 @@ private fun StartDatePicker(today: LocalDate, onPicked: (LocalDate) -> Unit, onD
         }
     }
     val state: DatePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = todayMillis,
+        initialSelectedDateMillis = minOf(initial, today).toEpochDays() * MILLIS_PER_DAY,
         selectableDates = notAfterToday,
     )
     DatePickerDialog(

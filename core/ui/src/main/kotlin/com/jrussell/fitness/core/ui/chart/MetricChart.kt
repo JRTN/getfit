@@ -38,6 +38,7 @@ import com.patrykandpatrick.vico.compose.cartesian.data.CartesianChartModel
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianLayerRangeProvider
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianValueFormatter
 import com.patrykandpatrick.vico.compose.cartesian.data.LineCartesianLayerModel
+import com.patrykandpatrick.vico.compose.cartesian.layer.CartesianLayerPadding
 import com.patrykandpatrick.vico.compose.cartesian.layer.LineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLine
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
@@ -57,9 +58,13 @@ import kotlinx.datetime.toJavaLocalDate
 private val LINE_THICKNESS: Dp = 2.5.dp
 private val POINT_SIZE: Dp = 6.dp
 private val LEGEND_SWATCH: Dp = 16.dp
+private val EDGE_PADDING: Dp = 24.dp
 private const val MIN_Y_PADDING: Double = 0.5
 private const val Y_PADDING_FRACTION: Double = 0.1
 private const val TARGET_DATE_LABELS: Int = 4
+
+/** How many value labels the y-axis shows (the default step placer can leave just one on a narrow range). */
+private const val VALUE_LABELS: Int = 5
 
 /**
  * The app's one chart component (spec: "The UI never calls a charting library directly"). It
@@ -130,6 +135,7 @@ private fun VicoChart(
                 valueFormatter = remember(formatValue) {
                     CartesianValueFormatter { _, value, _ -> formatValue(value) }
                 },
+                itemPlacer = remember { VerticalAxis.ItemPlacer.count(count = { VALUE_LABELS }) },
             ),
             bottomAxis = HorizontalAxis.rememberBottom(
                 valueFormatter = remember(dateLabelFormatter) {
@@ -139,6 +145,8 @@ private fun VicoChart(
                 },
                 itemPlacer = remember(labelSpacing) { HorizontalAxis.ItemPlacer.aligned(spacing = { labelSpacing }) },
             ),
+            // Room past both ends so the first and last date labels and edge points are not clipped.
+            layerPadding = { CartesianLayerPadding(unscalableStart = EDGE_PADDING, unscalableEnd = EDGE_PADDING) },
         ),
         model = model,
         modifier = Modifier.semantics { summary?.let { text: String -> contentDescription = text } },
