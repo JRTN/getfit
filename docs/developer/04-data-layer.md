@@ -120,7 +120,7 @@ Charts and summary cards never read repositories directly. They ask a [`MetricRe
 
 ## Remembered date ranges
 
-Home and Body each remember their range choice (All, Today, 7 days, 30 days, From…) across restarts, separately. [`DateRangeRepository`](../../core/domain/src/main/kotlin/com/jrussell/fitness/core/domain/range/DateRangeRepository.kt) stores it as stable text (`"ALL"`, `"LAST_DAYS:30"`, `"FROM:2026-06-01"`) under `range_<screen>` in the preferences DataStore ([`RangeSelectionDataSource`](../../core/datastore/src/main/kotlin/com/jrussell/fitness/core/datastore/RangeSelectionDataSource.kt)). Unreadable text falls back to the screen's default (Home: Today, Body: All), so a bad value can never break a screen.
+Home and Body each remember their range choice across restarts, separately. Home offers All, Today, 7 days, 30 days and From…; Body has no Today, since its latest-weight card already shows the newest weigh-in (`RangeScreen.offersToday`). [`DateRangeRepository`](../../core/domain/src/main/kotlin/com/jrussell/fitness/core/domain/range/DateRangeRepository.kt) stores it as stable text (`"ALL"`, `"LAST_DAYS:30"`, `"FROM:2026-06-01"`) under `range_<screen>` in the preferences DataStore ([`RangeSelectionDataSource`](../../core/datastore/src/main/kotlin/com/jrussell/fitness/core/datastore/RangeSelectionDataSource.kt)). Unreadable text, or a choice the screen doesn't offer (an old Today on Body), falls back to the screen's default (Home: Today, Body: All), so a bad value can never break a screen.
 
 ## Built-in reference rows and seeding
 

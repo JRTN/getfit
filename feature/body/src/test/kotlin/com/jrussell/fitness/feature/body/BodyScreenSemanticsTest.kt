@@ -85,6 +85,7 @@ class BodyScreenSemanticsTest {
         rule.onNodeWithText("30 days").performClick()
 
         assertThat(picked).isEqualTo(DateRangeSelection.LastDays(30))
+        rule.onNodeWithText("Today").assertDoesNotExist()
     }
 
     @Test
@@ -102,7 +103,7 @@ class BodyScreenSemanticsTest {
                 LatestWeight(it.value, it.date, perWeek = -1.2, since = LocalDate(2026, 10, 11))
             },
             history = history,
-            selection = DateRangeSelection.Today,
+            selection = DateRangeSelection.All,
             chartRange = LocalDate(2026, 10, 11)..today,
             chartWeighIns = emptyList(),
             entry = entry,

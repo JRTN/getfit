@@ -17,7 +17,6 @@ import com.jrussell.fitness.core.ui.chart.MetricChart
 import com.jrussell.fitness.core.ui.format.formatOneDecimal
 import com.jrussell.fitness.core.ui.format.massUnitSpoken
 import com.jrussell.fitness.core.ui.format.massUnitSymbol
-import com.jrussell.fitness.core.ui.range.RangeChips
 
 private val SCREEN_PADDING: Dp = 16.dp
 
@@ -37,7 +36,7 @@ internal fun BodyTrendsContent(
         modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(SCREEN_PADDING),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        RangeChips(selection = state.selection, onSelect = onRangeSelected, today = state.today)
+        BodyRangeChips(state = state, onSelect = onRangeSelected)
         MetricChart(
             title = stringResource(R.string.body_chart_title),
             series = listOf(

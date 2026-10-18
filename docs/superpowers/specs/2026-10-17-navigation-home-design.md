@@ -237,3 +237,9 @@ Decided with the user after trying the first weight chart on the emulator. Showi
 - **All** is a new chip, first in the row on every screen with range chips: from the earliest data through today. It is how you clear a narrower range. Body defaults to All; Home defaults to Today.
 - **Remembered separately:** Home's and Body's ranges are saved (with the UI preferences) and restored on the next launch, independently of each other.
 - The chips wrap onto a second line instead of scrolling sideways, so a long "From Oct 1, 2026" chip is never cut off.
+
+### Body has no Today chip (2026-10-18)
+
+- **Body's range chips are All, 7 days, 30 days and From…** (owner decision). The latest-weight card already shows the most recent weigh-in, so a Today range on Body added nothing. Home keeps Today, and stays its default.
+- A Today choice saved on Body before this change reads as Body's default, All.
+- "Charts on Today show the last 7 days" now applies only to Home; when the other tabs' Trends views gain range chips, each decides whether it offers Today.

@@ -37,6 +37,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.jrussell.fitness.core.designsystem.icon.GetFitIcons
+import com.jrussell.fitness.core.domain.range.DateRangeSelection
 import com.jrussell.fitness.core.model.MassUnit
 import com.jrussell.fitness.core.model.ids.MeasurementId
 import com.jrussell.fitness.core.ui.format.formatOneDecimal
@@ -69,9 +70,7 @@ internal fun BodyLogContent(state: BodyUiState, actions: BodyActions, modifier: 
         contentPadding = PaddingValues(SCREEN_PADDING),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        item {
-            RangeChips(selection = state.selection, onSelect = actions.onRangeSelected, today = state.today)
-        }
+        item { BodyRangeChips(state = state, onSelect = actions.onRangeSelected) }
         state.latest?.let { latest: LatestWeight ->
             item { LatestWeightCard(latest = latest, unit = state.unit, today = state.today) }
         }
@@ -117,6 +116,15 @@ internal fun BodyLogContent(state: BodyUiState, actions: BodyActions, modifier: 
             onDismiss = { pendingDelete = null },
         )
     }
+}
+
+/**
+ * Body's range chips, shared by Log and Trends. No Today chip: the latest-weight card already
+ * shows the most recent weigh-in.
+ */
+@Composable
+internal fun BodyRangeChips(state: BodyUiState, onSelect: (DateRangeSelection) -> Unit) {
+    RangeChips(selection = state.selection, onSelect = onSelect, today = state.today, showToday = false)
 }
 
 /** "212.4 lb · today" over "−1.2 lb/week since Oct 11", read by TalkBack as one sentence. */

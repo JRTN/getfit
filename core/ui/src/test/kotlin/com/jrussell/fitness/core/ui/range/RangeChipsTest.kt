@@ -55,6 +55,24 @@ class RangeChipsTest {
         assertThat(selected).isEqualTo(DateRangeSelection.All)
     }
 
+    @Test
+    fun withoutToday_hasNoTodayChip() {
+        rule.setContent {
+            GetFitTheme {
+                RangeChips(
+                    selection = DateRangeSelection.All,
+                    onSelect = {},
+                    today = LocalDate(2026, 10, 17),
+                    showToday = false,
+                )
+            }
+        }
+
+        rule.onNodeWithText("Today").assertDoesNotExist()
+        rule.onNodeWithText("All").assertIsSelected()
+        rule.onNodeWithText("7 days").assertIsNotSelected()
+    }
+
     private fun show(onSelect: (DateRangeSelection) -> Unit) {
         rule.setContent {
             GetFitTheme {

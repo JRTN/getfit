@@ -53,6 +53,14 @@ class DefaultDateRangeRepositoryTest {
         assertThat(repositoryOver(dataStore).selection(RangeScreen.BODY).first()).isEqualTo(DateRangeSelection.All)
     }
 
+    @Test
+    fun savedToday_onAScreenWithoutToday_readsAsTheDefault() = runTest {
+        val dataStore: DataStore<Preferences> = dataStoreIn(backgroundScope)
+        dataStore.edit { preferences -> preferences[stringPreferencesKey("range_body")] = "TODAY" }
+
+        assertThat(repositoryOver(dataStore).selection(RangeScreen.BODY).first()).isEqualTo(DateRangeSelection.All)
+    }
+
     private fun repositoryOver(dataStore: DataStore<Preferences>): DefaultDateRangeRepository {
         return DefaultDateRangeRepository(RangeSelectionDataSource(dataStore))
     }

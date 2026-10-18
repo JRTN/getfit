@@ -3,6 +3,7 @@ package com.jrussell.fitness.core.testing
 import com.jrussell.fitness.core.domain.range.DateRangeRepository
 import com.jrussell.fitness.core.domain.range.DateRangeSelection
 import com.jrussell.fitness.core.domain.range.RangeScreen
+import com.jrussell.fitness.core.domain.range.offers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
@@ -13,7 +14,9 @@ class FakeDateRangeRepository(initial: Map<RangeScreen, DateRangeSelection> = em
     private val state: MutableStateFlow<Map<RangeScreen, DateRangeSelection>> = MutableStateFlow(initial)
 
     override fun selection(screen: RangeScreen): Flow<DateRangeSelection> {
-        return state.map { saved: Map<RangeScreen, DateRangeSelection> -> saved[screen] ?: screen.defaultSelection }
+        return state.map { saved: Map<RangeScreen, DateRangeSelection> ->
+            saved[screen]?.takeIf(screen::offers) ?: screen.defaultSelection
+        }
     }
 
     override suspend fun setSelection(screen: RangeScreen, selection: DateRangeSelection) {

@@ -3,13 +3,24 @@ package com.jrussell.fitness.core.domain.range
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.LocalDate
 
-/** A screen whose range choice is remembered, each separately, with its default. */
-enum class RangeScreen(val defaultSelection: DateRangeSelection) {
+/**
+ * A screen whose range choice is remembered, each separately, with its default. [offersToday] is
+ * whether the screen has a Today chip; a saved Today on a screen without one reads as the default.
+ */
+enum class RangeScreen(val defaultSelection: DateRangeSelection, val offersToday: Boolean) {
     /** Home opens on today's summary. */
-    HOME(DateRangeSelection.Today),
+    HOME(DateRangeSelection.Today, offersToday = true),
 
-    /** Body (Log and Trends share one range) shows all weigh-ins until the user narrows it. */
-    BODY(DateRangeSelection.All),
+    /**
+     * Body (Log and Trends share one range) shows all weigh-ins until the user narrows it. It has
+     * no Today: its latest-weight card already shows the most recent weigh-in (owner decision, 2026-10-18).
+     */
+    BODY(DateRangeSelection.All, offersToday = false),
+}
+
+/** Whether [selection] is a choice this screen offers. */
+fun RangeScreen.offers(selection: DateRangeSelection): Boolean {
+    return offersToday || selection != DateRangeSelection.Today
 }
 
 /**

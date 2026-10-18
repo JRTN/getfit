@@ -132,16 +132,16 @@ class BodyViewModelTest {
     }
 
     @Test
-    fun trends_todaySelection_chartsLastSevenDays() = runTest {
+    fun trends_sevenDaySelection_chartsLastSevenDays() = runTest {
         weights.value = listOf(point(10, 9, 83.0), point(10, 11, 82.5), point(10, 17, 82.0))
 
-        val todayRange: FakeDateRangeRepository = FakeDateRangeRepository(
+        val sevenDays: FakeDateRangeRepository = FakeDateRangeRepository(
             mapOf(
-                RangeScreen.BODY to DateRangeSelection.Today,
+                RangeScreen.BODY to DateRangeSelection.LastDays(7),
             ),
         )
 
-        val state: BodyUiState = loaded(loadedViewModel(todayRange))
+        val state: BodyUiState = loaded(loadedViewModel(sevenDays))
 
         assertThat(state.chartRange).isEqualTo(LocalDate(2026, 10, 11)..today)
         assertThat(state.chartWeighIns.map { it.date }).containsExactly(LocalDate(2026, 10, 11), today)

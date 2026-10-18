@@ -37,8 +37,8 @@ private const val THIRTY_DAYS: Int = 30
 
 /**
  * The range presets shared by Home and the tabs (decision #38): All (clears any narrower range),
- * Today, 7 days, 30 days, and From…, which opens a date picker for the start date. Dates after
- * [today] can't be picked.
+ * Today (only when [showToday]), 7 days, 30 days, and From…, which opens a date picker for the
+ * start date. Dates after [today] can't be picked.
  * The chips form a single-choice group for TalkBack (radio role with selected state).
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -48,6 +48,7 @@ fun RangeChips(
     onSelect: (DateRangeSelection) -> Unit,
     today: LocalDate,
     modifier: Modifier = Modifier,
+    showToday: Boolean = true,
 ) {
     var pickingStart: Boolean by rememberSaveable { mutableStateOf(false) }
     // Wraps onto a second line instead of scrolling, so every choice (and the From date) stays visible.
@@ -60,10 +61,12 @@ fun RangeChips(
             label = stringResource(R.string.range_all),
             selected = selection == DateRangeSelection.All,
         ) { onSelect(DateRangeSelection.All) }
-        RangeChip(
-            label = stringResource(R.string.range_today),
-            selected = selection == DateRangeSelection.Today,
-        ) { onSelect(DateRangeSelection.Today) }
+        if (showToday) {
+            RangeChip(
+                label = stringResource(R.string.range_today),
+                selected = selection == DateRangeSelection.Today,
+            ) { onSelect(DateRangeSelection.Today) }
+        }
         RangeChip(
             label = stringResource(R.string.range_7_days),
             selected = selection == DateRangeSelection.LastDays(SEVEN_DAYS),
