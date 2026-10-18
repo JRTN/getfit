@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Android Auto Backup and device-to-device transfer (spec: "Backup layers"): user.db (with its
+    WAL file; the system stops the app before a full backup, so the two are consistent) and the
+    DataStore preferences. Listing includes means nothing else is copied: no crash logs, logs,
+    restore staging, corrupt-database copies or reference catalog. The device ID needs no exclude:
+    it lives in noBackupFilesDir, which is never backed up.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="database" path="user.db" />
+        <include domain="database" path="user.db-wal" />
+        <include domain="file" path="datastore/" />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="database" path="user.db" />
+        <include domain="database" path="user.db-wal" />
+        <include domain="file" path="datastore/" />
+    </device-transfer>
+</data-extraction-rules>
