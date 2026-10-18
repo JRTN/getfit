@@ -36,4 +36,16 @@ class FileDeviceIdProviderTest {
 
         assertThat(Uuid.parseOrNull(file.readText())).isNotNull().isEqualTo(id.value)
     }
+
+    @Test
+    fun readFails_isTreatedAsMissing() = runTest {
+        // A directory where the file should be: reading and writing it both fail.
+        File(temporaryFolder.root, "device_id").mkdirs()
+        val provider: FileDeviceIdProvider =
+            FileDeviceIdProvider(temporaryFolder.root, StandardTestDispatcher(testScheduler))
+
+        val first: DeviceId = provider.deviceId()
+
+        assertThat(provider.deviceId()).isEqualTo(first)
+    }
 }

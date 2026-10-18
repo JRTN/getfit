@@ -30,6 +30,7 @@ import com.jrussell.fitness.core.importers.export.BundleDecode
 import com.jrussell.fitness.core.importers.export.decodeExportBundle
 import com.jrussell.fitness.core.importers.export.encodeExportBundle
 import com.jrussell.fitness.core.model.MeasurementTypeKeys
+import com.jrussell.fitness.core.testing.RecordingLogger
 import java.io.File
 import kotlin.time.Duration.Companion.hours
 import kotlinx.coroutines.CoroutineScope
@@ -261,6 +262,7 @@ class DefaultBackupRepositoryTest {
             merger = merger(harness),
             files = BackupFiles(File(temporaryFolder.root, "cache"), PendingRestore(restoreDirectory, databaseFile)),
             clock = harness.clock,
+            logger = RecordingLogger(),
             ioDispatcher = UnconfinedTestDispatcher(testScheduler),
         )
     }

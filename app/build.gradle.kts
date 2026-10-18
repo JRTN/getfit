@@ -7,6 +7,8 @@ dependencies {
     testImplementation(libs.junit4)
     testImplementation(libs.assertk)
     testImplementation(libs.robolectric)
+    testImplementation(projects.core.testing)
+    testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(platform(libs.androidx.compose.bom))
     testImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
@@ -23,6 +25,9 @@ dependencies {
     implementation(projects.core.domain)
     implementation(projects.core.datastore)
     implementation(projects.core.database)
+    implementation(projects.core.backup)
+    implementation(libs.androidx.work.runtime)
+    implementation(libs.androidx.hilt.work)
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)

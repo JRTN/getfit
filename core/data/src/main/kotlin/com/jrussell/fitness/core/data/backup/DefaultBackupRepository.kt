@@ -21,6 +21,7 @@ import com.jrussell.fitness.core.domain.backup.RestoreResult
 import com.jrussell.fitness.core.importers.export.ExportBundle
 import com.jrussell.fitness.core.importers.export.MeasurementRecord
 import com.jrussell.fitness.core.importers.export.encodeExportBundle
+import com.jrussell.fitness.core.model.logging.Logger
 import java.io.OutputStream
 import javax.inject.Inject
 import kotlin.time.Clock
@@ -55,6 +56,7 @@ class DefaultBackupRepository @Inject constructor(
     private val merger: BundleMerger,
     files: BackupFiles,
     private val clock: Clock,
+    private val logger: Logger,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : BackupRepository,
     SnapshotJob {
@@ -96,6 +98,7 @@ class DefaultBackupRepository @Inject constructor(
                 Outcome.Success(takenAt)
             } else {
                 settings.recordFailure(failure.name)
+                logger.warn(TAG, "snapshot failed: $failure")
                 backupFailure(failure)
             }
         }
@@ -131,7 +134,11 @@ class DefaultBackupRepository @Inject constructor(
         return withContext(ioDispatcher) {
             when (val read: ReadFile = operations.readChosen(from.uri, ::restorable)) {
                 is ReadFile.Snapshot -> stageReplacement(read)
-                is ReadFile.Bundle -> Outcome.Success(merger.merge(read.bundle))
+                is ReadFile.Bundle -> Outcome.Success(
+                    merger.merge(read.bundle).also { merged ->
+                        logger.info(TAG, "merged a JSON export: $merged")
+                    },
+                )
                 is ReadFile.Failed -> backupFailure(read.failure)
             }
         }
@@ -148,11 +155,14 @@ class DefaultBackupRepository @Inject constructor(
                 // The current data is kept before anything is replaced.
                 operations.writeSafetyCopy()
                 pendingRestore.stage(read.file)
+                logger.info(TAG, "staged a database restore; restarting")
                 Outcome.Success(RestoreResult.RestartRequired)
             }
         }
     }
 }
+
+private const val TAG: String = "Backup"
 
 private fun bundlePreview(bundle: ExportBundle): RestorePreview {
     val newest: Instant? = bundle.measurements.maxOfOrNull { record: MeasurementRecord -> record.sync.updatedAt }

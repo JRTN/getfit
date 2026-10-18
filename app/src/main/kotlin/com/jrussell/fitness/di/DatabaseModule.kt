@@ -1,9 +1,11 @@
 package com.jrussell.fitness.di
 
 import android.content.Context
+import com.jrussell.fitness.core.data.backup.installPendingRestore
 import com.jrussell.fitness.core.data.di.IoDispatcher
 import com.jrussell.fitness.core.database.GetFitDatabase
 import com.jrussell.fitness.core.database.createGetFitDatabase
+import com.jrussell.fitness.core.model.logging.Logger
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -27,7 +29,12 @@ object DatabaseModule {
         @ApplicationContext context: Context,
         @IoDispatcher ioDispatcher: CoroutineDispatcher,
         clock: Clock,
+        logger: Logger,
     ): GetFitDatabase {
+        // A restore staged before the last restart is installed before Room opens the file.
+        if (installPendingRestore(context)) {
+            logger.info("Restore", "installed the staged database")
+        }
         return createGetFitDatabase(
             context = context,
             queryContext = ioDispatcher,
