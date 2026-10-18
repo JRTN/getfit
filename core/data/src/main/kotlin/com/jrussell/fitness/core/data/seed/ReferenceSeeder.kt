@@ -8,6 +8,7 @@ import com.jrussell.fitness.core.domain.IdGenerator
 import com.jrussell.fitness.core.model.DailyAggregation
 import com.jrussell.fitness.core.model.MeasurementCategory
 import com.jrussell.fitness.core.model.MeasurementTypeKeys
+import com.jrussell.fitness.core.model.StandardUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.time.Clock
@@ -65,7 +66,7 @@ class ReferenceSeeder @Inject constructor(
                 ownerId = null,
                 key = MeasurementTypeKeys.WEIGHT,
                 displayName = "Weight",
-                canonicalUnit = "kg",
+                canonicalUnit = StandardUnit.KILOGRAM,
                 category = MeasurementCategory.BODY,
                 dailyAggregation = DailyAggregation.LAST,
                 hasSecondaryValue = false,

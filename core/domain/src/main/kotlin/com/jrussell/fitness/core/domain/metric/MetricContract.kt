@@ -1,5 +1,6 @@
 package com.jrussell.fitness.core.domain.metric
 
+import com.jrussell.fitness.core.model.MeasurementUnit
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateRange
@@ -27,11 +28,6 @@ enum class Bucket {
     MONTH,
 }
 
-/** The canonical unit a metric's values are in. Grows with each milestone's metrics. */
-enum class UnitOfMeasure {
-    KILOGRAM,
-}
-
 /** Which part of the app a metric belongs to (decides where its single-domain charts live). */
 enum class MetricCategory {
     NUTRITION,
@@ -51,7 +47,7 @@ enum class MetricCategory {
 data class MetricDescriptor(
     val id: MetricId,
     val displayNameResource: Int,
-    val canonicalUnit: UnitOfMeasure,
+    val canonicalUnit: MeasurementUnit,
     val dailyAggregation: Aggregation,
     val category: MetricCategory,
     val higherIsBetter: Boolean?,

@@ -10,11 +10,11 @@ import com.jrussell.fitness.core.domain.metric.MetricDescriptor
 import com.jrussell.fitness.core.domain.metric.MetricId
 import com.jrussell.fitness.core.domain.metric.MetricIds
 import com.jrussell.fitness.core.domain.metric.MetricSeriesProvider
-import com.jrussell.fitness.core.domain.metric.UnitOfMeasure
 import com.jrussell.fitness.core.domain.metric.bucketize
 import com.jrussell.fitness.core.domain.metric.trendWeight
 import com.jrussell.fitness.core.model.Measurement
 import com.jrussell.fitness.core.model.MeasurementTypeKeys
+import com.jrussell.fitness.core.model.StandardUnit
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
@@ -70,7 +70,7 @@ class BodyMetricProvider @Inject constructor(private val measurements: Measureme
         return MetricDescriptor(
             id = id,
             displayNameResource = nameResource,
-            canonicalUnit = UnitOfMeasure.KILOGRAM,
+            canonicalUnit = StandardUnit.KILOGRAM,
             dailyAggregation = Aggregation.LAST,
             category = MetricCategory.BODY,
             higherIsBetter = null,

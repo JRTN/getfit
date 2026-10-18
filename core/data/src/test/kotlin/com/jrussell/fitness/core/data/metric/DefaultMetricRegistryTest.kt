@@ -12,7 +12,7 @@ import com.jrussell.fitness.core.domain.metric.MetricCategory
 import com.jrussell.fitness.core.domain.metric.MetricDescriptor
 import com.jrussell.fitness.core.domain.metric.MetricId
 import com.jrussell.fitness.core.domain.metric.MetricSeriesProvider
-import com.jrussell.fitness.core.domain.metric.UnitOfMeasure
+import com.jrussell.fitness.core.model.StandardUnit
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
@@ -43,7 +43,7 @@ class DefaultMetricRegistryTest {
         private val descriptor: MetricDescriptor = MetricDescriptor(
             id = MetricId(id),
             displayNameResource = 0,
-            canonicalUnit = UnitOfMeasure.KILOGRAM,
+            canonicalUnit = StandardUnit.KILOGRAM,
             dailyAggregation = Aggregation.LAST,
             category = MetricCategory.BODY,
             higherIsBetter = null,

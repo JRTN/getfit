@@ -41,7 +41,7 @@ class ReferenceSeederTest {
         assertThat(weight?.id).isEqualTo(idGenerator.nameBasedId("measurement-type:weight"))
         assertThat(weight?.ownerId).isNull()
         assertThat(weight?.localRevision).isEqualTo(0L)
-        assertThat(weight?.canonicalUnit).isEqualTo("kg")
+        assertThat(weight?.canonicalUnit?.code).isEqualTo("kg")
     }
 
     @Test

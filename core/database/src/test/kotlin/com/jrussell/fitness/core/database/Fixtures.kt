@@ -7,6 +7,7 @@ import com.jrussell.fitness.core.database.entity.SyncMetadata
 import com.jrussell.fitness.core.model.DailyAggregation
 import com.jrussell.fitness.core.model.MeasurementCategory
 import com.jrussell.fitness.core.model.MeasurementSource
+import com.jrussell.fitness.core.model.StandardUnit
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
 import kotlinx.datetime.LocalDate
@@ -46,7 +47,7 @@ fun aMeasurementType(id: Uuid = Uuid.random(), ownerId: Uuid?, key: String): Mea
         ownerId = ownerId,
         key = key,
         displayName = key,
-        canonicalUnit = "kg",
+        canonicalUnit = StandardUnit.KILOGRAM,
         category = MeasurementCategory.BODY,
         dailyAggregation = DailyAggregation.LAST,
         hasSecondaryValue = false,

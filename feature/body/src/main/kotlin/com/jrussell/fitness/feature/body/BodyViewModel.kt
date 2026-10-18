@@ -23,6 +23,7 @@ import com.jrussell.fitness.core.model.MassUnit
 import com.jrussell.fitness.core.model.Measurement
 import com.jrussell.fitness.core.model.MeasurementTypeKeys
 import com.jrussell.fitness.core.model.UserPreferences
+import com.jrussell.fitness.core.model.displayUnit
 import com.jrussell.fitness.core.model.ids.MeasurementId
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.Locale
@@ -144,7 +145,7 @@ class BodyViewModel @Inject constructor(
                 takenAt = takenAt,
                 timeZone = zone,
                 enteredValue = parsed.entered,
-                enteredUnit = unit.storageSymbol(),
+                enteredUnit = unit.displayUnit().code,
                 note = null,
                 localDateOverride = date,
             ),
@@ -216,12 +217,4 @@ private fun List<DataPoint>.inRange(range: LocalDateRange, unit: MassUnit): List
 /** This many kilograms in [unit]. */
 private fun Double.inUnit(unit: MassUnit): Double {
     return Mass.ofKilograms(this).inUnit(unit)
-}
-
-/** The unit recorded with a typed value (`Measurement.enteredUnit`); not translated. */
-private fun MassUnit.storageSymbol(): String {
-    return when (this) {
-        MassUnit.POUND -> "lb"
-        MassUnit.KILOGRAM -> "kg"
-    }
 }

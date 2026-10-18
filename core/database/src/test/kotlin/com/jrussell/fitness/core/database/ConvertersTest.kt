@@ -1,7 +1,11 @@
 package com.jrussell.fitness.core.database
 
+import assertk.assertFailure
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import assertk.assertions.isInstanceOf
+import com.jrussell.fitness.core.model.CustomUnit
+import com.jrussell.fitness.core.model.StandardUnit
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
 import kotlinx.datetime.LocalDate
@@ -40,5 +44,22 @@ class ConvertersTest {
 
         assertThat(converters.timeZoneToId(zone)).isEqualTo("America/Toronto")
         assertThat(converters.timeZoneFromId("America/Toronto")).isEqualTo(zone)
+    }
+
+    @Test
+    fun converter_unknownZone_isUtc() {
+        assertThat(converters.timeZoneFromId("Mars/Olympus")).isEqualTo(TimeZone.UTC)
+    }
+
+    @Test
+    fun converter_storesCodeText() {
+        assertThat(converters.measurementUnitToCode(StandardUnit.KILOGRAM)).isEqualTo("kg")
+        assertThat(converters.measurementUnitFromCode("kg")).isEqualTo(StandardUnit.KILOGRAM)
+        assertThat(converters.measurementUnitFromCode("custom:mg/dL")).isEqualTo(CustomUnit("mg/dL"))
+    }
+
+    @Test
+    fun converter_unknownCode_throws() {
+        assertFailure { converters.measurementUnitFromCode("furlong") }.isInstanceOf<IllegalStateException>()
     }
 }

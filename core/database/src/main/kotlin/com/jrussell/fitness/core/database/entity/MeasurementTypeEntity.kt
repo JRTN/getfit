@@ -5,6 +5,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.jrussell.fitness.core.model.DailyAggregation
 import com.jrussell.fitness.core.model.MeasurementCategory
+import com.jrussell.fitness.core.model.MeasurementUnit
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
 
@@ -26,7 +27,7 @@ data class MeasurementTypeEntity(
     val ownerId: Uuid?,
     val key: String,
     val displayName: String,
-    val canonicalUnit: String,
+    val canonicalUnit: MeasurementUnit,
     val category: MeasurementCategory,
     val dailyAggregation: DailyAggregation,
     val hasSecondaryValue: Boolean,

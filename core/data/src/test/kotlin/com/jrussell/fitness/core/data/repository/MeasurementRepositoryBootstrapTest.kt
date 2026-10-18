@@ -14,6 +14,7 @@ import com.jrussell.fitness.core.model.DailyAggregation
 import com.jrussell.fitness.core.model.Measurement
 import com.jrussell.fitness.core.model.MeasurementCategory
 import com.jrussell.fitness.core.model.MeasurementTypeKeys
+import com.jrussell.fitness.core.model.StandardUnit
 import com.jrussell.fitness.core.model.ids.MeasurementId
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.test.runTest
@@ -81,7 +82,7 @@ class MeasurementRepositoryBootstrapTest {
             ownerId = owner,
             key = "waist",
             displayName = "Waist",
-            canonicalUnit = "m",
+            canonicalUnit = StandardUnit.METER,
             category = MeasurementCategory.BODY,
             dailyAggregation = DailyAggregation.LAST,
             hasSecondaryValue = false,
