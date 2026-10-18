@@ -21,3 +21,12 @@ internal suspend fun runGuarded(logger: Logger, task: String, block: suspend () 
 }
 
 private const val STARTUP_TAG: String = "Startup"
+
+/**
+ * Whether [processName] is the app's main process. The `:restart` process (which finishes a full
+ * restore) gets its own `Application`, and it must not run startup: that would open `user.db`,
+ * and install a staged restore, while the old main process still has the database open.
+ */
+internal fun isMainProcess(processName: String?, packageName: String): Boolean {
+    return processName == packageName
+}

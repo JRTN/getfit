@@ -8,6 +8,7 @@ import com.jrussell.fitness.core.data.crash.CrashLogHandler
 import com.jrussell.fitness.core.data.di.ApplicationScope
 import com.jrussell.fitness.core.data.seed.DataBootstrap
 import com.jrussell.fitness.core.model.logging.Logger
+import dagger.Lazy
 import dagger.hilt.android.HiltAndroidApp
 import java.io.File
 import javax.inject.Inject
@@ -25,10 +26,10 @@ class GetFitApplication :
     Application(),
     Configuration.Provider {
     @Inject
-    lateinit var dataBootstrap: DataBootstrap
+    lateinit var dataBootstrap: Lazy<DataBootstrap>
 
     @Inject
-    lateinit var backupStartup: BackupStartup
+    lateinit var backupStartup: Lazy<BackupStartup>
 
     @Inject
     lateinit var logger: Logger
@@ -48,11 +49,16 @@ class GetFitApplication :
     override fun onCreate() {
         super.onCreate()
         installCrashLogHandler()
+        // The `:restart` process only relaunches the app; startup belongs to the main process. The
+        // startup objects are injected lazily, so building them (and the database) never happens there.
+        if (!isMainProcess(getProcessName(), packageName)) {
+            return
+        }
         applicationScope.launch {
             // Seeds built-in rows and creates the local profile on first launch; idempotent afterwards.
-            runGuarded(logger, task = "Data bootstrap") { dataBootstrap.run() }
+            runGuarded(logger, task = "Data bootstrap") { dataBootstrap.get().run() }
             // Keeps the daily backup scheduled, with a catch-up if it has fallen behind.
-            runGuarded(logger, task = "Backup scheduling") { backupStartup.run() }
+            runGuarded(logger, task = "Backup scheduling") { backupStartup.get().run() }
         }
     }
 

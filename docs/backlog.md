@@ -69,6 +69,15 @@ Milestone order (decision #39): M2 Body and Health Connect → M3 Nutrition → 
 - **Back stack after process death:** returning lands on Home rather than where the user was. (review §6.4)
 - **Restore counts don't match the preview.** The preview counts live entries ("4 entries"), but "Restored: 5 added" counts every merged row, including tombstones and the day-start setting. Count the same thing in both. (M1d drill)
 - **The folder-unavailable message appears twice.** After a failed Back up now, "Can't reach the backup folder. Choose it again." shows as both the result line and the status line, so TalkBack reads it twice. (M1d drill)
+- **Backup and restore leftovers** (from the M1d final review):
+  - **The first daily run can wait days.** On API 36 the first periodic run was deferred about 5 days (JobScheduler's flexible constraints). The catch-up only runs when the app is opened. Consider enqueuing a catch-up right after a folder is chosen, and check `getWorkInfosForUniqueWork` on the S25.
+  - **Settings looks healthy on a new phone after Auto Backup:** the folder URI comes back but its permission doesn't, so the status reads "last backup …" until the first run fails. Derive "folder unavailable" from `DocumentStore.hasPermission`.
+  - **The safety copy (`files/restore/before-restore.db`) can't be reached** in a release build. Consider "Undo last restore", or writing it to the backup folder.
+  - **Profile fields never come back from JSON on a fresh install,** because the new empty profile is always newer. Fix before a profile editor ships: treat a never-edited profile as older.
+  - **`cache/backup/restore-input` (health data) stays in the cache** after inspect or restore. Delete it when done.
+  - **Any non-SQLite file is read whole** (`readText`). Cap the size, e.g. at 50 MB.
+  - **The restore picker's MIME list leaves out `text/plain`,** so a `.json` some providers report as text can be greyed out.
+  - **Test gaps:** the corruption wrapper with real Room through `createGetFitDatabase`; `ContentResolverDocumentStore`'s exception mapping, with a fake provider.
 - **Value and unit through a resource:** "212.4 lb" is built by string concatenation in `HomeScreen.kt`, not through a resource. (review §5.4)
 - **Small cleanups:**
   - a formatting nit in `MetricChart`;
