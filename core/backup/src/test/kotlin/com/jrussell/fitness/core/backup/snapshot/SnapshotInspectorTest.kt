@@ -109,6 +109,28 @@ class SnapshotInspectorTest {
         assertThat(inspectSnapshot(file(), 1, v1Only)).isEqualTo(SnapshotCheck.InvalidRows)
     }
 
+    @Test
+    fun inspect_otherAppsDatabaseWithHighVersion_isNotGetFit() {
+        // Most apps set user_version; without Room's table it is not a "newer GetFit".
+        aGetFitFile(file(), userVersion = 7, identityHash = null)
+
+        assertThat(inspectSnapshot(file(), 1, v1Only)).isEqualTo(SnapshotCheck.NotGetFit)
+    }
+
+    @Test
+    fun inspect_unknownSourceName_isInvalidRows() {
+        aGetFitFile(file(), source = "FAX")
+
+        assertThat(inspectSnapshot(file(), 1, v1Only)).isEqualTo(SnapshotCheck.InvalidRows)
+    }
+
+    @Test
+    fun inspect_unknownEnteredUnit_isInvalidRows() {
+        aGetFitFile(file(), enteredUnit = "stone")
+
+        assertThat(inspectSnapshot(file(), 1, v1Only)).isEqualTo(SnapshotCheck.InvalidRows)
+    }
+
     private companion object {
         const val TRUNCATED_BYTES: Int = 4096
     }

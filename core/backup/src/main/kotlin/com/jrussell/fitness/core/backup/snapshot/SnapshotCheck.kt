@@ -4,6 +4,11 @@ import android.database.Cursor
 import android.database.DatabaseErrorHandler
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteException
+import com.jrussell.fitness.core.model.DailyAggregation
+import com.jrussell.fitness.core.model.MeasurementCategory
+import com.jrussell.fitness.core.model.MeasurementSource
+import com.jrussell.fitness.core.model.Sex
+import com.jrussell.fitness.core.model.displayUnitOf
 import com.jrussell.fitness.core.model.measurementUnitOf
 import java.io.File
 import kotlin.time.Instant
@@ -83,8 +88,11 @@ private fun check(db: SQLiteDatabase, currentVersion: Int, identityHashes: Map<I
     val expectedHash: String? = identityHashes[version]
     return when {
         db.firstString("PRAGMA quick_check") != "ok" -> SnapshotCheck.Damaged
+        // Room's table first: another app's database usually has a user_version too, and it is
+        // not "a newer GetFit".
+        !db.hasTable("room_master_table") -> SnapshotCheck.NotGetFit
         version > currentVersion -> SnapshotCheck.NewerVersion(version)
-        expectedHash == null || !db.hasTable("room_master_table") -> SnapshotCheck.NotGetFit
+        expectedHash == null -> SnapshotCheck.NotGetFit
         db.firstString("SELECT identity_hash FROM room_master_table LIMIT 1") != expectedHash -> SnapshotCheck.NotGetFit
         !rowsAreUsable(db) -> SnapshotCheck.InvalidRows
         else -> SnapshotCheck.Valid(
@@ -94,6 +102,11 @@ private fun check(db: SQLiteDatabase, currentVersion: Int, identityHashes: Map<I
     }
 }
 
+/**
+ * Whether every stored value Room's converters and the app's rules read is one this version
+ * knows. An enum constant added by a newer release needs no schema change, so without this an
+ * older install could restore a newer app's file and then fail on every read.
+ */
 private fun rowsAreUsable(db: SQLiteDatabase): Boolean {
     val dayStartsOk: Boolean = db.firstLong(
         "SELECT COUNT(*) FROM DayBoundarySetting WHERE dayStartMinutes NOT BETWEEN 0 AND $MAX_DAY_START_MINUTES",
@@ -104,8 +117,23 @@ private fun rowsAreUsable(db: SQLiteDatabase): Boolean {
     val unitsOk: Boolean = db.strings("SELECT DISTINCT canonicalUnit FROM MeasurementType").all { code: String ->
         measurementUnitOf(code) != null
     }
-    return dayStartsOk && zonesOk && unitsOk
+    val enteredUnitsOk: Boolean =
+        db.strings("SELECT DISTINCT enteredUnit FROM Measurement WHERE enteredUnit IS NOT NULL").all { code: String ->
+            displayUnitOf(code) != null
+        }
+    val namesOk: Boolean = STORED_ENUM_COLUMNS.all { (sql: String, known: Set<String>) ->
+        db.strings(sql).all { name: String -> name in known }
+    }
+    return dayStartsOk && zonesOk && unitsOk && enteredUnitsOk && namesOk
 }
+
+/** Each stored enum column, as a query for its distinct values, and the names this version knows. */
+private val STORED_ENUM_COLUMNS: List<Pair<String, Set<String>>> = listOf(
+    "SELECT DISTINCT source FROM Measurement" to MeasurementSource.entries.map { it.name }.toSet(),
+    "SELECT DISTINCT category FROM MeasurementType" to MeasurementCategory.entries.map { it.name }.toSet(),
+    "SELECT DISTINCT dailyAggregation FROM MeasurementType" to DailyAggregation.entries.map { it.name }.toSet(),
+    "SELECT DISTINCT sex FROM UserProfile WHERE sex IS NOT NULL" to Sex.entries.map { it.name }.toSet(),
+)
 
 private fun SQLiteDatabase.hasTable(name: String): Boolean {
     return rawQuery(

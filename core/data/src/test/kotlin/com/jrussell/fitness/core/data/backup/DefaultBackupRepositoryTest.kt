@@ -33,6 +33,7 @@ import com.jrussell.fitness.core.model.MeasurementTypeKeys
 import com.jrussell.fitness.core.testing.RecordingLogger
 import java.io.File
 import kotlin.time.Duration.Companion.hours
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestScope
@@ -252,18 +253,22 @@ class DefaultBackupRepositoryTest {
         assertThat(File(restoreDirectory, "staged.db").readBytes().contentEquals(file.readBytes())).isTrue()
     }
 
-    private fun TestScope.repository(): DefaultBackupRepository {
+    private fun TestScope.repository(
+        store: FileDocumentStore = documents,
+        cacheDirectory: File = File(temporaryFolder.root, "cache"),
+        dispatcher: CoroutineDispatcher = UnconfinedTestDispatcher(testScheduler),
+    ): DefaultBackupRepository {
         return DefaultBackupRepository(
             database = harness.database,
-            documents = documents,
+            documents = store,
             settings = BackupSettingsDataSource(dataStoreIn(backgroundScope)),
             scheduler = scheduler,
             exporter = exporter(harness),
             merger = merger(harness),
-            files = BackupFiles(File(temporaryFolder.root, "cache"), PendingRestore(restoreDirectory, databaseFile)),
+            files = BackupFiles(cacheDirectory, PendingRestore(restoreDirectory, databaseFile)),
             clock = harness.clock,
             logger = RecordingLogger(),
-            ioDispatcher = UnconfinedTestDispatcher(testScheduler),
+            ioDispatcher = dispatcher,
         )
     }
 

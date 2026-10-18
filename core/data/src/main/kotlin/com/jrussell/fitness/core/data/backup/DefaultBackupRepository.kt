@@ -1,5 +1,6 @@
 package com.jrussell.fitness.core.data.backup
 
+import android.database.sqlite.SQLiteException
 import com.jrussell.fitness.core.backup.documents.DocumentStore
 import com.jrussell.fitness.core.backup.snapshot.PendingRestore
 import com.jrussell.fitness.core.backup.snapshot.SnapshotCheck
@@ -22,14 +23,18 @@ import com.jrussell.fitness.core.importers.export.ExportBundle
 import com.jrussell.fitness.core.importers.export.MeasurementRecord
 import com.jrussell.fitness.core.importers.export.encodeExportBundle
 import com.jrussell.fitness.core.model.logging.Logger
+import java.io.IOException
 import java.io.OutputStream
 import javax.inject.Inject
+import javax.inject.Singleton
 import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 /**
@@ -47,6 +52,7 @@ import kotlinx.coroutines.withContext
  *
  * All file and database work runs on [ioDispatcher].
  */
+@Singleton
 class DefaultBackupRepository @Inject constructor(
     database: GetFitDatabase,
     private val documents: DocumentStore,
@@ -62,6 +68,7 @@ class DefaultBackupRepository @Inject constructor(
     SnapshotJob {
     private val operations: BackupFileOperations = BackupFileOperations(database, documents, files)
     private val pendingRestore: PendingRestore = files.pendingRestore
+    private val mutex: Mutex = Mutex()
 
     override val status: Flow<BackupStatus> = settings.settings.map { stored: BackupSettings ->
         BackupStatus(
@@ -90,7 +97,7 @@ class DefaultBackupRepository @Inject constructor(
     }
 
     override suspend fun backUpNow(): Outcome<Instant> {
-        return withContext(ioDispatcher) {
+        return guarded(BackupFailure.WRITE_FAILED) {
             val takenAt: Instant = clock.now()
             val failure: BackupFailure? = operations.snapshotIntoFolder(settings.settings.first().folderUri, takenAt)
             if (failure == null) {
@@ -105,7 +112,7 @@ class DefaultBackupRepository @Inject constructor(
     }
 
     override suspend fun exportJson(to: DocumentRef): Outcome<Int> {
-        return withContext(ioDispatcher) {
+        return guarded(BackupFailure.WRITE_FAILED) {
             val bundle: ExportBundle = exporter.export()
             val written: Boolean = operations.write(to.uri) { output: OutputStream ->
                 output.write(encodeExportBundle(bundle).toByteArray(Charsets.UTF_8))
@@ -115,7 +122,7 @@ class DefaultBackupRepository @Inject constructor(
     }
 
     override suspend fun exportDatabase(to: DocumentRef): Outcome<Unit> {
-        return withContext(ioDispatcher) {
+        return guarded(BackupFailure.WRITE_FAILED) {
             if (operations.copySnapshotTo(to.uri)) Outcome.Success(Unit) else backupFailure(BackupFailure.WRITE_FAILED)
         }
     }
@@ -131,7 +138,7 @@ class DefaultBackupRepository @Inject constructor(
     }
 
     override suspend fun restore(from: DocumentRef): Outcome<RestoreResult> {
-        return withContext(ioDispatcher) {
+        return guarded(BackupFailure.INVALID_ROWS) {
             when (val read: ReadFile = operations.readChosen(from.uri, ::restorable)) {
                 is ReadFile.Snapshot -> stageReplacement(read)
                 is ReadFile.Bundle -> Outcome.Success(
@@ -140,6 +147,26 @@ class DefaultBackupRepository @Inject constructor(
                     },
                 )
                 is ReadFile.Failed -> backupFailure(read.failure)
+            }
+        }
+    }
+
+    /**
+     * Runs one backup action at a time (the worker and Settings share this singleton), on the IO
+     * dispatcher. A database error (a full disk during `VACUUM INTO`, a constraint a restored file
+     * breaks) becomes [onDatabaseError] and a storage error [BackupFailure.WRITE_FAILED], instead of
+     * an exception that would crash the app; a failed merge has already rolled back.
+     */
+    private suspend fun <T> guarded(onDatabaseError: BackupFailure, block: suspend () -> Outcome<T>): Outcome<T> {
+        return mutex.withLock {
+            try {
+                withContext(ioDispatcher) { block() }
+            } catch (failed: SQLiteException) {
+                logger.error(TAG, "backup action failed", failed)
+                backupFailure(onDatabaseError)
+            } catch (failed: IOException) {
+                logger.error(TAG, "backup action failed", failed)
+                backupFailure(BackupFailure.WRITE_FAILED)
             }
         }
     }

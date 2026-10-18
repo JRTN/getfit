@@ -11,7 +11,7 @@ import kotlin.time.Instant
  * A [DocumentStore] over plain files for tests: a "tree URI" is a directory path and a document
  * URI a file path. [permitted] stands for the persisted grant; a missing directory is unreachable.
  */
-internal class FileDocumentStore(var permitted: Boolean = true) : DocumentStore {
+internal open class FileDocumentStore(var permitted: Boolean = true) : DocumentStore {
     override fun displayName(uri: String): String? {
         return File(uri).takeIf { file: File -> file.exists() }?.name
     }

@@ -65,7 +65,9 @@ internal class BackupFileOperations(
 
     /** Writes a fresh snapshot of `user.db` to the document [uri]; `false` if it couldn't be written. */
     fun copySnapshotTo(uri: String): Boolean {
-        val snapshot: File = File(files.cacheDirectory, SNAPSHOT_CACHE_NAME)
+        // A unique file per run, so one run can never delete or read another's copy.
+        files.cacheDirectory.mkdirs()
+        val snapshot: File = File.createTempFile("snapshot", ".db", files.cacheDirectory)
         writeSnapshot(database.openHelper.writableDatabase, snapshot)
         val written: Boolean = write(uri) { output: OutputStream -> snapshot.inputStream().use { it.copyTo(output) } }
         snapshot.delete()
@@ -131,7 +133,6 @@ internal class BackupFileOperations(
 
     private companion object {
         const val SQLITE_MIME_TYPE: String = "application/vnd.sqlite3"
-        const val SNAPSHOT_CACHE_NAME: String = "snapshot.db"
         const val RESTORE_INPUT_NAME: String = "restore-input"
         const val SQLITE_HEADER_LENGTH: Int = 16
     }

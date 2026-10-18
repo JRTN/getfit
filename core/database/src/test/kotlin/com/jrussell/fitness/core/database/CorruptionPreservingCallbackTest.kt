@@ -50,6 +50,33 @@ class CorruptionPreservingCallbackTest {
         assertThat(copy.readText()).isEqualTo("corrupt bytes")
     }
 
+    @Test
+    fun onCorruption_alsoKeepsWalAndShm() {
+        // In WAL mode the newest commits live only in -wal, which the default handling deletes too.
+        val databaseFile: File = temporaryFolder.newFile("user.db").apply { writeText("main") }
+        File(databaseFile.path + "-wal").writeText("recent commits")
+        File(databaseFile.path + "-shm").writeText("index")
+        val corruptDirectory: File = File(temporaryFolder.root, "corrupt")
+        val delegate: SupportSQLiteOpenHelper.Callback = object : SupportSQLiteOpenHelper.Callback(1) {
+            override fun onCreate(db: SupportSQLiteDatabase) {
+                // Not exercised.
+            }
+
+            override fun onUpgrade(db: SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) {
+                // Not exercised.
+            }
+
+            override fun onCorruption(db: SupportSQLiteDatabase) {
+                // The default would delete the files here.
+            }
+        }
+
+        CorruptionPreservingCallback(delegate, corruptDirectory, clock).onCorruption(databaseAt(databaseFile))
+
+        assertThat(File(corruptDirectory, "user-1760000000123.db-wal").readText()).isEqualTo("recent commits")
+        assertThat(File(corruptDirectory, "user-1760000000123.db-shm").readText()).isEqualTo("index")
+    }
+
     /** A stand-in database whose only answered call is its file path. */
     private fun databaseAt(file: File): SupportSQLiteDatabase {
         return Proxy.newProxyInstance(

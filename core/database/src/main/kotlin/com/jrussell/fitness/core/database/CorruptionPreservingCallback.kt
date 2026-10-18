@@ -11,7 +11,8 @@ import kotlin.time.Clock
  *
  * When SQLite reports corruption, the default callback deletes the database file and the app
  * starts empty. For the only copy of someone's data that is the worst outcome, so this first
- * copies the file to `corruptDirectory/user-<epochMillis>.db`, where it can be inspected or
+ * copies the file (with its `-wal` and `-shm` files, which hold the newest commits) to
+ * `corruptDirectory/user-<epochMillis>.db`, where it can be inspected or
  * recovered, and then lets [delegate] handle the corruption as usual. A failed copy never stops
  * the default handling.
  */
@@ -49,13 +50,23 @@ class CorruptionPreservingCallback(
         val source: File = path?.let(::File)?.takeIf { file: File -> file.exists() } ?: return
         try {
             corruptDirectory.mkdirs()
-            source.copyTo(File(corruptDirectory, "user-${clock.now().toEpochMilliseconds()}.db"), overwrite = true)
+            val copyName: String = "user-${clock.now().toEpochMilliseconds()}.db"
+            source.copyTo(File(corruptDirectory, copyName), overwrite = true)
+            // In WAL mode the newest commits are only in -wal; the default handling deletes it too.
+            JOURNAL_SUFFIXES.forEach { suffix: String ->
+                File(source.path + suffix).takeIf { it.exists() }
+                    ?.copyTo(File(corruptDirectory, copyName + suffix), overwrite = true)
+            }
         } catch (
             // Keeping the copy is best effort; the default handling must still run.
             @Suppress("SwallowedException") ignored: IOException,
         ) {
             // Nothing else to do.
         }
+    }
+
+    private companion object {
+        val JOURNAL_SUFFIXES: List<String> = listOf("-wal", "-shm")
     }
 }
 
