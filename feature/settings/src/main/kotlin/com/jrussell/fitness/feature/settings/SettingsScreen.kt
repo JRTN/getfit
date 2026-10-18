@@ -36,7 +36,7 @@ import com.jrussell.fitness.core.model.MassUnit
 import com.jrussell.fitness.core.model.ThemeMode
 import com.jrussell.fitness.core.model.UserPreferences
 
-/** The Settings screen. M1a has the Appearance section; later milestones add more sections. */
+/** The Settings screen: Appearance, Units and Backup; later milestones add more sections. */
 @Composable
 fun SettingsScreen(modifier: Modifier = Modifier, viewModel: SettingsViewModel = hiltViewModel()) {
     val state: UserPreferences? by viewModel.uiState.collectAsStateWithLifecycle()
@@ -49,6 +49,7 @@ fun SettingsScreen(modifier: Modifier = Modifier, viewModel: SettingsViewModel =
                 onPaletteSelected = viewModel::onPaletteSelected,
             )
             UnitsSettings(state = loaded, onMassUnitSelected = viewModel::onMassUnitSelected)
+            BackupSettings()
         }
     }
 }
