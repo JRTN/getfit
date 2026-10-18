@@ -6,6 +6,7 @@ import assertk.assertions.hasSize
 import assertk.assertions.isCloseTo
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
+import assertk.assertions.isNotNull
 import assertk.assertions.isNull
 import com.jrussell.fitness.core.domain.ManualMeasurement
 import com.jrussell.fitness.core.domain.MeasurementRepository
@@ -48,11 +49,9 @@ class BodyViewModelTest {
     private val measurements: RecordingMeasurements =
         RecordingMeasurements(FakeMeasurementRepository(dayStartMinutes = 240))
     private val weights: MutableStateFlow<List<DataPoint>> = MutableStateFlow(emptyList())
-    private val trend: MutableStateFlow<List<DataPoint>> = MutableStateFlow(emptyList())
     private val metrics: FakeMetricRegistry = FakeMetricRegistry(
         series = mutableMapOf<MetricId, MutableStateFlow<List<DataPoint>>>(
             MetricIds.BODY_WEIGHT to weights,
-            MetricIds.BODY_TREND_WEIGHT to trend,
         ),
     )
     private val preferences: FakeUserPreferencesRepository =
@@ -130,15 +129,61 @@ class BodyViewModelTest {
     @Test
     fun trends_todaySelection_chartsLastSevenDays() = runTest {
         weights.value = listOf(point(10, 9, 83.0), point(10, 11, 82.5), point(10, 17, 82.0))
-        trend.value = listOf(point(10, 9, 83.0), point(10, 11, 82.9), point(10, 17, 82.6))
 
         val state: BodyUiState = loaded(loadedViewModel())
 
         assertThat(state.chartRange).isEqualTo(LocalDate(2026, 10, 11)..today)
         assertThat(state.chartWeighIns.map { it.date }).containsExactly(LocalDate(2026, 10, 11), today)
         assertThat(state.chartWeighIns.last().value).isCloseTo(Mass.ofKilograms(82.0).toPounds(), 1e-9)
-        assertThat(state.chartTrend.map { it.date }).containsExactly(LocalDate(2026, 10, 11), today)
         assertThat(state.latest?.date).isEqualTo(today)
+    }
+
+    @Test
+    fun trends_trendLine_isBestFitAcrossTheRangesWeighIns() = runTest {
+        weights.value = listOf(point(10, 1, 90.0), point(10, 11, 82.5), point(10, 14, 81.0), point(10, 17, 82.0))
+
+        val state: BodyUiState = loaded(loadedViewModel())
+
+        // Fit through Oct 11, 14, 17 only (Oct 1 is outside the 7 days): -1/12 kg per day.
+        assertThat(state.chartTrend.map { it.date }).containsExactly(LocalDate(2026, 10, 11), today)
+        assertThat(state.chartTrend.first().value).isCloseTo(Mass.ofKilograms(82.0 + 1.0 / 12.0).toPounds(), 1e-9)
+        assertThat(state.chartTrend.last().value).isCloseTo(Mass.ofKilograms(82.0 - 5.0 / 12.0).toPounds(), 1e-9)
+    }
+
+    @Test
+    fun trends_singleWeighInInRange_hasNoTrendLine() = runTest {
+        weights.value = listOf(point(10, 1, 90.0), point(10, 17, 82.0))
+
+        assertThat(loaded(loadedViewModel()).chartTrend).isEmpty()
+    }
+
+    @Test
+    fun latest_ratePerWeek_isBestFitOverLastThirtyDays() = runTest {
+        weights.value = listOf(point(9, 1, 95.0), point(10, 3, 83.0), point(10, 17, 82.0))
+
+        val latest: LatestWeight? = loaded(loadedViewModel()).latest
+
+        // Sep 1 is outside Sep 18..Oct 17; Oct 3 → Oct 17 is -1 kg in 14 days, -0.5 kg per week.
+        assertThat(latest?.perWeek).isNotNull().isCloseTo(Mass.ofKilograms(-0.5).toPounds(), 1e-9)
+    }
+
+    @Test
+    fun latest_singleWeighIn_rateIsZero() = runTest {
+        weights.value = listOf(point(10, 17, 82.0))
+
+        assertThat(loaded(loadedViewModel()).latest?.perWeek).isEqualTo(0.0)
+    }
+
+    @Test
+    fun today_movesToTheNextDayOnceTheDayStartPasses() = runTest {
+        val viewModel: BodyViewModel = loadedViewModel()
+        assertThat(loaded(viewModel).today).isEqualTo(today)
+
+        // 05:00 in Toronto on Oct 18, past the 04:00 day start.
+        clock.now = Instant.parse("2026-10-18T09:00:00Z")
+
+        val next: BodyUiState = viewModel.uiState.filterNotNull().first { it.today != today }
+        assertThat(next.today).isEqualTo(LocalDate(2026, 10, 18))
     }
 
     @Test

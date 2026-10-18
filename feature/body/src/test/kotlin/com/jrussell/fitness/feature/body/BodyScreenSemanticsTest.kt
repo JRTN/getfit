@@ -8,6 +8,7 @@ import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.jrussell.fitness.core.designsystem.theme.GetFitTheme
@@ -65,11 +66,20 @@ class BodyScreenSemanticsTest {
         ).assertIsDisplayed()
     }
 
+    @Test
+    fun latestCard_showsAndReadsTheWeeklyRate() {
+        show(state(history = listOf(row)))
+
+        rule.onNodeWithText("−1.2 lb/week", useUnmergedTree = true).assertIsDisplayed()
+        rule.onNodeWithContentDescription("Latest weight 212.4 pounds, today, −1.2 pounds per week")
+            .assertIsDisplayed()
+    }
+
     private fun state(entry: WeightEntryState? = null, history: List<WeightRow> = emptyList()): BodyUiState {
         return BodyUiState(
             today = today,
             unit = MassUnit.POUND,
-            latest = history.firstOrNull()?.let { LatestWeight(it.value, it.date) },
+            latest = history.firstOrNull()?.let { LatestWeight(it.value, it.date, perWeek = -1.2) },
             history = history,
             selection = DateRangeSelection.Today,
             chartRange = LocalDate(2026, 10, 11)..today,

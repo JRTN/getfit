@@ -7,12 +7,15 @@ import com.jrussell.fitness.core.domain.ManualMeasurement
 import com.jrussell.fitness.core.domain.MeasurementRepository
 import com.jrussell.fitness.core.domain.Outcome
 import com.jrussell.fitness.core.domain.UserPreferencesRepository
-import com.jrussell.fitness.core.domain.localDateFor
 import com.jrussell.fitness.core.domain.metric.Bucket
 import com.jrussell.fitness.core.domain.metric.DataPoint
+import com.jrussell.fitness.core.domain.metric.LinearTrend
 import com.jrussell.fitness.core.domain.metric.MetricIds
 import com.jrussell.fitness.core.domain.metric.MetricRegistry
+import com.jrussell.fitness.core.domain.metric.linearTrend
+import com.jrussell.fitness.core.domain.observeToday
 import com.jrussell.fitness.core.domain.range.DateRangeSelection
+import com.jrussell.fitness.core.domain.range.cardRange
 import com.jrussell.fitness.core.domain.range.chartRange
 import com.jrussell.fitness.core.domain.time.WallClock
 import com.jrussell.fitness.core.model.Mass
@@ -33,7 +36,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DatePeriod
@@ -64,7 +66,9 @@ class BodyViewModel @Inject constructor(
 
     /** `null` until the first read, so the tab never flashes an empty state before data arrives. */
     @OptIn(ExperimentalCoroutinesApi::class)
-    val uiState: StateFlow<BodyUiState?> = today().flatMapLatest { day: LocalDate -> stateFor(day) }
+    val uiState: StateFlow<BodyUiState?> = observeToday(clock, dayBoundary).flatMapLatest { day: LocalDate ->
+        stateFor(day)
+    }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), initialValue = null)
 
     fun onRangeSelected(selection: DateRangeSelection) {
@@ -139,15 +143,9 @@ class BodyViewModel @Inject constructor(
         }
     }
 
-    /** Today's date after the user's day start (a 01:30 visit with a 04:00 start is still yesterday). */
-    private fun today(): Flow<LocalDate> {
-        val calendarDate: LocalDate = clock.now().toLocalDateTime(clock.timeZone()).date
-        return dayBoundary.observeDayStartMinutes(calendarDate)
-            .map { dayStartMinutes: Int -> localDateFor(clock.now(), clock.timeZone(), dayStartMinutes) }
-    }
-
     private fun stateFor(today: LocalDate): Flow<BodyUiState> {
         val allTime: LocalDateRange = HISTORY_START..today
+        val rateRange: LocalDateRange = DateRangeSelection.LastDays(RATE_DAYS).cardRange(today)
         val controls: Flow<Controls> = combine(selection, entry, preferences.userPreferences) {
                 selected: DateRangeSelection,
                 dialog: WeightEntryState?,
@@ -163,23 +161,24 @@ class BodyViewModel @Inject constructor(
                 today,
             ),
             metrics.series(MetricIds.BODY_WEIGHT, allTime, Bucket.DAY),
-            metrics.series(MetricIds.BODY_TREND_WEIGHT, allTime, Bucket.DAY),
-        ) { controls: Controls, readings: List<Measurement>, weights: List<DataPoint>, trend: List<DataPoint> ->
+        ) { controls: Controls, readings: List<Measurement>, weights: List<DataPoint> ->
             val unit: MassUnit = controls.unit
             val chartRange: LocalDateRange = controls.selection.chartRange(today)
+            val chartWeighIns: List<DataPoint> = weights.inRange(chartRange, unit)
             BodyUiState(
                 today = today,
                 unit = unit,
                 latest = weights.lastOrNull()?.let { point: DataPoint ->
-                    LatestWeight(point.value.inUnit(unit), point.date)
+                    val perWeek: Double = linearTrend(weights.inRange(rateRange, unit))?.perWeek ?: 0.0
+                    LatestWeight(point.value.inUnit(unit), point.date, perWeek)
                 },
                 history = readings
                     .sortedWith(compareByDescending<Measurement> { it.localDate }.thenByDescending { it.startTime })
                     .map { reading: Measurement -> reading.toRow(unit) },
                 selection = controls.selection,
                 chartRange = chartRange,
-                chartWeighIns = weights.inRange(chartRange, unit),
-                chartTrend = trend.inRange(chartRange, unit),
+                chartWeighIns = chartWeighIns,
+                chartTrend = trendLine(chartWeighIns),
                 entry = controls.entry,
             )
         }
@@ -188,11 +187,14 @@ class BodyViewModel @Inject constructor(
     private data class Controls(val selection: DateRangeSelection, val entry: WeightEntryState?, val unit: MassUnit)
 
     private companion object {
-        /** Reads all history so trend weight and "latest" never depend on the visible range. */
+        /** Reads all history so "latest" never depends on the visible range. */
         val HISTORY_START: LocalDate = LocalDate.fromEpochDays(0)
 
         /** How far back the weigh-in list goes. */
         const val HISTORY_DAYS: Int = 90
+
+        /** The latest-weight card's rate is the trend over this many days. */
+        const val RATE_DAYS: Int = 30
         const val STOP_TIMEOUT_MILLIS: Long = 5_000L
     }
 }
@@ -216,5 +218,13 @@ private fun MassUnit.storageSymbol(): String {
     return when (this) {
         MassUnit.POUND -> "lb"
         MassUnit.KILOGRAM -> "kg"
+    }
+}
+
+/** The dotted trend line: the best-fit line through [weighIns], drawn from the first to the last. */
+private fun trendLine(weighIns: List<DataPoint>): List<DataPoint> {
+    val trend: LinearTrend = linearTrend(weighIns) ?: return emptyList()
+    return listOf(weighIns.first().date, weighIns.last().date).map { date: LocalDate ->
+        DataPoint(date, trend.valueAt(date), coverage = null)
     }
 }

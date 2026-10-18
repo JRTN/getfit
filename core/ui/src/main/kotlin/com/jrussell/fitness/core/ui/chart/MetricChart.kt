@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -59,6 +60,10 @@ private val LINE_THICKNESS: Dp = 2.5.dp
 private val POINT_SIZE: Dp = 6.dp
 private val LEGEND_SWATCH: Dp = 16.dp
 private val EDGE_PADDING: Dp = 24.dp
+
+/** The dash and gap of a dotted (TREND) line; with the line's round caps, short dashes read as dots. */
+private val DOT_LENGTH: Dp = 3.dp
+private val DOT_GAP: Dp = 5.dp
 private const val MIN_Y_PADDING: Double = 0.5
 private const val Y_PADDING_FRACTION: Double = 0.1
 private const val TARGET_DATE_LABELS: Int = 4
@@ -69,14 +74,15 @@ private const val VALUE_LABELS: Int = 5
 /**
  * The app's one chart component (spec: "The UI never calls a charting library directly"). It
  * draws [series] over [range] with Vico, and always offers:
- * - a spoken summary of the last series as the chart's content description;
- * - a "View as table" toggle showing the same data as rows;
- * - a legend, so series are told apart by label and shape (line vs dots), never by color alone.
+ * - a spoken summary of the main series as the chart's content description;
+ * - a "View as table" toggle showing the recorded values as rows, with the summary above them;
+ * - a legend, so series are told apart by label and shape (solid vs dotted), never by color alone.
  *
- * Raw observations ([SeriesStyle.POINTS]) are drawn as muted dots; derived series
- * ([SeriesStyle.LINE]) as solid lines in the palette's series colors.
+ * Recorded values ([SeriesStyle.OBSERVED]) are drawn as a solid line with a dot on each point;
+ * fitted lines ([SeriesStyle.TREND]) as dotted lines. Each series takes the next palette color.
  *
- * @param series values already in display units; the last series is the one summarized.
+ * @param series values already in display units; the first [SeriesStyle.OBSERVED] series is the
+ *   main one, summarized and listed first in the table.
  * @param formatValue formats a value for axis labels, the table and the summary (locale-aware).
  */
 @Composable
@@ -97,9 +103,13 @@ fun MetricChart(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         } else {
-            val summary: String? = spokenSummary(title, drawable.last(), range, formatValue)
+            val observed: List<ChartSeries> = drawable.filter { one: ChartSeries -> one.style == SeriesStyle.OBSERVED }
+            val summary: String? = spokenSummary(title, observed.firstOrNull() ?: drawable.first(), range, formatValue)
             if (showTable) {
-                ChartTable(series = drawable, formatValue = formatValue)
+                summary?.let { text: String ->
+                    Text(text = text, style = MaterialTheme.typography.bodyMedium)
+                }
+                ChartTable(series = observed, formatValue = formatValue)
             } else {
                 VicoChart(series = drawable, range = range, summary = summary, formatValue = formatValue)
             }
@@ -147,6 +157,9 @@ private fun VicoChart(
             ),
             // Room past both ends so the first and last date labels and edge points are not clipped.
             layerPadding = { CartesianLayerPadding(unscalableStart = EDGE_PADDING, unscalableEnd = EDGE_PADDING) },
+            // One x step is one day. Left to itself, Vico infers the step from the gaps between points
+            // (7 days for weekly weigh-ins), and the date labels then land a step apart, often off-screen.
+            getXStep = { 1.0 },
         ),
         model = model,
         modifier = Modifier.semantics { summary?.let { text: String -> contentDescription = text } },
@@ -155,24 +168,31 @@ private fun VicoChart(
     )
 }
 
-/** Vico line styles: LINE series as solid colored lines, POINTS series as muted dots with no line. */
+/** Vico line styles: OBSERVED as a solid line with a dot per point, TREND as a dotted line. */
 @Composable
 private fun rememberSeriesLines(series: List<ChartSeries>): List<LineCartesianLayer.Line> {
     val colors: List<Color> = seriesColors(series)
-    val pointColor: Color = MaterialTheme.colorScheme.outline
     return series.mapIndexed { index: Int, one: ChartSeries ->
+        val fill: LineCartesianLayer.LineFill = remember(colors[index]) {
+            LineCartesianLayer.LineFill.single(Fill(colors[index]))
+        }
         when (one.style) {
-            SeriesStyle.LINE -> LineCartesianLayer.rememberLine(
-                fill = remember(colors[index]) { LineCartesianLayer.LineFill.single(Fill(colors[index])) },
+            SeriesStyle.OBSERVED -> LineCartesianLayer.rememberLine(
+                fill = fill,
                 stroke = LineCartesianLayer.LineStroke.Continuous(thickness = LINE_THICKNESS),
-            )
-            SeriesStyle.POINTS -> LineCartesianLayer.rememberLine(
-                fill = remember { LineCartesianLayer.LineFill.single(Fill.Transparent) },
                 pointProvider = LineCartesianLayer.PointProvider.single(
                     LineCartesianLayer.Point(
-                        rememberShapeComponent(fill = Fill(pointColor), shape = CircleShape),
+                        rememberShapeComponent(fill = Fill(colors[index]), shape = CircleShape),
                         POINT_SIZE,
                     ),
+                ),
+            )
+            SeriesStyle.TREND -> LineCartesianLayer.rememberLine(
+                fill = fill,
+                stroke = LineCartesianLayer.LineStroke.Dashed(
+                    thickness = LINE_THICKNESS,
+                    dashLength = DOT_LENGTH,
+                    gapLength = DOT_GAP,
                 ),
             )
         }
@@ -213,23 +233,29 @@ private fun chartModel(series: List<ChartSeries>): CartesianChartModel {
     )
 }
 
-/** One legend entry per series: a dot or line sample in the series' color, then its label. */
+/** One legend entry per series: a sample of its line (solid with a dot, or dotted), then its label. */
 @Composable
 private fun Legend(series: List<ChartSeries>) {
     val colors: List<Color> = seriesColors(series)
-    val pointColor: Color = MaterialTheme.colorScheme.outline
     Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
         series.forEachIndexed { index: Int, one: ChartSeries ->
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 Canvas(modifier = Modifier.size(LEGEND_SWATCH)) {
-                    when (one.style) {
-                        SeriesStyle.LINE -> drawLine(
-                            color = colors[index],
-                            start = Offset(0f, size.height / 2),
-                            end = Offset(size.width, size.height / 2),
-                            strokeWidth = LINE_THICKNESS.toPx(),
-                        )
-                        SeriesStyle.POINTS -> drawCircle(color = pointColor, radius = POINT_SIZE.toPx() / 2)
+                    val middle: Float = size.height / 2
+                    drawLine(
+                        color = colors[index],
+                        start = Offset(0f, middle),
+                        end = Offset(size.width, middle),
+                        strokeWidth = LINE_THICKNESS.toPx(),
+                        pathEffect = when (one.style) {
+                            SeriesStyle.OBSERVED -> null
+                            SeriesStyle.TREND -> PathEffect.dashPathEffect(
+                                floatArrayOf(DOT_LENGTH.toPx(), DOT_GAP.toPx()),
+                            )
+                        },
+                    )
+                    if (one.style == SeriesStyle.OBSERVED) {
+                        drawCircle(color = colors[index], radius = POINT_SIZE.toPx() / 2)
                     }
                 }
                 Text(text = one.label, style = MaterialTheme.typography.labelMedium)
@@ -238,18 +264,11 @@ private fun Legend(series: List<ChartSeries>) {
     }
 }
 
-/** Palette colors assigned in order to the LINE series; POINTS series take none. */
+/** Palette colors assigned to the series in order. */
 @Composable
 private fun seriesColors(series: List<ChartSeries>): List<Color> {
     val palette: List<Color> = GetFitTheme.dataColors.seriesPalette
-    var lineIndex: Int = 0
-    return series.map { one: ChartSeries ->
-        if (one.style == SeriesStyle.LINE) {
-            palette[lineIndex++ % palette.size]
-        } else {
-            Color.Unspecified
-        }
-    }
+    return series.indices.map { index: Int -> palette[index % palette.size] }
 }
 
 @Preview(name = "Weight chart", fontScale = 1f)
@@ -260,15 +279,16 @@ private fun MetricChartPreview() {
     val weighIns: List<DataPoint> = (0 until 30 step 2).map { day: Int ->
         DataPoint(LocalDate.fromEpochDays(start.toEpochDays() + day), 212.0 - day * 0.08 + (day % 3) * 0.4, null)
     }
-    val trend: List<DataPoint> = weighIns.map { point: DataPoint ->
-        point.copy(value = 212.4 - (point.value - 212) * 0.1)
-    }
+    val trend: List<DataPoint> = listOf(
+        DataPoint(weighIns.first().date, 212.3, null),
+        DataPoint(weighIns.last().date, 210.4, null),
+    )
     GetFitTheme {
         MetricChart(
             title = "Weight",
             series = listOf(
-                ChartSeries("Weight", "lb", "pounds", weighIns, SeriesStyle.POINTS),
-                ChartSeries("Trend", "lb", "pounds", trend, SeriesStyle.LINE),
+                ChartSeries("Weight", "lb", "pounds", weighIns, SeriesStyle.OBSERVED),
+                ChartSeries("Trend", "lb", "pounds", trend, SeriesStyle.TREND),
             ),
             range = start..LocalDate(2026, 10, 17),
             formatValue = { value: Double -> String.format(Locale.US, "%.1f", value) },

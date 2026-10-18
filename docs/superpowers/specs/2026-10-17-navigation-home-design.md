@@ -81,7 +81,7 @@ There are two kinds of screens:
 | **Nutrition** | Energy eaten against target and remaining; protein, carbs and fat against targets; direct water against its goal. A secondary line: "with today's plan: N kcal" | Per-day averages, and "target met on X of Y complete days" |
 | **Training** | Sessions completed today (name, duration) and planned but not yet completed | Sessions completed against the target scaled to the range; skipped count |
 | **Energy out** | Expenditure so far today (active, and total from the active energy mode) | Average daily energy balance |
-| **Body** | Latest weight with trend weight; progress against the active projection plan once plans exist (M5); then the user's pinned measurements (latest value each) | Each pinned measurement: start → now, with rate per week |
+| **Body** | Latest weight with the weight trend (lb or kg per week; see "Weight trend" below); progress against the active projection plan once plans exist (M5); then the user's pinned measurements (latest value each) | Each pinned measurement: start → now, with rate per week |
 | **Pinned charts** | Each pinned chart, drawn over Home's range | Same |
 
 Cards whose data does not exist yet (e.g. Nutrition before M4) are hidden, not shown empty.
@@ -101,7 +101,7 @@ Every metric gets a **summary rule**, derived from its descriptor and its target
 | --- | --- | --- |
 | `AVERAGE_PER_DAY` | Metrics with a daily target, or daily-sum metrics with no target (energy, macros, nutrients, water, sleep, steps) | The mean of the daily values. Nutrition metrics average over **COMPLETE days only** (the existing rule: incomplete days never feed aggregates). Also shows how many of those days met the target |
 | `TALLY` | Metrics with a period target, and count-like metrics (sessions, hard sets) | The total over the range, against the target scaled to the range length: weekly target × days ÷ 7 |
-| `CHANGE` | Body measurements (`dailyAggregation` LAST) | Value at the start of the range → latest value, and the rate per week. Weight uses trend weight at both ends |
+| `CHANGE` | Body measurements (`dailyAggregation` LAST) | First value in the range → last value in the range, and the rate per week: the slope of the least-squares line through the values in the range (0 with fewer than two dates). With no value inside the range, the latest value at both ends and a rate of 0 |
 
 `MetricDescriptor` gains `summaryRule: SummaryRule`. Targets gain a period (see Data model), and a metric with a `WEEK` target uses `TALLY` whatever its default rule.
 
@@ -193,7 +193,7 @@ The dependency rules are unchanged. Features still never depend on each other; t
   - the Body tab gets Log / Trends, with manual weight entry, history, and the weight trend chart with a table view;
   - Home ships with the range control and the **Body card** (weight and trend), the only domain with data;
   - the tab bar becomes Home, Nutrition, Training, Body.
-  - The M1 exit check is unchanged: "enter weights → see trend-weight chart and table → export, wipe, restore, identical data".
+  - The M1 exit check is unchanged: "enter weights → see the weight chart (weigh-in line and dotted trend line) and table → export, wipe, restore, identical data".
 - **M2** (when sleep and heart data first make cross-domain charts meaningful): the full chart builder (all three views), saved and pinned charts, pinned measurements, and Body Trends charts for the new metrics.
 - **M3 / M4:** the Training card, Training Trends, the Nutrition card with projection, Nutrition Trends, and weekly targets.
 - **M5:** Body's Plan view (projection plans, simulator, plan-versus-actual chart), and plan progress on Home's Body card.
@@ -215,3 +215,12 @@ The dependency rules are unchanged. Features still never depend on each other; t
 - **`MetricTarget`:** add `period`. Add the `SavedChart` and `HomePinnedMeasurement` tables.
 - **"Energy accounting → Daily budget":** "The Today screen shows" becomes "Home's Energy card shows".
 - **Milestones M1c and M6:** the text above.
+
+## Amendment 2026-10-18: Weight trend
+
+Decided with the user after trying the first weight chart on the emulator. Showing the smoothed "trend weight" (decision #28) next to a real weight confused more than it helped ("Trend 214.1 lb" when the scale said 212.4).
+
+- **What the user sees as "trend" is a rate**, in lb or kg per week: the slope of the least-squares line through the weigh-ins in a range, with each weigh-in placed by its date. With fewer than two days of weigh-ins it is 0.0 (no "not enough data" message).
+- **The weight chart** draws a solid line through each day's weigh-in, with a dot on each, as the main series, and the trend as a dotted straight line from the first to the last weigh-in in the range. The table lists only the weigh-ins, with the spoken summary (which includes the rate) above it.
+- **Where the rate is measured:** Body's latest-weight card uses the last 30 days. Home's Weight card uses Home's range, with Today using the last 7 days like Today's charts.
+- **Trend weight (decision #28) stays** as an internal metric (`BODY_TREND_WEIGHT`) for the M5 adaptive expenditure estimate and PAL calibration. It is no longer displayed.

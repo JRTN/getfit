@@ -56,29 +56,55 @@ fun trendWeight(daily: List<DataPoint>, alpha: Double = DEFAULT_TREND_ALPHA): Li
     return trend
 }
 
-/** Where a metric started and ended over a range, and its average rate per week. */
+/**
+ * A straight line fitted through weigh-ins (or any daily points) by least squares, with x in days.
+ * Its slope is "the trend": how fast the value is changing. [valueAtAnchor] is the line's value
+ * on [anchor], the first point's date.
+ */
+data class LinearTrend(val anchor: LocalDate, val valueAtAnchor: Double, val perDay: Double) {
+    val perWeek: Double get() = perDay * DAYS_PER_WEEK
+
+    /** The line's value on [date]. */
+    fun valueAt(date: LocalDate): Double {
+        return valueAtAnchor + perDay * anchor.daysUntil(date)
+    }
+}
+
+/**
+ * The least-squares line through [points] (ascending by date). Points are placed by their date,
+ * so uneven gaps between weigh-ins count. `null` with fewer than two distinct dates.
+ */
+fun linearTrend(points: List<DataPoint>): LinearTrend? {
+    val anchor: LocalDate = points.firstOrNull()?.date ?: return null
+    // Centered sums, so large day numbers never cost precision.
+    val xs: List<Double> = points.map { point: DataPoint -> anchor.daysUntil(point.date).toDouble() }
+    val meanX: Double = xs.average()
+    val meanY: Double = points.map { point: DataPoint -> point.value }.average()
+    val spreadX: Double = xs.sumOf { x: Double -> (x - meanX) * (x - meanX) }
+    val covariance: Double = points.indices.sumOf { index: Int ->
+        (xs[index] - meanX) * (points[index].value - meanY)
+    }
+    // No spread in x means every point is on one date: there is no slope to fit.
+    return if (spreadX == 0.0) {
+        null
+    } else {
+        val perDay: Double = covariance / spreadX
+        LinearTrend(anchor = anchor, valueAtAnchor = meanY - perDay * meanX, perDay = perDay)
+    }
+}
+
+/** Where a metric started and ended over a range, and its trend per week. */
 data class RangeChange(val start: Double, val end: Double, val perWeek: Double)
 
 /**
- * The CHANGE summary of [trend] over [range]. The start is the last point on or before the range
- * start (so a range beginning between weigh-ins still has a start), else the first point inside
- * the range; the end is the last point on or before the range end. `null` when fewer than two
- * distinct dates are available.
+ * The CHANGE summary of [points] (ascending by date) over [range]: the first and last points
+ * inside the range, and the slope of the best-fit line through them ([linearTrend]). A single
+ * point (or a single date) has a trend of zero. `null` when no point falls inside the range.
  */
-fun rangeChange(trend: List<DataPoint>, range: LocalDateRange): RangeChange? {
-    val startPoint: DataPoint? = trend.lastOrNull { point: DataPoint -> point.date <= range.start }
-        ?: trend.firstOrNull { point: DataPoint -> point.date in range }
-    val endPoint: DataPoint? = trend.lastOrNull { point: DataPoint -> point.date <= range.endInclusive }
-    val spanDays: Int = if (startPoint != null && endPoint != null) startPoint.date.daysUntil(endPoint.date) else 0
-    return if (startPoint != null && endPoint != null && spanDays > 0) {
-        RangeChange(
-            start = startPoint.value,
-            end = endPoint.value,
-            perWeek = (endPoint.value - startPoint.value) / spanDays * DAYS_PER_WEEK,
-        )
-    } else {
-        null
-    }
+fun rangeChange(points: List<DataPoint>, range: LocalDateRange): RangeChange? {
+    val inside: List<DataPoint> = points.filter { point: DataPoint -> point.date in range }
+    val first: DataPoint = inside.firstOrNull() ?: return null
+    return RangeChange(start = first.value, end = inside.last().value, perWeek = linearTrend(inside)?.perWeek ?: 0.0)
 }
 
 private fun bucketStart(date: LocalDate, bucket: Bucket): LocalDate {

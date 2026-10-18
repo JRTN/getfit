@@ -22,20 +22,28 @@ class MetricChartSemanticsTest {
     val rule: ComposeContentTestRule = createComposeRule()
 
     private val range: LocalDateRange = LocalDate(2026, 9, 18)..LocalDate(2026, 10, 17)
-    private val trend: ChartSeries = ChartSeries(
-        label = "Trend",
+    private val weighIns: ChartSeries = ChartSeries(
+        label = "Weight",
         unitSymbol = "lb",
         unitSpoken = "pounds",
         points = listOf(
             DataPoint(LocalDate(2026, 9, 19), 212.4, null),
             DataPoint(LocalDate(2026, 10, 17), 209.9, null),
         ),
-        style = SeriesStyle.LINE,
+        style = SeriesStyle.OBSERVED,
+    )
+    private val trendLine: ChartSeries = weighIns.copy(
+        label = "Trend",
+        points = listOf(
+            DataPoint(LocalDate(2026, 9, 19), 213.0, null),
+            DataPoint(LocalDate(2026, 10, 17), 209.5, null),
+        ),
+        style = SeriesStyle.TREND,
     )
 
     @Test
     fun chart_exposesSpokenSummary() {
-        show(listOf(trend))
+        show(listOf(weighIns))
 
         rule.onNodeWithContentDescription("Weight, 30 days, 212.4 to 209.9 pounds", substring = true)
             .assertIsDisplayed()
@@ -43,7 +51,7 @@ class MetricChartSemanticsTest {
 
     @Test
     fun viewAsTable_togglesTableRows() {
-        show(listOf(trend))
+        show(listOf(weighIns))
         rule.onNodeWithText("209.9").assertDoesNotExist()
 
         rule.onNodeWithText("View as table").performClick()
@@ -55,9 +63,29 @@ class MetricChartSemanticsTest {
 
     @Test
     fun emptySeries_showsNoDataMessage() {
-        show(listOf(trend.copy(points = emptyList())))
+        show(listOf(weighIns.copy(points = emptyList())))
 
         rule.onNodeWithText("No data in this range").assertIsDisplayed()
+    }
+
+    @Test
+    fun chartWithTrendLine_summarizesTheWeighIns() {
+        show(listOf(weighIns, trendLine))
+
+        rule.onNodeWithContentDescription("Weight, 30 days, 212.4 to 209.9 pounds", substring = true)
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun table_leavesOutTheTrendLineAndShowsTheRate() {
+        show(listOf(weighIns, trendLine))
+
+        rule.onNodeWithText("View as table").performClick()
+
+        rule.onNodeWithText("Weight (lb)").assertIsDisplayed()
+        rule.onNodeWithText("Trend (lb)").assertDoesNotExist()
+        rule.onNodeWithText("213.0").assertDoesNotExist()
+        rule.onNodeWithText("decreasing 0.6 pounds per week", substring = true).assertIsDisplayed()
     }
 
     private fun show(series: List<ChartSeries>) {

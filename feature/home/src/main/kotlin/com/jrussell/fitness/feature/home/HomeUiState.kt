@@ -17,10 +17,16 @@ data class HomeUiState(val today: LocalDate, val selection: DateRangeSelection, 
 sealed interface BodyCard {
     val unit: MassUnit
 
-    /** Range "Today": the latest weigh-in (with its date, which may be earlier) and the trend. */
-    data class Today(val latest: Double, val latestDate: LocalDate, val trend: Double, override val unit: MassUnit) :
+    /**
+     * Range "Today": the latest weigh-in (with its date, which may be earlier) and the weight
+     * trend [perWeek] over the last 7 days, the span Today's charts show (0 with too few weigh-ins).
+     */
+    data class Today(val latest: Double, val latestDate: LocalDate, val perWeek: Double, override val unit: MassUnit) :
         BodyCard
 
-    /** Any multi-day range: trend weight start → now and rate per week; `null` with too little data. */
-    data class Range(val change: RangeChange?, override val unit: MassUnit) : BodyCard
+    /**
+     * Any multi-day range: the first and last weigh-ins in it and the weight trend per week. With
+     * no weigh-in inside the range, the latest one at both ends and a trend of 0.
+     */
+    data class Range(val change: RangeChange, override val unit: MassUnit) : BodyCard
 }

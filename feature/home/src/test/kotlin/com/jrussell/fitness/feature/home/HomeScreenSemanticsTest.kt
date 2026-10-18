@@ -10,6 +10,7 @@ import androidx.compose.ui.test.performClick
 import assertk.assertThat
 import assertk.assertions.isTrue
 import com.jrussell.fitness.core.designsystem.theme.GetFitTheme
+import com.jrussell.fitness.core.domain.metric.RangeChange
 import com.jrussell.fitness.core.domain.range.DateRangeSelection
 import com.jrussell.fitness.core.model.MassUnit
 import kotlinx.datetime.LocalDate
@@ -27,7 +28,7 @@ class HomeScreenSemanticsTest {
     private val todayCard: BodyCard = BodyCard.Today(
         latest = 212.4,
         latestDate = today,
-        trend = 213.1,
+        perWeek = -1.2,
         unit = MassUnit.POUND,
     )
 
@@ -53,8 +54,16 @@ class HomeScreenSemanticsTest {
     fun bodyCard_mergesSemantics() {
         show(todayCard, onOpenBody = {})
 
-        rule.onNodeWithContentDescription("Weight 212.4 pounds, trend 213.1 pounds", substring = true)
+        rule.onNodeWithContentDescription("Weight 212.4 pounds, −1.2 pounds per week", substring = true)
             .assertHasClickAction()
+    }
+
+    @Test
+    fun rangeCard_showsChangeAndRate() {
+        show(BodyCard.Range(RangeChange(start = 216.0, end = 212.4, perWeek = -3.6), MassUnit.POUND), onOpenBody = {})
+
+        rule.onNodeWithText("−3.6 lb/week", useUnmergedTree = true).assertIsDisplayed()
+        rule.onNodeWithContentDescription("Weight 216.0 to 212.4 pounds, −3.6 pounds per week").assertIsDisplayed()
     }
 
     private fun show(body: BodyCard?, onOpenBody: () -> Unit) {

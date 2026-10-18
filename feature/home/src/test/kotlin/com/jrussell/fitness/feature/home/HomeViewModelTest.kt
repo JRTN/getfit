@@ -9,6 +9,7 @@ import assertk.assertions.isNull
 import com.jrussell.fitness.core.domain.metric.DataPoint
 import com.jrussell.fitness.core.domain.metric.MetricId
 import com.jrussell.fitness.core.domain.metric.MetricIds
+import com.jrussell.fitness.core.domain.metric.RangeChange
 import com.jrussell.fitness.core.domain.range.DateRangeSelection
 import com.jrussell.fitness.core.model.MassUnit
 import com.jrussell.fitness.core.model.UserPreferences
@@ -34,11 +35,9 @@ class HomeViewModelTest {
     private val today: LocalDate = LocalDate(2026, 10, 17)
     private val clock: FakeWallClock = FakeWallClock(Instant.parse("2026-10-17T12:00:00Z"), TimeZone.UTC)
     private val weights: MutableStateFlow<List<DataPoint>> = MutableStateFlow(emptyList())
-    private val trend: MutableStateFlow<List<DataPoint>> = MutableStateFlow(emptyList())
     private val metrics: FakeMetricRegistry = FakeMetricRegistry(
         series = mutableMapOf<MetricId, MutableStateFlow<List<DataPoint>>>(
             MetricIds.BODY_WEIGHT to weights,
-            MetricIds.BODY_TREND_WEIGHT to trend,
         ),
     )
     private val preferences: FakeUserPreferencesRepository =
@@ -53,9 +52,8 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun today_showsLatestAndTrend() = runTest {
-        weights.value = listOf(point(10, 15, 96.0), point(10, 17, 95.0))
-        trend.value = listOf(point(10, 15, 96.2), point(10, 17, 96.0))
+    fun today_showsLatestAndWeeklyRate() = runTest {
+        weights.value = listOf(point(10, 1, 99.0), point(10, 15, 96.0), point(10, 17, 95.0))
 
         val body: BodyCard? = loaded(newViewModel()).body
 
@@ -63,47 +61,57 @@ class HomeViewModelTest {
         val card: BodyCard.Today = body as BodyCard.Today
         assertThat(card.latest).isCloseTo(95.0, 1e-9)
         assertThat(card.latestDate).isEqualTo(today)
-        assertThat(card.trend).isCloseTo(96.0, 1e-9)
+        // Today's rate is the trend over the last 7 days, like Today's charts; Oct 1 is outside.
+        assertThat(card.perWeek).isCloseTo(-3.5, 1e-9)
+    }
+
+    @Test
+    fun today_singleWeighIn_rateIsZero() = runTest {
+        weights.value = listOf(point(10, 17, 95.0))
+
+        assertThat((loaded(newViewModel()).body as BodyCard.Today).perWeek).isEqualTo(0.0)
     }
 
     @Test
     fun rangeThirtyDays_showsChange() = runTest {
-        weights.value = listOf(point(9, 1, 100.0), point(10, 17, 98.0))
-        trend.value = listOf(point(9, 1, 100.0), point(10, 17, 98.0))
-        val viewModel: HomeViewModel = newViewModel()
+        weights.value = listOf(point(9, 1, 100.0), point(9, 19, 99.0), point(10, 3, 97.0), point(10, 17, 98.0))
 
-        viewModel.onRangeSelected(DateRangeSelection.LastDays(30))
-        val state: HomeUiState = viewModel.uiState.filterNotNull().first {
-            it.selection ==
-                DateRangeSelection.LastDays(30)
-        }
+        val card: BodyCard.Range = rangeCard(DateRangeSelection.LastDays(30))
 
-        val card: BodyCard.Range = state.body as BodyCard.Range
-        assertThat(card.change?.start).isNotNull().isCloseTo(100.0, 1e-9)
-        assertThat(card.change?.end).isNotNull().isCloseTo(98.0, 1e-9)
-        assertThat(card.change?.perWeek).isNotNull().isCloseTo(-2.0 / 46 * 7, 1e-9)
+        assertThat(card.change.start).isCloseTo(99.0, 1e-9)
+        assertThat(card.change.end).isCloseTo(98.0, 1e-9)
+        assertThat(card.change.perWeek).isCloseTo(-0.25, 1e-9)
     }
 
     @Test
-    fun rangeWithSingleWeighIn_showsNotEnoughData() = runTest {
+    fun rangeWithSingleWeighIn_rateIsZero() = runTest {
         weights.value = listOf(point(10, 17, 98.0))
-        trend.value = listOf(point(10, 17, 98.0))
+
+        assertThat(rangeCard(DateRangeSelection.LastDays(7)).change).isEqualTo(RangeChange(98.0, 98.0, 0.0))
+    }
+
+    @Test
+    fun rangeWithNoWeighInsInside_showsLatestWithZeroRate() = runTest {
+        weights.value = listOf(point(9, 1, 100.0))
+
+        assertThat(rangeCard(DateRangeSelection.LastDays(7)).change).isEqualTo(RangeChange(100.0, 100.0, 0.0))
+    }
+
+    @Test
+    fun today_movesToTheNextDayAfterMidnight() = runTest {
         val viewModel: HomeViewModel = newViewModel()
+        assertThat(loaded(viewModel).today).isEqualTo(today)
 
-        viewModel.onRangeSelected(DateRangeSelection.LastDays(7))
-        val state: HomeUiState = viewModel.uiState.filterNotNull().first {
-            it.selection ==
-                DateRangeSelection.LastDays(7)
-        }
+        clock.now = Instant.parse("2026-10-18T00:01:00Z")
 
-        assertThat((state.body as BodyCard.Range).change).isNull()
+        assertThat(viewModel.uiState.filterNotNull().first { it.today != today }.today)
+            .isEqualTo(LocalDate(2026, 10, 18))
     }
 
     @Test
     fun values_followPreferredUnit() = runTest {
         preferences.setMassUnit(MassUnit.POUND)
         weights.value = listOf(point(10, 17, 95.0))
-        trend.value = listOf(point(10, 17, 95.0))
 
         val card: BodyCard.Today = loaded(newViewModel()).body as BodyCard.Today
 
@@ -113,6 +121,12 @@ class HomeViewModelTest {
 
     private fun newViewModel(): HomeViewModel {
         return HomeViewModel(metrics, preferences, FakeDayBoundaryRepository(), clock)
+    }
+
+    private suspend fun rangeCard(selection: DateRangeSelection): BodyCard.Range {
+        val viewModel: HomeViewModel = newViewModel()
+        viewModel.onRangeSelected(selection)
+        return viewModel.uiState.filterNotNull().first { it.selection == selection }.body as BodyCard.Range
     }
 
     private suspend fun loaded(viewModel: HomeViewModel): HomeUiState {

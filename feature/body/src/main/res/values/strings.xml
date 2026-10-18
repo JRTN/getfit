@@ -11,8 +11,10 @@
     <string name="body_today">today</string>
     <!-- Latest weight: value, unit symbol, date ("today" or a date). -->
     <string name="body_latest_value">%1$s %2$s · %3$s</string>
-    <!-- Spoken latest weight: value, unit spoken, date. -->
-    <string name="body_latest_spoken">Latest weight %1$s %2$s, %3$s</string>
+    <!-- Weekly rate under the latest weight: signed change, unit symbol. -->
+    <string name="body_latest_rate">%1$s %2$s/week</string>
+    <!-- Spoken latest weight: value, unit spoken, date, signed weekly change. -->
+    <string name="body_latest_spoken">Latest weight %1$s %2$s, %3$s, %4$s %2$s per week</string>
     <string name="body_add_weight">Add weight</string>
     <string name="body_history_title">History</string>
     <string name="body_history_empty">No weigh-ins yet. Add your first one above.</string>

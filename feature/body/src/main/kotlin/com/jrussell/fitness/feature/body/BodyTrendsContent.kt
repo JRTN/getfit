@@ -23,8 +23,8 @@ import com.jrussell.fitness.core.ui.range.RangeChips
 private val SCREEN_PADDING: Dp = 16.dp
 
 /**
- * The Trends view: range chips, then the body-weight chart with each day's weigh-in as dots and
- * trend weight as a line. Today charts the last 7 days (decision #38).
+ * The Trends view: range chips, then the body-weight chart: a solid line through each day's
+ * weigh-in and the dotted best-fit trend line. Today charts the last 7 days (decision #38).
  */
 @Composable
 internal fun BodyTrendsContent(
@@ -47,14 +47,14 @@ internal fun BodyTrendsContent(
                     unitSymbol = symbol,
                     unitSpoken = spoken,
                     points = state.chartWeighIns,
-                    style = SeriesStyle.POINTS,
+                    style = SeriesStyle.OBSERVED,
                 ),
                 ChartSeries(
                     label = stringResource(R.string.body_series_trend),
                     unitSymbol = symbol,
                     unitSpoken = spoken,
                     points = state.chartTrend,
-                    style = SeriesStyle.LINE,
+                    style = SeriesStyle.TREND,
                 ),
             ),
             range = state.chartRange,

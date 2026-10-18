@@ -40,6 +40,7 @@ import com.jrussell.fitness.core.designsystem.icon.GetFitIcons
 import com.jrussell.fitness.core.model.MassUnit
 import com.jrussell.fitness.core.model.ids.MeasurementId
 import com.jrussell.fitness.core.ui.format.formatOneDecimal
+import com.jrussell.fitness.core.ui.format.formatSignedOneDecimal
 import com.jrussell.fitness.core.ui.format.massUnitSpoken
 import com.jrussell.fitness.core.ui.format.massUnitSymbol
 import java.time.format.DateTimeFormatter
@@ -108,12 +109,13 @@ internal fun BodyLogContent(state: BodyUiState, actions: BodyActions, modifier: 
     }
 }
 
-/** "212.4 lb · today", read by TalkBack as one sentence. */
+/** "212.4 lb · today" over "−1.2 lb/week", read by TalkBack as one sentence. */
 @Composable
 private fun LatestWeightCard(latest: LatestWeight, unit: MassUnit, today: LocalDate) {
     val value: String = formatOneDecimal(latest.value)
     val date: String = dateLabel(latest.date, today)
-    val spoken: String = stringResource(R.string.body_latest_spoken, value, massUnitSpoken(unit), date)
+    val rate: String = formatSignedOneDecimal(latest.perWeek)
+    val spoken: String = stringResource(R.string.body_latest_spoken, value, massUnitSpoken(unit), date, rate)
     Surface(
         shape = MaterialTheme.shapes.medium,
         border = BorderStroke(HAIRLINE, MaterialTheme.colorScheme.outlineVariant),
@@ -128,6 +130,11 @@ private fun LatestWeightCard(latest: LatestWeight, unit: MassUnit, today: LocalD
             Text(
                 text = stringResource(R.string.body_latest_value, value, massUnitSymbol(unit), date),
                 style = MaterialTheme.typography.headlineSmall,
+            )
+            Text(
+                text = stringResource(R.string.body_latest_rate, rate, massUnitSymbol(unit)),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }

@@ -61,7 +61,7 @@ All ground-floor decisions are closed. Later sections give the detail behind eac
 | 25 | Hydration | Dedicated `HydrationEntry`; goal applies to direct water only; water also exists as a food |
 | 26 | Exercise library | Open dataset seeded by `externalKey`; custom exercises; non-destructive overrides; JSON import |
 | 27 | e1RM | Epley default, user-selectable formula; always computed at query time |
-| 28 | Trend weight | Exponential moving average with gap-adjusted smoothing factor |
+| 28 | Trend weight | Exponential moving average with gap-adjusted smoothing factor; internal only (amended 2026-10-18: the displayed weight trend is the least-squares rate per week, see the navigation and Home spec) |
 | 29 | Projection defaults | All parameters configurable with conservative defaults; glycogen transient deferred to v2 |
 | 30 | Navigation layout | Four bottom tabs: Home, Nutrition, Training, Body; Settings in the top bar (amended 2026-10-17 from five tabs with Today and Trends; see #38) |
 | 31 | Typeface | Inter (chosen 2026-10-16), bundled, tabular figures for all numbers |

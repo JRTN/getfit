@@ -27,6 +27,17 @@ class ChartSummaryTest {
     }
 
     @Test
+    fun summary_perWeek_isBestFitSlope() {
+        val points: List<DataPoint> =
+            listOf(point(10, 1, 100.0), point(10, 2, 98.0), point(10, 3, 98.0), point(10, 4, 99.0))
+
+        val summary: ChartSummaryData? = chartSummaryData(points, thirtyDays)
+
+        // The first and last alone would say -2.33 per week; the dotted line through all four says -2.1.
+        assertThat(summary?.perWeek).isNotNull().isCloseTo(-2.1, 1e-9)
+    }
+
+    @Test
     fun summary_noPoints_isNull() {
         assertThat(chartSummaryData(emptyList(), thirtyDays)).isNull()
     }

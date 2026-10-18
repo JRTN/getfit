@@ -124,34 +124,32 @@ private fun TodayBody(card: BodyCard.Today, today: LocalDate) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
-    Text(
-        text = stringResource(R.string.home_body_trend, formatOneDecimal(card.trend), symbol),
-        style = MaterialTheme.typography.bodyMedium,
-    )
+    RateText(card.perWeek, symbol)
 }
 
 @Composable
 private fun RangeBody(card: BodyCard.Range) {
     val symbol: String = massUnitSymbol(card.unit)
-    CardLabel(stringResource(R.string.home_body_weight_trend))
-    val change = card.change
-    if (change == null) {
-        Text(text = stringResource(R.string.home_body_not_enough), style = MaterialTheme.typography.bodyMedium)
-    } else {
-        Text(
-            text = stringResource(
-                R.string.home_body_change,
-                formatOneDecimal(change.start),
-                formatOneDecimal(change.end),
-                symbol,
-            ),
-            style = MaterialTheme.typography.headlineSmall,
-        )
-        Text(
-            text = stringResource(R.string.home_body_rate, formatSignedOneDecimal(change.perWeek), symbol),
-            style = MaterialTheme.typography.bodyMedium,
-        )
-    }
+    CardLabel(stringResource(R.string.home_body_weight))
+    Text(
+        text = stringResource(
+            R.string.home_body_change,
+            formatOneDecimal(card.change.start),
+            formatOneDecimal(card.change.end),
+            symbol,
+        ),
+        style = MaterialTheme.typography.headlineSmall,
+    )
+    RateText(card.change.perWeek, symbol)
+}
+
+/** The weight trend, "−1.2 lb/week". */
+@Composable
+private fun RateText(perWeek: Double, symbol: String) {
+    Text(
+        text = stringResource(R.string.home_body_rate, formatSignedOneDecimal(perWeek), symbol),
+        style = MaterialTheme.typography.bodyMedium,
+    )
 }
 
 @Composable
@@ -161,28 +159,23 @@ private fun CardLabel(text: String) {
 
 @Composable
 private fun todaySpoken(card: BodyCard.Today, today: LocalDate): String {
-    val spokenUnit: String = massUnitSpoken(card.unit)
     val sentence: String = stringResource(
         R.string.home_body_spoken_today,
         formatOneDecimal(card.latest),
-        spokenUnit,
-        formatOneDecimal(card.trend),
-        spokenUnit,
+        massUnitSpoken(card.unit),
+        formatSignedOneDecimal(card.perWeek),
     )
     return if (card.latestDate == today) sentence else "$sentence, ${dateLabel(card.latestDate, today)}"
 }
 
 @Composable
 private fun rangeSpoken(card: BodyCard.Range): String {
-    val change = card.change ?: return stringResource(R.string.home_body_spoken_not_enough)
-    val spokenUnit: String = massUnitSpoken(card.unit)
     return stringResource(
         R.string.home_body_spoken_range,
-        formatOneDecimal(change.start),
-        formatOneDecimal(change.end),
-        spokenUnit,
-        formatSignedOneDecimal(change.perWeek),
-        spokenUnit,
+        formatOneDecimal(card.change.start),
+        formatOneDecimal(card.change.end),
+        massUnitSpoken(card.unit),
+        formatSignedOneDecimal(card.change.perWeek),
     )
 }
 
@@ -206,7 +199,7 @@ private fun HomeContentPreview() {
             state = HomeUiState(
                 today = today,
                 selection = DateRangeSelection.Today,
-                body = BodyCard.Today(latest = 212.4, latestDate = today, trend = 213.1, unit = MassUnit.POUND),
+                body = BodyCard.Today(latest = 212.4, latestDate = today, perWeek = -1.2, unit = MassUnit.POUND),
             ),
             onRangeSelected = {},
             onOpenBody = {},

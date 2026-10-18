@@ -120,7 +120,7 @@ private fun BodyContentPreview() {
             state = BodyUiState(
                 today = today,
                 unit = MassUnit.POUND,
-                latest = LatestWeight(212.4, today),
+                latest = LatestWeight(212.4, today, perWeek = -1.2),
                 history = listOf(WeightRow(MeasurementId(Uuid.random()), today, LocalTime(7, 5), 212.4)),
                 selection = DateRangeSelection.Today,
                 chartRange = LocalDate(2026, 10, 11)..today,
