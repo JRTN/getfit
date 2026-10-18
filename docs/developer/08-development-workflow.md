@@ -33,8 +33,8 @@ spec (docs/initial_design.md)
 | **M0 — Skeleton** (`v0.0.1`) | [m0-skeleton](../superpowers/plans/2026-10-16-m0-skeleton.md) | All modules, convention plugins, version catalog, Hilt, Navigation 3 with five empty tabs, crash log, CI workflow, release signing, quality tooling |
 | **M1a — Design system** | [m1a-design-system](../superpowers/plans/2026-10-16-m1a-design-system.md) | Palette matrix with contrast tests, Inter, Material Symbols, Settings → Appearance on DataStore, Settings as an overlay, the color-literal detekt rule |
 | **M1b — Data foundation** | [m1b-data-foundation](../superpowers/plans/2026-10-17-m1b-data-foundation.md) | `user.db` v1, revision-stamped writes, owner scoping, typed UUID IDs, day assignment, measurement and day-start repositories, the sync seam, injected dispatchers, the dispatcher and migration detekt rules |
-| M1c — Weight, metrics, charts | *next* | Metric registry, chart component with table toggle, manual weight entry, trend weight |
-| M1d — Backup | | Auto Backup rules, scheduled SQLite export, JSON export/import; `v0.1.0` |
+| **M1c — Weight, metrics, charts** | [m1c-weight-home-charts](../superpowers/plans/2026-10-18-m1c-weight-home-charts.md) | The four-tab layout with a read-only Home (decision #38); the metric registry and body-weight provider; `MetricChart` (Vico) with a dotted best-fit trend, spoken summary and table view; weight entry with unit- and locale-aware parsing, backfill dates and delete; remembered date ranges with All; tabs that keep their state; pure-Kotlin modules limited to multiplatform APIs |
+| M1d — Backup | *next* | Auto Backup rules, scheduled SQLite export, JSON export/import; `v0.1.0` |
 
 Each plan's "Calls made in this plan" section, and the decision register in the spec, explain why things are the way they are. When code surprises you, look there first.
 

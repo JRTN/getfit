@@ -1,13 +1,13 @@
 # 2. Architecture
 
-GetFit is a single-activity Jetpack Compose app split into about 24 Gradle modules. The split is deliberately fine-grained: each module has one job, and Gradle refuses to compile code that crosses a boundary it should not cross.
+GetFit is a single-activity Jetpack Compose app split into about 23 Gradle modules. The split is deliberately fine-grained: each module has one job, and Gradle refuses to compile code that crosses a boundary it should not cross.
 
 ## The five layers
 
 ```
  :app                         the only module that wires implementations to interfaces
    │
- :feature:today  :feature:nutrition  :feature:training  :feature:body  :feature:trends  :feature:settings
+ :feature:home  :feature:nutrition  :feature:training  :feature:body  :feature:settings
    │   (screens + ViewModels; see only the layer below, never storage, never each other)
    │
  :core:designsystem  :core:ui                      Compose UI building blocks
@@ -52,30 +52,29 @@ The Konsist rules run with `strict = true`: a rule that matches no code fails in
 
 | Module | Responsibility | Status |
 | --- | --- | --- |
-| [`:app`](../../app/) | `GetFitApplication`, `MainActivity`, the navigation shell, all Hilt modules (`di/`) | Shell, tabs, Settings overlay, DI wiring |
-| [`:feature:today`](../../feature/today/) | Daily dashboard | Placeholder screen |
+| [`:app`](../../app/) | `GetFitApplication`, `MainActivity`, the navigation shell, all Hilt modules (`di/`) | Shell with four tabs that keep their state ([`TabNavDisplay`](../../app/src/main/kotlin/com/jrussell/fitness/ui/TabNavDisplay.kt)), Settings overlay, DI wiring |
+| [`:feature:home`](../../feature/home/) | Read-only summary of where you are (decision #38); later the cross-domain chart builder | Range chips (remembered) and the Weight card: latest weight and its trend per week |
 | [`:feature:nutrition`](../../feature/nutrition/) | Diary, food search, recipes, targets, hydration | Placeholder screen |
 | [`:feature:training`](../../feature/training/) | Live workout, templates, exercise library | Placeholder screen |
-| [`:feature:body`](../../feature/body/) | Measurements, sleep, Health Connect inspector | Placeholder screen |
-| [`:feature:trends`](../../feature/trends/) | Metric explorer, projection plans | Placeholder screen |
-| [`:feature:settings`](../../feature/settings/) | Settings | Appearance section (theme mode, palette) |
+| [`:feature:body`](../../feature/body/) | Measurements, sleep, Health Connect inspector, projection plans (M5) | Weight: Log (add, history, delete) and Trends (chart), sharing one remembered range |
+| [`:feature:settings`](../../feature/settings/) | Settings | Appearance (theme mode, palette) and weight unit |
 
-Each feature exposes the same three files: a Navigation 3 key (`TodayKey`), a screen composable (`TodayScreen`), and an entry function (`todayEntry()`) that registers the screen with the app's `NavDisplay`. See [`TodayEntry.kt`](../../feature/today/src/main/kotlin/com/jrussell/fitness/feature/today/TodayEntry.kt).
+Each feature exposes the same three files: a Navigation 3 key (`HomeKey`), a screen composable (`HomeScreen`), and an entry function (`homeEntry()`) that registers the screen with the app's navigation. See [`HomeEntry.kt`](../../feature/home/src/main/kotlin/com/jrussell/fitness/feature/home/HomeEntry.kt). Each work tab (Nutrition, Training, Body) has **Log** and **Trends** views; Body gains a **Plan** view in M5. There is no Trends tab and no Today tab: Home and each tab's Trends view replaced them (decision #38).
 
 ### Core: UI
 
 | Module | Responsibility | Status |
 | --- | --- | --- |
 | [`:core:designsystem`](../../core/designsystem/) | Palettes, contrast math, typography (Inter), shapes, icons, `GetFitTheme` | Complete for M1 |
-| [`:core:ui`](../../core/ui/) | Shared composites: chart component, data table, multi-select scaffold | Empty (charts arrive in M1c) |
+| [`:core:ui`](../../core/ui/) | Shared composites: chart component, data table, multi-select scaffold | [`MetricChart`](../../core/ui/src/main/kotlin/com/jrussell/fitness/core/ui/chart/MetricChart.kt) (Vico, with dotted best-fit trend, spoken summary and table view), [`RangeChips`](../../core/ui/src/main/kotlin/com/jrussell/fitness/core/ui/range/RangeChips.kt), number and date formatting |
 
 ### Core: data and storage
 
 | Module | Responsibility | Status |
 | --- | --- | --- |
-| [`:core:data`](../../core/data/) | Repository implementations, `StampedWriter`, owner provider, device ID, seeding, crash log | Measurements, day boundary, preferences |
+| [`:core:data`](../../core/data/) | Repository implementations, `StampedWriter`, owner provider, device ID, seeding, crash log, metric providers | Measurements, day boundary, preferences, remembered ranges, metric registry (body weight) |
 | [`:core:database`](../../core/database/) | `user.db`: Room entities, DAOs, converters, committed schema JSON | Schema v1 (7 tables) |
-| [`:core:datastore`](../../core/datastore/) | Preferences DataStore for UI-only settings | Theme mode, palette |
+| [`:core:datastore`](../../core/datastore/) | Preferences DataStore for UI-only settings | Theme mode, palette, weight unit, each screen's date range |
 | [`:core:sync`](../../core/sync/) | `SyncGateway` seam and `NoOpSyncGateway` | Seam only |
 | [`:core:reference`](../../core/reference/) | Bundled read-only USDA food catalog (`reference.db`) | Empty (M4) |
 | [`:core:healthconnect`](../../core/healthconnect/) | Health Connect client and import worker | Empty (M2) |
@@ -86,7 +85,7 @@ Each feature exposes the same three files: a Navigation 3 key (`TodayKey`), a sc
 | Module | Responsibility | Status |
 | --- | --- | --- |
 | [`:core:model`](../../core/model/) | Domain types: typed IDs, `Measurement`, enums, `UserPreferences` | Growing per milestone |
-| [`:core:domain`](../../core/domain/) | Repository interfaces, `Outcome`/`DomainError`, `IdGenerator`, `localDateFor` | Growing per milestone |
+| [`:core:domain`](../../core/domain/) | Repository interfaces, `Outcome`/`DomainError`, `IdGenerator`, `localDateFor`, `observeToday`, `WallClock`, the metric contract and transforms (best-fit trend, trend weight), date ranges | Growing per milestone |
 | [`:core:projection`](../../core/projection/) | Weight projection simulator and solver | Empty (M5) |
 | [`:core:importers`](../../core/importers/) | Strong and Cronometer CSV parsers, JSON export format | Empty (M1d/M3/M4) |
 
@@ -94,7 +93,7 @@ Each feature exposes the same three files: a Navigation 3 key (`TodayKey`), a sc
 
 | Module | Responsibility |
 | --- | --- |
-| [`:core:testing`](../../core/testing/) | Test helpers shared across modules: `FakeClock`, `MainDispatcherRule`, hand-written repository fakes |
+| [`:core:testing`](../../core/testing/) | Test helpers shared across modules: `FakeClock`, `FakeWallClock`, `MainDispatcherRule`, hand-written repository and registry fakes |
 | [`:architecture-tests`](../../architecture-tests/) | Konsist rules that read every module's source |
 | [`:detekt-rules`](../../detekt-rules/) | GetFit's custom detekt rules (rule set `getfit`) |
 | [`build-logic`](../../build-logic/) | Convention plugins: the build configuration every module shares |

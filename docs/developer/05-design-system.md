@@ -44,6 +44,20 @@ GetFitTheme.dataColors.macroProtein        // data: charts, macros, targets
 
 Some users cannot tell certain colors apart. Every status shown in color also carries a second cue: an icon, a sign, a label or a pattern. The spec's "Redundant encoding" table lists the pairings, and later screens must follow it.
 
+### Charts
+
+[`MetricChart`](../../core/ui/src/main/kotlin/com/jrussell/fitness/core/ui/chart/MetricChart.kt) in `:core:ui` is the only chart component; features never call Vico. It encodes everything at least twice:
+
+| What | Shown by |
+| --- | --- |
+| A series' recorded values vs its trend | Shape: a **solid line with a dot on each point** vs a **dotted line** (same palette color), plus the legend's labels and samples |
+| Two series on one chart | Palette color *and* their own legend labels ("Weight", "Weight trend") |
+| The numbers themselves | "View as table": the recorded values as rows, one TalkBack announcement per row |
+| The overall shape | The spoken summary, the chart's content description: "Body weight, 30 days, 216.0 to 212.4 pounds, decreasing 0.9 pounds per week" |
+| Change direction on cards | A sign ("−1.4 lb/week"), never color alone |
+
+Every chart also follows one rule for trends: the dotted line is the least-squares best fit through the series, and every "per week" rate the app shows is its slope. "Hide trend line" next to "View as table" turns the dotted line off for that chart.
+
 ## No color literals outside the design system
 
 The custom detekt rule [`NoColorLiteralOutsideDesignSystem`](../../detekt-rules/src/main/kotlin/com/jrussell/fitness/detekt/NoColorLiteralOutsideDesignSystem.kt) fails the build on any of these outside `com.jrussell.fitness.core.designsystem`:
@@ -70,8 +84,10 @@ The custom detekt rule [`NoColorLiteralOutsideDesignSystem`](../../detekt-rules/
 ## Accessibility built in so far
 
 - **Touch targets** stay at 48 dp or larger (`minimumInteractiveComponentSize()`), even though rows look compact.
-- **Settings radio groups** expose radio roles and selected state to TalkBack, which [`SettingsScreenSemanticsTest`](../../feature/settings/src/test/kotlin/com/jrussell/fitness/feature/settings/SettingsScreenSemanticsTest.kt) verifies.
-- **Tab labels** cap their font scale at 1.3× so five labels fit at 200% system font without breaking words; screen content always gets the full scale.
+- **Radio groups** (Settings options, range chips, the Log/Trends switch) expose their roles and selected state to TalkBack, verified by each feature's semantics tests (e.g. [`SettingsScreenSemanticsTest`](../../feature/settings/src/test/kotlin/com/jrussell/fitness/feature/settings/SettingsScreenSemanticsTest.kt), [`RangeChipsTest`](../../core/ui/src/test/kotlin/com/jrussell/fitness/core/ui/range/RangeChipsTest.kt)).
+- **Cards and list rows read as one sentence** ("Latest weight 212.4 pounds, today, −1.2 pounds per week since Oct 11"), and destructive row actions are also offered as TalkBack custom actions (Delete on each weigh-in).
+- **Field errors** are set as the field's error semantics, so TalkBack announces "Enter a weight between 45 and 881 lb".
+- **Large fonts:** at 200% system font, chips and chart buttons wrap onto another line instead of clipping. Tab labels cap their font scale at 1.3× so the labels fit without breaking words; screen content always gets the full scale.
 - **Strings** are always resources (no hard-coded user-visible text).
 
 ## Theme mode and the system bars

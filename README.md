@@ -3,8 +3,8 @@
 **A local-first Android app for nutrition, training and body tracking, in one place.**
 
 > **Status:** early development, pre-`v0.1.0`.
-> - **Built:** the design system, theming and settings, and the full local data foundation.
-> - **Next:** weight entry with trend charts, then backup.
+> - **Built:** the design system, theming and settings, the local data foundation, and weight logging with a Home summary and trend charts.
+> - **Next:** backup and export, then `v0.1.0`.
 >
 > The roadmap is [below](#roadmap).
 
@@ -53,7 +53,7 @@ Commits written with the agent carry a `Co-Authored-By` trailer.
 - **Nutrition:** search a bundled USDA catalog that keeps every nutrient it provides; a diary with meal slots, planned and consumed entries, multi-select actions and quick-add; recipes; food edits that never silently rewrite history; versioned targets; hydration; CSV import of existing history.
 - **Training:** a live workout logger that saves every set the moment it is entered; templates; an exercise library with custom exercises; previous performance, PRs and estimated 1RM; a rest timer; CSV import of existing history.
 - **Body:** manual measurements, plus Health Connect import (weight, body fat, heart rate, HRV, SpO2, sleep, steps) with de-duplication and source priority.
-- **Trends:** any metric against any other, with transforms and overlays, plus energy-balance estimates and a weight projection engine that reports whether a target is realistic.
+- **Home and charts:** a read-only summary of where you are today, or over any range; charts of any metric against any other, each with a best-fit trend; plus energy-balance estimates and a weight projection engine that reports whether a target is realistic.
 - **Accessible by default:** color-vision-safe and high-contrast palettes checked against WCAG ratios by tests; color is never the only signal; designed for TalkBack and 200% font size.
 
 The full specification, including every decision and why it was made, is in [`docs/initial_design.md`](docs/initial_design.md).
@@ -85,13 +85,13 @@ Versioning is semantic: `0.1.0` is the first usable release, each new capability
 | M0 | Skeleton: modules, build logic, navigation shell, CI, signing | Done (`v0.0.1`) |
 | M1a | Design system: palettes and contrast tests, typography, icons, appearance settings | Done |
 | M1b | Data foundation: `user.db`, stamped writes, owner scoping, day assignment, sync seam | Done |
-| M1c | Weight entry, metric registry, charts with table view, trend weight | Next |
-| M1d | Backup: Auto Backup, scheduled snapshots, JSON export/import | **`v0.1.0`** |
-| M2 | Body and Health Connect | |
+| M1c | Four-tab layout with a read-only Home, weight entry, metric registry, charts with a best-fit trend and table view | Done |
+| M1d | Backup: Auto Backup, scheduled snapshots, JSON export/import | Next (**`v0.1.0`**) |
+| M2 | Body and Health Connect, plus the cross-domain chart builder on Home | |
 | M3 | Training | |
 | M4 | Nutrition | |
 | M5 | Energy accounting and weight projection | |
-| M6 | Daily-driver release: dashboard, trends explorer, accessibility pass | |
+| M6 | Daily-driver release: polish and accessibility pass over Home and the chart builder | |
 
 ## Building
 

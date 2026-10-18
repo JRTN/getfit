@@ -7,7 +7,7 @@ GetFit is local-first: the phone holds the only copy of the data. This chapter e
 | Store | Module | Holds | Status |
 | --- | --- | --- | --- |
 | `user.db` (Room/SQLite) | [`:core:database`](../../core/database/) | Everything the user owns, plus seeded reference rows | Schema v1 |
-| Preferences DataStore | [`:core:datastore`](../../core/datastore/) | UI-only preferences: theme mode, palette (later: display units, chart defaults) | In use |
+| Preferences DataStore | [`:core:datastore`](../../core/datastore/) | UI-only preferences: theme mode, palette, weight unit, and each screen's remembered date range | In use |
 | `reference.db` (read-only) | `:core:reference` | Bundled USDA food catalog, replaced wholesale with each dataset version | M4 |
 
 **Rule of thumb:** a setting that changes how *past* data is evaluated (day start, energy mode, targets) is a **versioned row in `user.db`** with an effective date, never a DataStore preference. Changing it then never re-dates history, and it travels with backups and sync.
@@ -91,6 +91,10 @@ The two-owner tests in [`DefaultMeasurementRepositoryTest`](../../core/data/src/
 
 Every timestamped user entry stores its own time zone, so "which day was this?" survives travel.
 
+### "Now" and "today": `WallClock`
+
+ViewModels never call `Clock.System` or `TimeZone.currentSystemDefault()`. They take [`WallClock`](../../core/domain/src/main/kotlin/com/jrussell/fitness/core/domain/time/WallClock.kt) (bound to `SystemWallClock` in `:core:data`), which gives the current instant *and* the zone, so tests control both with `FakeWallClock`. [`observeToday(clock, dayBoundary)`](../../core/domain/src/main/kotlin/com/jrussell/fitness/core/domain/Today.kt) turns that into "today after the day start" as a `Flow`, re-checked every minute, so Home and Body move to the new day while open.
+
 ### Day assignment
 
 People log after midnight that belongs to "yesterday". The user picks a **day start** (e.g. 04:00), and [`localDateFor(instant, zone, dayStartMinutes)`](../../core/domain/src/main/kotlin/com/jrussell/fitness/core/domain/DayAssignment.kt) decides the day:
@@ -99,9 +103,24 @@ People log after midnight that belongs to "yesterday". The user picks a **day st
 
 The rule compares wall-clock minutes only, with no zone arithmetic, so DST changes can never shift a date. [`DayAssignmentTest`](../../core/domain/src/test/kotlin/com/jrussell/fitness/core/domain/DayAssignmentTest.kt) covers the boundary, a midnight start, spring-forward, and the zone deciding the date.
 
+**A chosen date wins.** When the user backfills an entry and picks its date, [`ManualMeasurement.localDateOverride`](../../core/domain/src/main/kotlin/com/jrussell/fitness/core/domain/ManualMeasurement.kt) files it under that date regardless of the day-start rule: "Oct 10 at 01:30" with a 04:00 start lands on Oct 10, because that is the day the user meant. Entries made "now" leave it `null` and follow the rule.
+
 ### Versioned settings
 
 The day start is versioned: [`DayBoundarySettingEntity`](../../core/database/src/main/kotlin/com/jrussell/fitness/core/database/entity/DayBoundarySettingEntity.kt) rows each have an `effectiveFrom` date. Evaluating any day uses the row with the greatest `effectiveFrom` on or before it. With no row, the day starts at midnight (`DEFAULT_DAY_START_MINUTES = 0`). Setting the same date twice updates that row rather than inserting a second one. See [`DefaultDayBoundaryRepository`](../../core/data/src/main/kotlin/com/jrussell/fitness/core/data/repository/DefaultDayBoundaryRepository.kt). Energy settings and targets will follow the same pattern.
+
+## Metrics: the registry and its providers
+
+Charts and summary cards never read repositories directly. They ask a [`MetricRegistry`](../../core/domain/src/main/kotlin/com/jrussell/fitness/core/domain/metric/MetricContract.kt) for a metric by ID, over a date range, in day/week/month buckets, and get a `Flow<List<DataPoint>>` back (values in canonical units, one point per bucket). This is the seam M2's cross-domain chart builder will use to put any metric next to any other.
+
+- [`DefaultMetricRegistry`](../../core/data/src/main/kotlin/com/jrussell/fitness/core/data/metric/DefaultMetricRegistry.kt) routes each request to the [`MetricSeriesProvider`](../../core/domain/src/main/kotlin/com/jrussell/fitness/core/domain/metric/MetricContract.kt) that declares that metric. Providers are collected into a set by Hilt ([`MetricsModule`](../../app/src/main/kotlin/com/jrussell/fitness/di/MetricsModule.kt)); adding a domain means adding a provider, not editing the registry.
+- [`BodyMetricProvider`](../../core/data/src/main/kotlin/com/jrussell/fitness/core/data/metric/BodyMetricProvider.kt) publishes `body.weight` (each day's last reading) and `body.trend_weight` (the gap-adjusted moving average of decision #28, kept for M5's expenditure estimate and not shown to users). Both are built from the live measurement query, so a new weigh-in reaches every watching screen.
+- Pure math lives in [`Transforms.kt`](../../core/domain/src/main/kotlin/com/jrussell/fitness/core/domain/metric/Transforms.kt): bucketing, `trendWeight`, and `linearTrend`, the least-squares line every chart draws as its dotted trend and whose slope is every "per week" rate shown. `rangeChange` gives a card's first and last values in a range and that slope (0 with fewer than two dates).
+- Derived values are never stored (convention 11): change the formula and all history follows.
+
+## Remembered date ranges
+
+Home and Body each remember their range choice (All, Today, 7 days, 30 days, From…) across restarts, separately. [`DateRangeRepository`](../../core/domain/src/main/kotlin/com/jrussell/fitness/core/domain/range/DateRangeRepository.kt) stores it as stable text (`"ALL"`, `"LAST_DAYS:30"`, `"FROM:2026-06-01"`) under `range_<screen>` in the preferences DataStore ([`RangeSelectionDataSource`](../../core/datastore/src/main/kotlin/com/jrussell/fitness/core/datastore/RangeSelectionDataSource.kt)). Unreadable text falls back to the screen's default (Home: Today, Body: All), so a bad value can never break a screen.
 
 ## Built-in reference rows and seeding
 
