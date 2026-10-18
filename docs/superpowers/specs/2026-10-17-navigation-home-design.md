@@ -221,7 +221,7 @@ The dependency rules are unchanged. Features still never depend on each other; t
 Decided with the user after trying the first weight chart on the emulator. Showing the smoothed "trend weight" (decision #28) next to a real weight confused more than it helped ("Trend 214.1 lb" when the scale said 212.4).
 
 - **What the user sees as "trend" is a rate**, in lb or kg per week: the slope of the least-squares line through the weigh-ins in a range, with each weigh-in placed by its date. With fewer than two days of weigh-ins it is 0.0 (no "not enough data" message).
-- **The weight chart** draws a solid line through each day's weigh-in, with a dot on each, as the main series, and the trend as a dotted straight line from the first to the last weigh-in in the range. The table lists only the weigh-ins, with the spoken summary (which includes the rate) above it.
+- **The weight chart** draws a solid line through each day's weigh-in, with a dot on each, as the main series, and the trend as a dotted straight line from the first to the last weigh-in in the range. The table lists only the weigh-ins, with no legend and no summary text (the spoken summary stays on the chart view; revised the same day after the summary sentence looked out of place on screen).
 - **Where the rate is measured:** over the screen's selected range, labeled "since <range start>" (see "Ranges" below; this replaced a fixed 30-day window on Body the same day).
 - **Trend weight (decision #28) stays** as an internal metric (`BODY_TREND_WEIGHT`) for the M5 adaptive expenditure estimate and PAL calibration. It is no longer displayed.
 

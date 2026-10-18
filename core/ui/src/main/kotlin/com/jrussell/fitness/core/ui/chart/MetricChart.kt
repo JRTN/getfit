@@ -81,7 +81,7 @@ private const val VALUE_LABELS: Int = 5
  *   points ([trendLine]), in the same color, drawn under the main line;
  * - the spoken summary (the chart's content description) reads the first series: first and last
  *   values and the trend per week, whether or not the trend line is drawn;
- * - "View as table" lists the recorded values, with the summary above them;
+ * - "View as table" lists the recorded values (no legend; the summary stays on the chart view);
  * - a legend tells lines apart by label and shape (solid vs dotted), never by color alone.
  *
  * Next to "View as table", "Hide trend line" / "Show trend line" turns the dotted lines off and on
@@ -112,14 +112,12 @@ fun MetricChart(
             val summary: String? = spokenSummary(title, drawable.first(), range, formatValue)
             val lines: List<DrawnLine> = drawnLines(drawable, showTrend)
             if (showTable) {
-                summary?.let { text: String ->
-                    Text(text = text, style = MaterialTheme.typography.bodyMedium)
-                }
                 ChartTable(series = drawable, formatValue = formatValue)
             } else {
                 VicoChart(lines = lines, range = range, summary = summary, formatValue = formatValue)
+                // The legend describes the drawn lines, so it belongs to the chart view only.
+                Legend(lines = lines)
             }
-            Legend(lines = lines)
             val hasTrend: Boolean = drawable.any { one: ChartSeries -> trendLine(one.points).isNotEmpty() }
             ChartActions(
                 showTable = showTable,

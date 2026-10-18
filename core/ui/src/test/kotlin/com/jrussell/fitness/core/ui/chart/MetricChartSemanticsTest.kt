@@ -89,14 +89,16 @@ class MetricChartSemanticsTest {
     }
 
     @Test
-    fun table_listsRecordedValuesWithTheRateAbove() {
+    fun table_listsRecordedValuesOnly_withoutLegendOrSummaryText() {
         show(listOf(weighIns))
 
         rule.onNodeWithText("View as table").performClick()
 
         rule.onNodeWithText("Weight (lb)").assertIsDisplayed()
         rule.onNodeWithText("Trend (lb)").assertDoesNotExist()
-        rule.onNodeWithText("decreasing 0.6 pounds per week", substring = true).assertIsDisplayed()
+        rule.onNodeWithText("Weight").assertDoesNotExist()
+        rule.onNodeWithText("Trend").assertDoesNotExist()
+        rule.onNodeWithText("decreasing 0.6 pounds per week", substring = true).assertDoesNotExist()
     }
 
     @Test
