@@ -15,4 +15,9 @@
     <string name="settings_weight_unit_title">Weight unit</string>
     <string name="settings_weight_unit_pounds">Pounds</string>
     <string name="settings_weight_unit_kilograms">Kilograms</string>
+
+    <string name="settings_charts_title">Charts</string>
+    <string name="settings_charts_summary">Trend lines</string>
+    <string name="settings_trend_lines_title">Trend lines</string>
+    <string name="settings_trend_lines_summary">A dotted line of best fit on the Nutrition, Training and Body charts</string>
 </resources>

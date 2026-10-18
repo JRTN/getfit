@@ -9,7 +9,6 @@ import com.jrussell.fitness.core.domain.Outcome
 import com.jrussell.fitness.core.domain.UserPreferencesRepository
 import com.jrussell.fitness.core.domain.metric.Bucket
 import com.jrussell.fitness.core.domain.metric.DataPoint
-import com.jrussell.fitness.core.domain.metric.LinearTrend
 import com.jrussell.fitness.core.domain.metric.MetricIds
 import com.jrussell.fitness.core.domain.metric.MetricRegistry
 import com.jrussell.fitness.core.domain.metric.linearTrend
@@ -151,7 +150,7 @@ class BodyViewModel @Inject constructor(
                 dialog: WeightEntryState?,
                 prefs: UserPreferences,
             ->
-            Controls(selected, dialog, prefs.massUnit)
+            Controls(selected, dialog, prefs.massUnit, prefs.showTrendLines)
         }
         return combine(
             controls,
@@ -164,7 +163,6 @@ class BodyViewModel @Inject constructor(
         ) { controls: Controls, readings: List<Measurement>, weights: List<DataPoint> ->
             val unit: MassUnit = controls.unit
             val chartRange: LocalDateRange = controls.selection.chartRange(today)
-            val chartWeighIns: List<DataPoint> = weights.inRange(chartRange, unit)
             BodyUiState(
                 today = today,
                 unit = unit,
@@ -177,14 +175,19 @@ class BodyViewModel @Inject constructor(
                     .map { reading: Measurement -> reading.toRow(unit) },
                 selection = controls.selection,
                 chartRange = chartRange,
-                chartWeighIns = chartWeighIns,
-                chartTrend = trendLine(chartWeighIns),
+                chartWeighIns = weights.inRange(chartRange, unit),
+                showTrend = controls.showTrend,
                 entry = controls.entry,
             )
         }
     }
 
-    private data class Controls(val selection: DateRangeSelection, val entry: WeightEntryState?, val unit: MassUnit)
+    private data class Controls(
+        val selection: DateRangeSelection,
+        val entry: WeightEntryState?,
+        val unit: MassUnit,
+        val showTrend: Boolean,
+    )
 
     private companion object {
         /** Reads all history so "latest" never depends on the visible range. */
@@ -218,13 +221,5 @@ private fun MassUnit.storageSymbol(): String {
     return when (this) {
         MassUnit.POUND -> "lb"
         MassUnit.KILOGRAM -> "kg"
-    }
-}
-
-/** The dotted trend line: the best-fit line through [weighIns], drawn from the first to the last. */
-private fun trendLine(weighIns: List<DataPoint>): List<DataPoint> {
-    val trend: LinearTrend = linearTrend(weighIns) ?: return emptyList()
-    return listOf(weighIns.first().date, weighIns.last().date).map { date: LocalDate ->
-        DataPoint(date, trend.valueAt(date), coverage = null)
     }
 }

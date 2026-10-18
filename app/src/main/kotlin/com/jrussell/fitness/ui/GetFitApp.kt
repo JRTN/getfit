@@ -32,6 +32,7 @@ import com.jrussell.fitness.feature.body.BodyKey
 import com.jrussell.fitness.feature.body.bodyEntry
 import com.jrussell.fitness.feature.home.homeEntry
 import com.jrussell.fitness.feature.nutrition.nutritionEntry
+import com.jrussell.fitness.feature.settings.ChartSettingsKey
 import com.jrussell.fitness.feature.settings.R as SettingsR
 import com.jrussell.fitness.feature.settings.SettingsKey
 import com.jrussell.fitness.feature.settings.settingsEntry
@@ -49,17 +50,17 @@ import com.jrussell.fitness.navigation.TopLevelDestination
 @Composable
 fun GetFitApp(navigation: TopLevelBackStack<NavKey>, onExit: () -> Unit) {
     val currentDestination: TopLevelDestination = TopLevelDestination.forKey(navigation.topLevelKey)
-    val showingSettings: Boolean = navigation.overlay == SettingsKey
+    val overlay: NavKey? = navigation.overlay
 
     Scaffold(
         topBar = {
             GetFitTopBar(
-                title = if (showingSettings) {
-                    stringResource(SettingsR.string.feature_settings_title)
-                } else {
-                    stringResource(currentDestination.label)
+                title = when (overlay) {
+                    SettingsKey -> stringResource(SettingsR.string.feature_settings_title)
+                    ChartSettingsKey -> stringResource(SettingsR.string.settings_charts_title)
+                    else -> stringResource(currentDestination.label)
                 },
-                showingOverlay = showingSettings,
+                showingOverlay = overlay != null,
                 onOpenSettings = { navigation.openOverlay(SettingsKey) },
                 onCloseOverlay = { navigation.closeOverlay() },
             )
@@ -89,7 +90,7 @@ fun GetFitApp(navigation: TopLevelBackStack<NavKey>, onExit: () -> Unit) {
                 nutritionEntry()
                 trainingEntry()
                 bodyEntry()
-                settingsEntry()
+                settingsEntry(onOpenCharts = { navigation.pushOverlay(ChartSettingsKey) })
             },
         )
     }

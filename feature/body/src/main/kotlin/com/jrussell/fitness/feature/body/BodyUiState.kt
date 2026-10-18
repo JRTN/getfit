@@ -16,8 +16,7 @@ import kotlinx.datetime.LocalTime
  * @property history individual weigh-ins from the last 90 days, newest first.
  * @property selection the Trends range; [chartRange] is the dates the chart spans for it.
  * @property chartWeighIns one point per day (that day's last weigh-in) inside [chartRange].
- * @property chartTrend the dotted trend line: the best-fit line through [chartWeighIns], from the
- *   first to the last weigh-in date; empty with fewer than two days of weigh-ins.
+ * @property showTrend whether the chart draws its dotted trend line (Settings › Charts).
  * @property entry the add-weight dialog, or `null` while it is closed.
  */
 data class BodyUiState(
@@ -28,7 +27,7 @@ data class BodyUiState(
     val selection: DateRangeSelection,
     val chartRange: LocalDateRange,
     val chartWeighIns: List<DataPoint>,
-    val chartTrend: List<DataPoint>,
+    val showTrend: Boolean,
     val entry: WeightEntryState?,
 )
 

@@ -1,6 +1,7 @@
 package com.jrussell.fitness.feature.settings
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,6 +14,7 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
@@ -20,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
@@ -30,15 +33,24 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.jrussell.fitness.core.designsystem.icon.GetFitIcons
 import com.jrussell.fitness.core.designsystem.theme.GetFitTheme
 import com.jrussell.fitness.core.model.ColorPalette
 import com.jrussell.fitness.core.model.MassUnit
 import com.jrussell.fitness.core.model.ThemeMode
 import com.jrussell.fitness.core.model.UserPreferences
 
-/** The Settings screen. M1a has the Appearance section; later milestones add more sections. */
+/**
+ * The Settings screen: Appearance and Units, then rows that open sub-pages (Charts).
+ *
+ * @param onOpenCharts opens Settings › Charts.
+ */
 @Composable
-fun SettingsScreen(modifier: Modifier = Modifier, viewModel: SettingsViewModel = hiltViewModel()) {
+fun SettingsScreen(
+    onOpenCharts: () -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: SettingsViewModel = hiltViewModel(),
+) {
     val state: UserPreferences? by viewModel.uiState.collectAsStateWithLifecycle()
     // Nothing is drawn until the saved choices load (a few ms), so no default flashes first.
     state?.let { loaded: UserPreferences ->
@@ -49,6 +61,7 @@ fun SettingsScreen(modifier: Modifier = Modifier, viewModel: SettingsViewModel =
                 onPaletteSelected = viewModel::onPaletteSelected,
             )
             UnitsSettings(state = loaded, onMassUnitSelected = viewModel::onMassUnitSelected)
+            ChartsRow(onClick = onOpenCharts)
         }
     }
 }
@@ -95,6 +108,32 @@ fun UnitsSettings(state: UserPreferences, onMassUnitSelected: (MassUnit) -> Unit
             label = ::massUnitLabel,
             onSelect = onMassUnitSelected,
         )
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+    }
+}
+
+/** Opens Settings › Charts: a full-width row with a chevron, at least 48 dp tall. */
+@Composable
+fun ChartsRow(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = MIN_ROW_HEIGHT)
+                .clickable(role = Role.Button, onClick = onClick)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = stringResource(R.string.settings_charts_title), style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    text = stringResource(R.string.settings_charts_summary),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Icon(painter = painterResource(GetFitIcons.ChevronRight), contentDescription = null)
+        }
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
     }
 }
@@ -163,7 +202,7 @@ private fun massUnitLabel(unit: MassUnit): Int {
     }
 }
 
-private val MIN_ROW_HEIGHT: Dp = 48.dp
+internal val MIN_ROW_HEIGHT: Dp = 48.dp
 
 @PreviewLightDark
 @PreviewFontScale

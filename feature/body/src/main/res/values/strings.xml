@@ -47,5 +47,4 @@
     <!-- Trends view -->
     <string name="body_chart_title">Body weight</string>
     <string name="body_series_weight">Weight</string>
-    <string name="body_series_trend">Trend</string>
 </resources>

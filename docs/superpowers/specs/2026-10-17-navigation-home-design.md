@@ -224,3 +224,9 @@ Decided with the user after trying the first weight chart on the emulator. Showi
 - **The weight chart** draws a solid line through each day's weigh-in, with a dot on each, as the main series, and the trend as a dotted straight line from the first to the last weigh-in in the range. The table lists only the weigh-ins, with the spoken summary (which includes the rate) above it.
 - **Where the rate is measured:** Body's latest-weight card uses the last 30 days. Home's Weight card uses Home's range, with Today using the last 7 days like Today's charts.
 - **Trend weight (decision #28) stays** as an internal metric (`BODY_TREND_WEIGHT`) for the M5 adaptive expenditure estimate and PAL calibration. It is no longer displayed.
+
+### Every chart, and the trend-line switch (same day)
+
+- **The rule holds for every chart, not just weight.** The shared chart component draws each series as its values connected by a solid line with a dot on each point (the main line), and derives the trend itself: a dotted least-squares line through that series' points, in the same color, drawn under the main line. Any rate a chart reports ("per week" in the spoken summary and table) is that line's slope. Screens pass only recorded values; they never build a trend series.
+- **The trend line can be turned off.** For the built-in charts on Nutrition, Training and Body, the switch is **Settings › Charts › Trend lines** (on by default; stored with the UI preferences). Turning it off removes the dotted line; the summary's rate stays. For custom charts (M2's chart builder), each chart has its own trend-line switch on its create/edit screen.
+- Settings gains sub-pages: a Charts row opens Settings › Charts on top of Settings, and back returns to Settings.

@@ -32,4 +32,8 @@ class FakeUserPreferencesRepository(initial: UserPreferences = UserPreferences.D
     override suspend fun setMassUnit(unit: MassUnit) {
         state.update { preferences: UserPreferences -> preferences.copy(massUnit = unit) }
     }
+
+    override suspend fun setShowTrendLines(show: Boolean) {
+        state.update { preferences: UserPreferences -> preferences.copy(showTrendLines = show) }
+    }
 }

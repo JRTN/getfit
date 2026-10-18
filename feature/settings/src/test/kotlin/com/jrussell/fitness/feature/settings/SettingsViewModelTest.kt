@@ -72,4 +72,13 @@ class SettingsViewModelTest {
 
         assertThat(repository.current.massUnit).isEqualTo(MassUnit.POUND)
     }
+
+    @Test
+    fun onShowTrendLinesChanged_writesRepository() = runTest {
+        val viewModel: SettingsViewModel = SettingsViewModel(repository)
+
+        viewModel.onShowTrendLinesChanged(false)
+
+        assertThat(repository.current.showTrendLines).isEqualTo(false)
+    }
 }

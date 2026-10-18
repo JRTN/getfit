@@ -30,15 +30,6 @@ class MetricChartSemanticsTest {
             DataPoint(LocalDate(2026, 9, 19), 212.4, null),
             DataPoint(LocalDate(2026, 10, 17), 209.9, null),
         ),
-        style = SeriesStyle.OBSERVED,
-    )
-    private val trendLine: ChartSeries = weighIns.copy(
-        label = "Trend",
-        points = listOf(
-            DataPoint(LocalDate(2026, 9, 19), 213.0, null),
-            DataPoint(LocalDate(2026, 10, 17), 209.5, null),
-        ),
-        style = SeriesStyle.TREND,
     )
 
     @Test
@@ -47,6 +38,35 @@ class MetricChartSemanticsTest {
 
         rule.onNodeWithContentDescription("Weight, 30 days, 212.4 to 209.9 pounds", substring = true)
             .assertIsDisplayed()
+    }
+
+    @Test
+    fun trendOn_legendNamesTheTrendLine() {
+        show(listOf(weighIns), showTrend = true)
+
+        rule.onNodeWithText("Trend").assertIsDisplayed()
+    }
+
+    @Test
+    fun trendOff_noTrendLine() {
+        show(listOf(weighIns), showTrend = false)
+
+        rule.onNodeWithText("Weight").assertIsDisplayed()
+        rule.onNodeWithText("Trend").assertDoesNotExist()
+    }
+
+    @Test
+    fun singleDate_noTrendLine() {
+        show(listOf(weighIns.copy(points = weighIns.points.take(1))), showTrend = true)
+
+        rule.onNodeWithText("Trend").assertDoesNotExist()
+    }
+
+    @Test
+    fun trendOff_summaryStillGivesTheRate() {
+        show(listOf(weighIns), showTrend = false)
+
+        rule.onNodeWithContentDescription("decreasing 0.6 pounds per week", substring = true).assertIsDisplayed()
     }
 
     @Test
@@ -62,33 +82,24 @@ class MetricChartSemanticsTest {
     }
 
     @Test
+    fun table_listsRecordedValuesWithTheRateAbove() {
+        show(listOf(weighIns))
+
+        rule.onNodeWithText("View as table").performClick()
+
+        rule.onNodeWithText("Weight (lb)").assertIsDisplayed()
+        rule.onNodeWithText("Trend (lb)").assertDoesNotExist()
+        rule.onNodeWithText("decreasing 0.6 pounds per week", substring = true).assertIsDisplayed()
+    }
+
+    @Test
     fun emptySeries_showsNoDataMessage() {
         show(listOf(weighIns.copy(points = emptyList())))
 
         rule.onNodeWithText("No data in this range").assertIsDisplayed()
     }
 
-    @Test
-    fun chartWithTrendLine_summarizesTheWeighIns() {
-        show(listOf(weighIns, trendLine))
-
-        rule.onNodeWithContentDescription("Weight, 30 days, 212.4 to 209.9 pounds", substring = true)
-            .assertIsDisplayed()
-    }
-
-    @Test
-    fun table_leavesOutTheTrendLineAndShowsTheRate() {
-        show(listOf(weighIns, trendLine))
-
-        rule.onNodeWithText("View as table").performClick()
-
-        rule.onNodeWithText("Weight (lb)").assertIsDisplayed()
-        rule.onNodeWithText("Trend (lb)").assertDoesNotExist()
-        rule.onNodeWithText("213.0").assertDoesNotExist()
-        rule.onNodeWithText("decreasing 0.6 pounds per week", substring = true).assertIsDisplayed()
-    }
-
-    private fun show(series: List<ChartSeries>) {
+    private fun show(series: List<ChartSeries>, showTrend: Boolean = true) {
         rule.setContent {
             GetFitTheme {
                 MetricChart(
@@ -96,6 +107,7 @@ class MetricChartSemanticsTest {
                     series = series,
                     range = range,
                     formatValue = { value: Double -> String.format(Locale.US, "%.1f", value) },
+                    showTrend = showTrend,
                 )
             }
         }

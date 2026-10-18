@@ -125,7 +125,7 @@ private fun BodyContentPreview() {
                 selection = DateRangeSelection.Today,
                 chartRange = LocalDate(2026, 10, 11)..today,
                 chartWeighIns = emptyList(),
-                chartTrend = emptyList(),
+                showTrend = true,
                 entry = null,
             ),
             actions = BodyActions.None,

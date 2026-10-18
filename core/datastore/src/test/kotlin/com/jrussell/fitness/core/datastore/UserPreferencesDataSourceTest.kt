@@ -111,6 +111,30 @@ class UserPreferencesDataSourceTest {
     }
 
     @Test
+    fun showTrendLines_absent_isOn() = runTest {
+        val dataSource: UserPreferencesDataSource = UserPreferencesDataSource(dataStoreIn(backgroundScope))
+
+        assertThat(dataSource.userPreferences.first().showTrendLines).isEqualTo(true)
+    }
+
+    @Test
+    fun setShowTrendLines_persists() = runTest {
+        val dataSource: UserPreferencesDataSource = UserPreferencesDataSource(dataStoreIn(backgroundScope))
+
+        dataSource.setShowTrendLines(false)
+
+        assertThat(dataSource.userPreferences.first().showTrendLines).isEqualTo(false)
+    }
+
+    @Test
+    fun showTrendLines_wrongTypedStoredValue_isOn() = runTest {
+        val dataStore: DataStore<Preferences> = dataStoreIn(backgroundScope)
+        dataStore.edit { preferences -> preferences[stringPreferencesKey("show_trend_lines")] = "no" }
+
+        assertThat(UserPreferencesDataSource(dataStore).userPreferences.first().showTrendLines).isEqualTo(true)
+    }
+
+    @Test
     fun userPreferences_corruptFile_emitsDefaults() = runTest {
         file.writeBytes(byteArrayOf(0x13, 0x37, 0x00, 0x7F, 0x42))
 

@@ -139,22 +139,13 @@ class BodyViewModelTest {
     }
 
     @Test
-    fun trends_trendLine_isBestFitAcrossTheRangesWeighIns() = runTest {
-        weights.value = listOf(point(10, 1, 90.0), point(10, 11, 82.5), point(10, 14, 81.0), point(10, 17, 82.0))
+    fun trends_showTrend_followsTheChartsSetting() = runTest {
+        val viewModel: BodyViewModel = loadedViewModel()
+        assertThat(loaded(viewModel).showTrend).isEqualTo(true)
 
-        val state: BodyUiState = loaded(loadedViewModel())
+        preferences.setShowTrendLines(false)
 
-        // Fit through Oct 11, 14, 17 only (Oct 1 is outside the 7 days): -1/12 kg per day.
-        assertThat(state.chartTrend.map { it.date }).containsExactly(LocalDate(2026, 10, 11), today)
-        assertThat(state.chartTrend.first().value).isCloseTo(Mass.ofKilograms(82.0 + 1.0 / 12.0).toPounds(), 1e-9)
-        assertThat(state.chartTrend.last().value).isCloseTo(Mass.ofKilograms(82.0 - 5.0 / 12.0).toPounds(), 1e-9)
-    }
-
-    @Test
-    fun trends_singleWeighInInRange_hasNoTrendLine() = runTest {
-        weights.value = listOf(point(10, 1, 90.0), point(10, 17, 82.0))
-
-        assertThat(loaded(loadedViewModel()).chartTrend).isEmpty()
+        assertThat(viewModel.uiState.filterNotNull().first { !it.showTrend }.showTrend).isEqualTo(false)
     }
 
     @Test
@@ -193,7 +184,6 @@ class BodyViewModelTest {
         assertThat(state.latest).isNull()
         assertThat(state.history).isEmpty()
         assertThat(state.chartWeighIns).isEmpty()
-        assertThat(state.chartTrend).isEmpty()
         assertThat(state.today).isEqualTo(today)
     }
 

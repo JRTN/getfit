@@ -16,6 +16,10 @@
     <string name="chart_trend_increasing">increasing %1$s %2$s per week</string>
     <string name="chart_trend_decreasing">decreasing %1$s %2$s per week</string>
     <string name="chart_trend_steady">steady</string>
+    <!-- Legend label of the dotted line of best fit on a one-series chart. -->
+    <string name="chart_trend">Trend</string>
+    <!-- Legend label of a series trend line on a chart with several series: series label. -->
+    <string name="chart_series_trend">%1$s trend</string>
 
     <!-- Units: symbols next to numbers, spoken words for TalkBack -->
     <string name="unit_symbol_pound">lb</string>

@@ -115,4 +115,51 @@ class TopLevelBackStackTest {
         assertThat(stack.overlay).isNull()
         assertThat(stack.backStack.last()).isEqualTo("detail")
     }
+
+    @Test
+    fun pushOverlay_opensASubpageOverTheOverlay() {
+        val stack: TopLevelBackStack<String> = TopLevelBackStack("today")
+        stack.switchTo("body")
+        stack.openOverlay("settings")
+
+        stack.pushOverlay("charts")
+
+        assertThat(stack.backStack.toList()).containsExactly("today", "body", "settings", "charts")
+        assertThat(stack.overlay).isEqualTo("charts")
+    }
+
+    @Test
+    fun removeLast_closesTheSubpageThenTheOverlay() {
+        val stack: TopLevelBackStack<String> = TopLevelBackStack("today")
+        stack.openOverlay("settings")
+        stack.pushOverlay("charts")
+
+        assertThat(stack.removeLast()).isTrue()
+        assertThat(stack.overlay).isEqualTo("settings")
+        assertThat(stack.removeLast()).isTrue()
+        assertThat(stack.overlay).isNull()
+    }
+
+    @Test
+    fun closeOverlay_fromSubpage_returnsToTheOverlay() {
+        val stack: TopLevelBackStack<String> = TopLevelBackStack("today")
+        stack.openOverlay("settings")
+        stack.pushOverlay("charts")
+
+        stack.closeOverlay()
+
+        assertThat(stack.backStack.toList()).containsExactly("today", "settings")
+    }
+
+    @Test
+    fun switchTo_closesEverySubpage() {
+        val stack: TopLevelBackStack<String> = TopLevelBackStack("today")
+        stack.openOverlay("settings")
+        stack.pushOverlay("charts")
+
+        stack.switchTo("body")
+
+        assertThat(stack.backStack.toList()).containsExactly("today", "body")
+        assertThat(stack.overlay).isNull()
+    }
 }

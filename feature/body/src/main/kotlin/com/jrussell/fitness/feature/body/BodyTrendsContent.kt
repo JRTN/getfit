@@ -14,7 +14,6 @@ import androidx.compose.ui.unit.dp
 import com.jrussell.fitness.core.domain.range.DateRangeSelection
 import com.jrussell.fitness.core.ui.chart.ChartSeries
 import com.jrussell.fitness.core.ui.chart.MetricChart
-import com.jrussell.fitness.core.ui.chart.SeriesStyle
 import com.jrussell.fitness.core.ui.format.formatOneDecimal
 import com.jrussell.fitness.core.ui.format.massUnitSpoken
 import com.jrussell.fitness.core.ui.format.massUnitSymbol
@@ -47,18 +46,11 @@ internal fun BodyTrendsContent(
                     unitSymbol = symbol,
                     unitSpoken = spoken,
                     points = state.chartWeighIns,
-                    style = SeriesStyle.OBSERVED,
-                ),
-                ChartSeries(
-                    label = stringResource(R.string.body_series_trend),
-                    unitSymbol = symbol,
-                    unitSpoken = spoken,
-                    points = state.chartTrend,
-                    style = SeriesStyle.TREND,
                 ),
             ),
             range = state.chartRange,
             formatValue = { value: Double -> formatOneDecimal(value) },
+            showTrend = state.showTrend,
         )
     }
 }
