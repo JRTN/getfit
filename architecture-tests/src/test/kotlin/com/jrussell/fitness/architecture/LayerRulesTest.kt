@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test
  */
 class LayerRulesTest {
     private val pureModules: List<String> = listOf("core/model", "core/domain", "core/projection", "core/importers")
-    private val featureNames: List<String> = listOf("today", "nutrition", "training", "body", "trends", "settings")
+    private val featureNames: List<String> = listOf("home", "nutrition", "training", "body", "settings")
 
     /** Rule 1: pure-Kotlin modules stay free of Android so they can become Kotlin Multiplatform. */
     @Test

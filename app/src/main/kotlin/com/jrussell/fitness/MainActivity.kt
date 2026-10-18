@@ -9,7 +9,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -36,11 +35,10 @@ class MainActivity : ComponentActivity() {
                 LaunchedEffect(loaded.themeMode) {
                     applyApplicationNightMode(loaded.themeMode)
                 }
-                DisposableEffect(dark) {
+                LaunchedEffect(dark) {
                     // Status- and navigation-bar icons follow the app's theme, not the system's.
                     val style: SystemBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT) { dark }
                     enableEdgeToEdge(statusBarStyle = style, navigationBarStyle = style)
-                    onDispose { }
                 }
                 GetFitTheme(themeMode = loaded.themeMode, palette = loaded.palette) {
                     GetFitApp(

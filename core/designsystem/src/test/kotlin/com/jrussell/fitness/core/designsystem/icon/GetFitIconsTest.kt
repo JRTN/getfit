@@ -32,8 +32,6 @@ class GetFitIconsTest {
         val context: Context = ApplicationProvider.getApplicationContext()
         val directional: List<Pair<String, Int>> = listOf(
             "Back" to GetFitIcons.Back,
-            "Trends" to GetFitIcons.Trends,
-            "TrendsSelected" to GetFitIcons.TrendsSelected,
         )
         directional.forEach { (name: String, id: Int) ->
             assertThat(ContextCompat.getDrawable(context, id)?.isAutoMirrored, name).isEqualTo(true)

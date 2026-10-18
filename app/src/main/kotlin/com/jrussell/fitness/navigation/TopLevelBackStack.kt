@@ -12,7 +12,7 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
  *
  * Navigation 3's `NavDisplay` shows a single list of keys, [backStack]. This class builds that
  * list as "start tab's stack, then the current tab's stack, then the overlay". As a result,
- * pressing back at the root of any other tab returns to the start tab (Today) instead of
+ * pressing back at the root of any other tab returns to the start tab (Home) instead of
  * leaving the app, and switching back to a tab restores where you were inside it.
  *
  * The overlay belongs to no tab: it appears at most once, closes when you switch tabs, and is

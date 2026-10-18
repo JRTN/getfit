@@ -22,11 +22,10 @@ include(":app")
 include(":architecture-tests")
 include(":detekt-rules")
 
-include(":feature:today")
+include(":feature:home")
 include(":feature:nutrition")
 include(":feature:training")
 include(":feature:body")
-include(":feature:trends")
 include(":feature:settings")
 
 include(":core:model")

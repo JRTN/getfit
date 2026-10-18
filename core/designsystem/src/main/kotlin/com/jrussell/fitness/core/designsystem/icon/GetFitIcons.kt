@@ -9,9 +9,9 @@ import com.jrussell.fitness.core.designsystem.R
  * `Icon(painterResource(id), ...)`; their color comes from `LocalContentColor`.
  */
 object GetFitIcons {
-    @DrawableRes val Today: Int = R.drawable.ic_today
+    @DrawableRes val Home: Int = R.drawable.ic_home
 
-    @DrawableRes val TodaySelected: Int = R.drawable.ic_today_selected
+    @DrawableRes val HomeSelected: Int = R.drawable.ic_home_selected
 
     @DrawableRes val Nutrition: Int = R.drawable.ic_nutrition
 
@@ -25,10 +25,6 @@ object GetFitIcons {
 
     @DrawableRes val BodySelected: Int = R.drawable.ic_body_selected
 
-    @DrawableRes val Trends: Int = R.drawable.ic_trends
-
-    @DrawableRes val TrendsSelected: Int = R.drawable.ic_trends_selected
-
     @DrawableRes val Settings: Int = R.drawable.ic_settings
 
     @DrawableRes val Back: Int = R.drawable.ic_back
@@ -37,16 +33,14 @@ object GetFitIcons {
 
     /** Every icon with its name, for tests and previews. */
     val all: List<Pair<String, Int>> = listOf(
-        "Today" to Today,
-        "TodaySelected" to TodaySelected,
+        "Home" to Home,
+        "HomeSelected" to HomeSelected,
         "Nutrition" to Nutrition,
         "NutritionSelected" to NutritionSelected,
         "Training" to Training,
         "TrainingSelected" to TrainingSelected,
         "Body" to Body,
         "BodySelected" to BodySelected,
-        "Trends" to Trends,
-        "TrendsSelected" to TrendsSelected,
         "Settings" to Settings,
         "Back" to Back,
         "Check" to Check,

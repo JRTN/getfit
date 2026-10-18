@@ -3,6 +3,7 @@ package com.jrussell.fitness.core.designsystem.theme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import assertk.assertThat
 import assertk.assertions.isEqualTo
@@ -18,7 +19,7 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 class ThemeProvisionTest {
     @get:Rule
-    val rule = createComposeRule()
+    val rule: ComposeContentTestRule = createComposeRule()
 
     @Test
     fun highContrastDark_providesMatchingSchemeAndDataColors() {

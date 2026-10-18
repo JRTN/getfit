@@ -29,22 +29,21 @@ import androidx.navigation3.ui.NavDisplay
 import com.jrussell.fitness.R
 import com.jrussell.fitness.core.designsystem.icon.GetFitIcons
 import com.jrussell.fitness.feature.body.bodyEntry
+import com.jrussell.fitness.feature.home.homeEntry
 import com.jrussell.fitness.feature.nutrition.nutritionEntry
 import com.jrussell.fitness.feature.settings.R as SettingsR
 import com.jrussell.fitness.feature.settings.SettingsKey
 import com.jrussell.fitness.feature.settings.settingsEntry
-import com.jrussell.fitness.feature.today.todayEntry
 import com.jrussell.fitness.feature.training.trainingEntry
-import com.jrussell.fitness.feature.trends.trendsEntry
 import com.jrussell.fitness.navigation.TopLevelBackStack
 import com.jrussell.fitness.navigation.TopLevelDestination
 
 /**
- * The app shell: a top bar with the screen title and a Settings action, the five-tab bottom
+ * The app shell: a top bar with the screen title and a Settings action, the four-tab bottom
  * bar, and Navigation 3's `NavDisplay` showing the current screen between them.
  *
  * @param navigation the tab back stack (owned by `MainViewModel`).
- * @param onExit called when back is pressed on Today's root screen; the app moves to the background.
+ * @param onExit called when back is pressed on Home's root screen; the app moves to the background.
  */
 @Composable
 fun GetFitApp(navigation: TopLevelBackStack<NavKey>, onExit: () -> Unit) {
@@ -85,11 +84,10 @@ fun GetFitApp(navigation: TopLevelBackStack<NavKey>, onExit: () -> Unit) {
                 rememberViewModelStoreNavEntryDecorator(),
             ),
             entryProvider = entryProvider {
-                todayEntry()
+                homeEntry()
                 nutritionEntry()
                 trainingEntry()
                 bodyEntry()
-                trendsEntry()
                 settingsEntry()
             },
         )

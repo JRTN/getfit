@@ -6,6 +6,7 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import com.jrussell.fitness.core.designsystem.theme.GetFitTheme
@@ -21,7 +22,7 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class SettingsScreenSemanticsTest {
     @get:Rule
-    val rule = createComposeRule()
+    val rule: ComposeContentTestRule = createComposeRule()
 
     @Test
     fun appearanceOptions_exposeRadioRoleAndSelection() {

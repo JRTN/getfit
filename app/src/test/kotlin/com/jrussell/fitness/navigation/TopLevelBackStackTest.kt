@@ -104,4 +104,15 @@ class TopLevelBackStackTest {
         assertThat(stack.overlay).isNull()
         assertThat(stack.backStack.toList()).containsExactly("today", "body", "detail")
     }
+
+    @Test
+    fun push_closesOverlay() {
+        val stack: TopLevelBackStack<String> = TopLevelBackStack("home")
+        stack.openOverlay("settings")
+
+        stack.push("detail")
+
+        assertThat(stack.overlay).isNull()
+        assertThat(stack.backStack.last()).isEqualTo("detail")
+    }
 }

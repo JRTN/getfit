@@ -1,4 +1,4 @@
-package com.jrussell.fitness.feature.trends
+package com.jrussell.fitness.feature.home
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,12 +9,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 
-/** Placeholder for the Trends screen until its milestone builds the real content. */
+/** Placeholder for the Home screen until its milestone builds the real content. */
 @Composable
-fun TrendsScreen(modifier: Modifier = Modifier) {
+fun HomeScreen(modifier: Modifier = Modifier) {
     Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Text(
-            text = stringResource(R.string.feature_trends_title),
+            text = stringResource(R.string.feature_home_title),
             style = MaterialTheme.typography.titleLarge,
         )
     }

@@ -63,7 +63,7 @@ All ground-floor decisions are closed. Later sections give the detail behind eac
 | 27 | e1RM | Epley default, user-selectable formula; always computed at query time |
 | 28 | Trend weight | Exponential moving average with gap-adjusted smoothing factor |
 | 29 | Projection defaults | All parameters configurable with conservative defaults; glycogen transient deferred to v2 |
-| 30 | Navigation layout | Five bottom tabs: Today, Nutrition, Training, Body, Trends; Settings in the top bar |
+| 30 | Navigation layout | Four bottom tabs: Home, Nutrition, Training, Body; Settings in the top bar (amended 2026-10-17 from five tabs with Today and Trends; see #38) |
 | 31 | Typeface | Inter (chosen 2026-10-16), bundled, tabular figures for all numbers |
 | 32 | Charts | Vico, wrapped behind an app-owned `ChartSpec` abstraction |
 | 33 | Test stack | JUnit 5 (pure modules), JUnit 4 + Robolectric (Android modules), AssertK, Turbine, hand-written fakes |
@@ -71,6 +71,7 @@ All ground-floor decisions are closed. Later sections give the detail behind eac
 | 35 | Sync readiness | UUIDv7 keys, tombstones, global revision counter, per-remote cursor, `NoOpSyncGateway` |
 | 36 | Versioning and branching | Semver tags `vX.Y.Z` on `master`; trunk-based with short-lived branches; 0.x minor bump per newly useful capability; 1.0.0 = this design complete (added 2026-10-16) |
 | 37 | Default accent and M1 split | Violet accent `#6941C6` (light) / `#C3B1FF` (dark), chosen from mockups; M1 delivered as four plans: M1a design system → M1b data foundation → M1c weight, metrics and charts → M1d backup; `v0.1.0` after M1d (added 2026-10-16) |
+| 38 | Navigation and Home | Read-only Home (opens on Today; range presets Today, 7 days, 30 days, From…; averages for daily targets, tallies for period targets; eaten food only, plan shown as a projection) hosting the cross-domain chart builder (overlay scaled, overlay real units, compare two with a one-day shift) and pinned charts and measurements; Nutrition, Training and Body each have Log / Trends views (Body also Plan, for projections); charts on Today show the last 7 days. Full design: `docs/superpowers/specs/2026-10-17-navigation-home-design.md` (added 2026-10-17) |
 
 ## Platform, SDK levels and tooling
 
@@ -138,11 +139,10 @@ Gradle enforces rules 1–4 structurally; Konsist tests and the Dependency Analy
 | Module | Kind | Responsibility |
 | --- | --- | --- |
 | `:app` | Android app | `MainActivity`, Navigation 3 `NavDisplay`, Hilt `Application`, bindings, cross-feature navigation |
-| `:feature:today` | Android feature | Daily dashboard: budget, macros, hydration, sleep, today's workout |
+| `:feature:home` | Android feature | Read-only Home: range control, summary cards (nutrition, training, energy, body), pinned charts and measurements, cross-domain chart builder |
 | `:feature:nutrition` | Android feature | Diary, food search, food and recipe editors, targets, hydration |
 | `:feature:training` | Android feature | Live workout, templates, exercise library, history, rest-timer service |
-| `:feature:body` | Android feature | Measurements, sleep, measurement types, Health Connect inspector |
-| `:feature:trends` | Android feature | Metric explorer, chart builder, projection plans |
+| `:feature:body` | Android feature | Log / Trends / Plan: measurements, sleep, measurement types, Health Connect inspector, body charts, projection plans |
 | `:feature:settings` | Android feature | Profile, units, day start, energy mode, theme and palette, backup, source priority, crash log |
 | `:core:model` | Pure Kotlin | Domain types, typed IDs, quantities, enums |
 | `:core:domain` | Pure Kotlin | Repository interfaces, use cases, rules, metric contract |
@@ -156,7 +156,7 @@ Gradle enforces rules 1–4 structurally; Konsist tests and the Dependency Analy
 | `:core:sync` | Android library | `SyncGateway`, `NoOpSyncGateway`, `SyncWorker` |
 | `:core:backup` | Android library | Snapshot export, JSON export/import, scheduled export worker |
 | `:core:designsystem` | Android library (Compose) | Theme, tokens, palettes, typography, base components |
-| `:core:ui` | Android library (Compose) | Chart component, data table, multi-select scaffold, unit-formatted text |
+| `:core:ui` | Android library (Compose) | Chart component, chart-builder UI, range chips, data table, multi-select scaffold, unit-formatted text |
 | `:core:testing` | Test fixtures | Fakes, test dispatchers, fixture builders |
 
 ## Build infrastructure
@@ -355,7 +355,9 @@ The tables below list only columns beyond the standard set (`id`, `ownerId`, `cr
 | `MetricTarget` | U | `metricId`, `kind` (MIN, MAX, RANGE), `minValue`, `maxValue`, `formulaType` (FIXED, PER\_KG\_BODY\_WEIGHT, PER\_KG\_LEAN\_MASS, PERCENT\_OF\_ENERGY), `formulaParamsJson`, `effectiveFrom` | `(ownerId, metricId, effectiveFrom)` unique |
 | `SourcePriority` | U | `measurementTypeId`, `rank`, `sourceKind` (MANUAL, HEALTH\_CONNECT, IMPORT), `sourcePackage` | `(ownerId, measurementTypeId, rank)` unique |
 
-`MetricTarget` covers nutrient targets, the direct-water goal (`hydration.direct`), sleep and step goals. Evaluating a past day uses the row with the greatest `effectiveFrom` on or before that day.
+`MetricTarget` covers nutrient targets, the direct-water goal (`hydration.direct`), sleep and step goals. Evaluating a past day uses the row with the greatest `effectiveFrom` on or before that day. `MetricTarget` gains `period` (DAY, WEEK; default DAY) when weekly targets arrive (M3/M4): a WEEK target is summarized as a tally over a range.
+
+**Home and charts (M2).** `SavedChart` (U): `name`, `scope` (HOME, NUTRITION, TRAINING, BODY), `specJson` (serialized `ChartSpec`), `pinnedToHome`, `homeOrder`; keys `(ownerId, scope)`, `(ownerId, pinnedToHome, homeOrder)`. `HomePinnedMeasurement` (U): `measurementTypeId`, `displayOrder`; keys `(ownerId, measurementTypeId)` unique, `(ownerId, displayOrder)`.
 
 ### Nutrition
 
@@ -572,6 +574,8 @@ Providers are contributed with Hilt multibinding (`@IntoSet`) from `:core:data`;
 
 The UI never calls a charting library directly. A `ChartSpec` (series list, transforms, axes, overlays, reference lines from targets) is rendered by a single component in `:core:ui` that wraps Vico and always offers a semantic summary and a "View as table" toggle.
 
+The chart builder (decision #38) edits a `ChartSpec` in one of three views: **overlay, scaled** (each series mapped to its own range so shapes line up, real values in a readout), **overlay, real units** (at most two units on two axes) and **compare two** (one dot per day with an optional one-day shift, or the pair over time, with a plain-language correlation strength that never claims cause). Cross-domain charts are built and pinned from Home; single-domain charts live in their tab's Trends view. Saved charts never store a date range: they follow the screen showing them, and Today draws the last 7 days.
+
 ## Energy accounting
 
 The app computes every expenditure estimate it can and always shows them side by side; the active mode only decides which one drives the daily energy budget.
@@ -621,7 +625,7 @@ T_t = T_{t-\Delta d} + \alpha_{\mathrm{eff}}\,(w_t - T_{t-\Delta d}), \qquad \al
 
 ### Daily budget
 
-Budget = expenditure from the active mode + goal adjustment. The goal adjustment comes from the active `ProjectionPlan` (required intake minus current expenditure) or from a fixed energy target in `MetricTarget`. The Today screen shows: budget, consumed, remaining, and a compact comparison of the formula, adaptive and wearable estimates.
+Budget = expenditure from the active mode + goal adjustment. The goal adjustment comes from the active `ProjectionPlan` (required intake minus current expenditure) or from a fixed energy target in `MetricTarget`. Home's Energy card shows: budget, consumed, remaining, and a compact comparison of the formula, adaptive and wearable estimates.
 
 ## Projection engine
 
@@ -752,7 +756,7 @@ A unit test computes the WCAG contrast ratio of every foreground/background toke
 
 | Element | Convention |
 | --- | --- |
-| Typeface | Inter or IBM Plex Sans, bundled; `fontFeatureSettings = "tnum"` on all numeric text |
+| Typeface | Inter (decision #31), bundled; `fontFeatureSettings = "tnum"` on all numeric text |
 | Elevation | `tonalElevation = 0.dp` everywhere; separation by hairline dividers |
 | Corners | 2–4 dp |
 | Density | Compact visual rows; every interactive element keeps a ≥ 48 dp touch target via `minimumInteractiveComponentSize()` |
@@ -770,7 +774,7 @@ A unit test computes the WCAG contrast ratio of every foreground/background toke
 ### Interaction patterns
 
 - **Multi-select:** long-press any list row (`Modifier.combinedClickable`, haptic feedback). Selection is `Set<Uuid>` in `UiState`. A non-empty selection swaps the top bar for a contextual action bar: delete, copy to date, move to meal, create recipe from selection. `BackHandler` clears it.
-- **Navigation:** five bottom tabs — Today, Nutrition, Training, Body, Trends — with Settings in the top bar.
+- **Navigation:** four bottom tabs — Home, Nutrition, Training, Body — with Settings in the top bar. Home is read-only; each work tab has Log / Trends views (decision #38).
 
 ### TalkBack and text scaling
 
@@ -853,7 +857,7 @@ Version 1 is reached when the release build replaces Cronometer and Strong for d
 
 1. **M0 — Skeleton.** Private repo, `build-logic` convention plugins, version catalog, every module created empty, Hilt, Navigation 3 with five empty tabs, light/dark theme stub, crash-log handler, CI workflow.
    - Exit: debug and release builds install side by side on the S25; CI is green.
-2. **M1 — Foundations.** Design-system tokens, palette matrix and contrast tests, bundled typeface; `user.db` with standard columns, `SyncSequence`, `CurrentOwnerProvider`, `UserProfile` and versioned settings; metric-registry contract; chart component with table toggle; `NoOpSyncGateway`; all three backup layers; manual body-weight entry.
+2. **M1 — Foundations.** Design-system tokens, palette matrix and contrast tests, bundled typeface; `user.db` with standard columns, `SyncSequence`, `CurrentOwnerProvider`, `UserProfile` and versioned settings; metric-registry contract; chart component with table toggle; `NoOpSyncGateway`; all three backup layers; manual body-weight entry; four-tab navigation with Home (range control and Body card) and Body Log / Trends (M1c).
    - Exit: enter weights → see trend-weight chart and table → export, wipe the debug app, restore, identical data.
 3. **M2 — Body and Health Connect.** Permission flow and rationale screen, inspector, import worker for weight, body fat, heart rate, resting heart rate, HRV, SpO2, sleep, steps and energy; source priority; Body tab screens; `MeasurementType` editor (including lab markers).
    - Exit: inspector shows what the Versa 4 writes; a week of Fitbit sleep and heart data appears without duplicates.
@@ -861,9 +865,9 @@ Version 1 is reached when the release build replaces Cronometer and Strong for d
    - Exit: a full gym session logged in GetFit; complete Strong history imported with exercises mapped.
 5. **M4 — Nutrition.** Reference-database builder and `reference.db`; search with copy-on-first-use; diary with meal slots, planned/consumed status, multi-select actions and quick-add; recipes; food versioning with undoable rebind; versioned targets; coverage-aware totals; hydration and its goal; `DayLog`; Cronometer CSV import.
    - Exit: a day logged in both apps matches Cronometer's energy and macros within a stated tolerance; Cronometer history imported.
-6. **M5 — Energy and projection.** BMR formulas, the four energy modes with side-by-side estimates, daily budget on Today, projection plan screen, simulator, solver and feasibility verdicts, plan-versus-actual charts.
+6. **M5 — Energy and projection.** BMR formulas, the four energy modes with side-by-side estimates, daily budget on Home, projection plan screen in Body, simulator, solver and feasibility verdicts, plan-versus-actual charts.
    - Exit: the worked example reproduces in the UI; a 20-week plan shows trajectories and a correct verdict for an infeasible target.
-7. **M6 — Daily-driver release.** Today dashboard, Trends metric explorer (any metric versus any, transforms, overlays), accessibility pass at 200% font scale with TalkBack, R8 release build signed with the release key.
+7. **M6 — Daily-driver release.** Polish and accessibility pass over Home and the chart builder (built from M1c onward, decision #38), accessibility pass at 200% font scale with TalkBack, R8 release build signed with the release key.
    - Exit: the release build is installed as the daily app; Cronometer and Strong subscriptions can be canceled.
 
 ## Risks and deferred items

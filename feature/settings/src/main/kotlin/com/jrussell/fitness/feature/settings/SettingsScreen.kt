@@ -26,6 +26,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -134,7 +135,7 @@ private fun paletteLabel(palette: ColorPalette): Int {
     }
 }
 
-private val MIN_ROW_HEIGHT = 48.dp
+private val MIN_ROW_HEIGHT: Dp = 48.dp
 
 @PreviewLightDark
 @PreviewFontScale

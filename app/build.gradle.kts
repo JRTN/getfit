@@ -7,11 +7,10 @@ dependencies {
     testImplementation(libs.junit4)
     testImplementation(libs.assertk)
 
-    implementation(projects.feature.today)
+    implementation(projects.feature.home)
     implementation(projects.feature.nutrition)
     implementation(projects.feature.training)
     implementation(projects.feature.body)
-    implementation(projects.feature.trends)
     implementation(projects.feature.settings)
     implementation(projects.core.data)
     implementation(projects.core.designsystem)
