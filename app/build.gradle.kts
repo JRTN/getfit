@@ -6,6 +6,10 @@ plugins {
 dependencies {
     testImplementation(libs.junit4)
     testImplementation(libs.assertk)
+    testImplementation(libs.robolectric)
+    testImplementation(platform(libs.androidx.compose.bom))
+    testImplementation(libs.androidx.compose.ui.test.junit4)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
 
     implementation(projects.feature.home)
     implementation(projects.feature.nutrition)

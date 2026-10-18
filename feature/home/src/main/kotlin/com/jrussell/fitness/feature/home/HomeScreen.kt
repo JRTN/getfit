@@ -160,14 +160,15 @@ private fun CardLabel(text: String) {
 
 @Composable
 private fun todaySpoken(card: BodyCard.Today, today: LocalDate): String {
-    val sentence: String = stringResource(
+    // The weigh-in's day comes right after its value, so the rate's "since" date is never mixed up with it.
+    return stringResource(
         R.string.home_body_spoken_today,
         formatOneDecimal(card.latest),
         massUnitSpoken(card.unit),
+        dateLabel(card.latestDate, today),
         formatSignedOneDecimal(card.perWeek),
         formatShortDate(card.since, today),
     )
-    return if (card.latestDate == today) sentence else "$sentence, ${dateLabel(card.latestDate, today)}"
 }
 
 @Composable

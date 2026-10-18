@@ -21,11 +21,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
-import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
-import androidx.navigation3.ui.NavDisplay
 import com.jrussell.fitness.R
 import com.jrussell.fitness.core.designsystem.icon.GetFitIcons
 import com.jrussell.fitness.feature.body.BodyKey
@@ -41,7 +38,7 @@ import com.jrussell.fitness.navigation.TopLevelDestination
 
 /**
  * The app shell: a top bar with the screen title and a Settings action, the four-tab bottom
- * bar, and Navigation 3's `NavDisplay` showing the current screen between them.
+ * bar, and [TabNavDisplay] showing the current screen between them (each tab keeps its state).
  *
  * @param navigation the tab back stack (owned by `MainViewModel`).
  * @param onExit called when back is pressed on Home's root screen; the app moves to the background.
@@ -71,19 +68,10 @@ fun GetFitApp(navigation: TopLevelBackStack<NavKey>, onExit: () -> Unit) {
             )
         },
     ) { innerPadding: PaddingValues ->
-        NavDisplay(
-            backStack = navigation.backStack,
+        TabNavDisplay(
+            navigation = navigation,
+            onExit = onExit,
             modifier = Modifier.padding(innerPadding),
-            onBack = {
-                val popped: Boolean = navigation.removeLast()
-                if (!popped) {
-                    onExit()
-                }
-            },
-            entryDecorators = listOf(
-                rememberSaveableStateHolderNavEntryDecorator(),
-                rememberViewModelStoreNavEntryDecorator(),
-            ),
             entryProvider = entryProvider {
                 homeEntry(onOpenBody = { navigation.switchTo(BodyKey) })
                 nutritionEntry()

@@ -21,6 +21,7 @@ import org.gradle.kotlin.dsl.configure
  *   the release app with its own separate database;
  * - **release** builds are shrunk and obfuscated by R8 from the first release onwards, and are
  *   signed with the release key when this machine has it (see `configureReleaseSigning`).
+ * - unit tests see Android resources, for Robolectric Compose tests of the app shell.
  *
  * ```
  * plugins {
@@ -38,6 +39,9 @@ class AndroidApplicationConventionPlugin : Plugin<Project> {
 
             extensions.configure<ApplicationExtension> {
                 configureAndroidCommon(this, namespace = BASE_NAMESPACE)
+                // Robolectric Compose tests (the app shell's navigation) need merged resources and the
+                // test activity from ui-test-manifest, as library modules already have.
+                testOptions.unitTests.isIncludeAndroidResources = true
 
                 defaultConfig {
                     applicationId = BASE_NAMESPACE

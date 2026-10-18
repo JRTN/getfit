@@ -55,7 +55,10 @@ class HomeScreenSemanticsTest {
     fun bodyCard_mergesSemantics() {
         show(todayCard, onOpenBody = {})
 
-        rule.onNodeWithContentDescription("Weight 212.4 pounds, −1.2 pounds per week since Oct 11", substring = true)
+        rule.onNodeWithContentDescription(
+            "Weight 212.4 pounds, today, −1.2 pounds per week since Oct 11",
+            substring = true,
+        )
             .assertHasClickAction()
     }
 
@@ -70,6 +73,14 @@ class HomeScreenSemanticsTest {
         rule.onNodeWithContentDescription(
             "Weight 216.0 to 212.4 pounds, −3.6 pounds per week since Sep 18",
         ).assertIsDisplayed()
+    }
+
+    @Test
+    fun bodyCard_olderWeighIn_readsItsDateBeforeTheRate() {
+        show((todayCard as BodyCard.Today).copy(latestDate = LocalDate(2026, 10, 15)), onOpenBody = {})
+
+        rule.onNodeWithContentDescription("Weight 212.4 pounds, Oct 15, 2026, −1.2 pounds per week since Oct 11")
+            .assertIsDisplayed()
     }
 
     private fun show(body: BodyCard?, onOpenBody: () -> Unit) {

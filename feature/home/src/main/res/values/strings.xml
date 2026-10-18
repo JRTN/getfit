@@ -11,8 +11,8 @@
     <string name="home_body_change">%1$s → %2$s %3$s</string>
     <!-- Weekly rate (the weight trend): signed change, unit symbol, range start ("Oct 11"). -->
     <string name="home_body_rate">%1$s %2$s/week since %3$s</string>
-    <!-- Spoken: latest, unit, signed weekly change, range start (then ", date" when not today). -->
-    <string name="home_body_spoken_today">Weight %1$s %2$s, %3$s %2$s per week since %4$s</string>
+    <!-- Spoken: latest, unit, its day ("today" or a date), signed weekly change, range start. -->
+    <string name="home_body_spoken_today">Weight %1$s %2$s, %3$s, %4$s %2$s per week since %5$s</string>
     <!-- Spoken: start, end, unit, signed weekly change, range start. -->
     <string name="home_body_spoken_range">Weight %1$s to %2$s %3$s, %4$s %3$s per week since %5$s</string>
 </resources>
