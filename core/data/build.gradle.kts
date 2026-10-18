@@ -10,6 +10,7 @@ dependencies {
     implementation(projects.core.datastore)
     implementation(projects.core.healthconnect)
     implementation(projects.core.backup)
+    implementation(projects.core.importers)
     implementation(libs.room.runtime)
 
     testImplementation(projects.core.testing)

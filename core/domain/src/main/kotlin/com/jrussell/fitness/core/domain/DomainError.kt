@@ -1,5 +1,7 @@
 package com.jrussell.fitness.core.domain
 
+import com.jrussell.fitness.core.domain.backup.BackupFailure
+
 /** Why an [Outcome] failed. Each case carries enough detail for the UI to explain it. */
 sealed interface DomainError {
     /** [field] was rejected because of [reason] (e.g. out of range, not a finite number). */
@@ -13,4 +15,7 @@ sealed interface DomainError {
 
     /** No visible [entity] with [id] exists for the current owner. */
     data class NotFound(val entity: String, val id: String) : DomainError
+
+    /** A backup, export or restore failed for [failure]. */
+    data class Backup(val failure: BackupFailure) : DomainError
 }
