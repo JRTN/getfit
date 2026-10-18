@@ -25,7 +25,7 @@ Dependencies point downward. The one upward arrow is the important one: `:core:d
 
 From the spec ("Module architecture"):
 
-1. **Pure-Kotlin modules** (`:core:model`, `:core:domain`, `:core:projection`, `:core:importers`) depend on no Android module. That keeps them portable to Kotlin Multiplatform later.
+1. **Pure-Kotlin modules** (`:core:model`, `:core:domain`, `:core:projection`, `:core:importers`) depend on no Android module and use only multiplatform APIs: the Kotlin standard library and kotlinx libraries, never `java.*` or `javax.*`. That keeps them portable to Kotlin Multiplatform later.
 2. **`:feature:*`** depends only on `:core:domain`, `:core:model`, `:core:ui` and `:core:designsystem`. ViewModels receive repository *interfaces* through Hilt.
 3. **No feature depends on another feature.** Cross-feature navigation goes through callbacks supplied by `:app`.
 4. **`:core:data`** is the only module (besides `:app`) that depends on the storage modules (`:core:database`, `:core:datastore`, and later `:core:reference`, `:core:healthconnect`, `:core:backup`).
@@ -36,7 +36,7 @@ From the spec ("Module architecture"):
 | Rule | Enforced by |
 | --- | --- |
 | Features see only domain/model/ui/designsystem | [`AndroidFeatureConventionPlugin`](../../build-logic/convention/src/main/kotlin/AndroidFeatureConventionPlugin.kt) adds exactly those four dependencies; a feature build file adds nothing |
-| Pure modules import no Android | [`LayerRulesTest.pureModules_importNoAndroid`](../../architecture-tests/src/test/kotlin/com/jrussell/fitness/architecture/LayerRulesTest.kt) (Konsist) |
+| Pure modules use only multiplatform APIs (no `java.*`, `javax.*`, `android.*`, `androidx.*`, … imports or inline references) | [`LayerRulesTest.pureModules_importOnlyMultiplatformApis` and `pureModules_referenceNoPlatformPackagesInCode`](../../architecture-tests/src/test/kotlin/com/jrussell/fitness/architecture/LayerRulesTest.kt) (Konsist) |
 | No feature references another | [`LayerRulesTest.featureModules_doNotReferenceOtherFeatures`](../../architecture-tests/src/test/kotlin/com/jrussell/fitness/architecture/LayerRulesTest.kt) |
 | ViewModels take only domain interfaces | [`ViewModelDependencyRulesTest`](../../architecture-tests/src/test/kotlin/com/jrussell/fitness/architecture/ViewModelDependencyRulesTest.kt) |
 | Owner-scoped DAO queries take `ownerId` | [`DaoOwnerScopingRulesTest`](../../architecture-tests/src/test/kotlin/com/jrussell/fitness/architecture/DaoOwnerScopingRulesTest.kt) |

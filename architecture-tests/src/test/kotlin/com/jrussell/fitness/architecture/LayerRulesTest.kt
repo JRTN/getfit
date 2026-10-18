@@ -14,15 +14,38 @@ class LayerRulesTest {
     private val pureModules: List<String> = listOf("core/model", "core/domain", "core/projection", "core/importers")
     private val featureNames: List<String> = listOf("home", "nutrition", "training", "body", "settings")
 
-    /** Rule 1: pure-Kotlin modules stay free of Android so they can become Kotlin Multiplatform. */
+    /**
+     * Rule 1: pure-Kotlin modules use only multiplatform APIs (Kotlin stdlib, kotlinx libraries),
+     * so they can become Kotlin Multiplatform without rewrites. Bans Android and JVM-only packages
+     * (`java.*`, `javax.*`, …) both as imports and as fully qualified references in code.
+     */
     @Test
-    fun pureModules_importNoAndroid() {
-        Konsist.scopeFromProduction()
+    fun pureModules_importOnlyMultiplatformApis() {
+        pureModuleFiles().assertFalse(strict = true) { file: KoFileDeclaration ->
+            file.imports.any { import: KoImportDeclaration -> isPlatformSpecific(import.name) }
+        }
+    }
+
+    /** Rule 1, continued: no fully qualified platform references slip past the import check. */
+    @Test
+    fun pureModules_referenceNoPlatformPackagesInCode() {
+        pureModuleFiles().assertFalse(strict = true) { file: KoFileDeclaration ->
+            codeLines(file).any { line: String -> FULLY_QUALIFIED_PLATFORM_REFERENCE.containsMatchIn(line) }
+        }
+    }
+
+    private fun pureModuleFiles(): List<KoFileDeclaration> {
+        return Konsist.scopeFromProduction()
             .files
             .filter { file: KoFileDeclaration -> normalizedModuleName(file) in pureModules }
-            .assertFalse(strict = true) { file: KoFileDeclaration ->
-                file.imports.any { import: KoImportDeclaration -> isAndroidImport(import.name) }
-            }
+    }
+
+    /** The file's lines minus imports, package line and comments (KDoc may mention `java.time`). */
+    private fun codeLines(file: KoFileDeclaration): List<String> {
+        return file.text.lines()
+            .map { line: String -> line.trim() }
+            .filterNot { line: String -> NON_CODE_PREFIXES.any { prefix: String -> line.startsWith(prefix) } }
+            .map { line: String -> line.substringBefore("//") }
     }
 
     /** Rule 3: no feature module references another feature's package. */
@@ -47,7 +70,19 @@ class LayerRulesTest {
         return file.moduleName.replace('\\', '/')
     }
 
-    private fun isAndroidImport(name: String): Boolean {
-        return name.startsWith("android.") || name.startsWith("androidx.")
+    private fun isPlatformSpecific(name: String): Boolean {
+        return PLATFORM_PACKAGES.any { prefix: String -> name.startsWith("$prefix.") }
+    }
+
+    private companion object {
+        /** Packages that exist only on the JVM or Android, never in Kotlin Multiplatform common code. */
+        val PLATFORM_PACKAGES: List<String> = listOf("java", "javax", "jdk", "sun", "android", "androidx", "dalvik")
+
+        /** Line starts that mark imports, the package line and comments (KDoc may name `java.time`). */
+        val NON_CODE_PREFIXES: List<String> = listOf("import ", "package ", "//", "/*", "*")
+
+        /** A platform package used inline, e.g. `java.util.UUID.randomUUID()`. */
+        val FULLY_QUALIFIED_PLATFORM_REFERENCE: Regex =
+            Regex("""(?<![\w.])(${PLATFORM_PACKAGES.joinToString("|")})\.[a-z]""")
     }
 }
