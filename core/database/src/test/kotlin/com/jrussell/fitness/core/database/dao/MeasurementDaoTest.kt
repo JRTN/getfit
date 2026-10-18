@@ -2,6 +2,7 @@ package com.jrussell.fitness.core.database.dao
 
 import assertk.assertThat
 import assertk.assertions.containsExactly
+import assertk.assertions.containsExactlyInAnyOrder
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNotNull
 import assertk.assertions.isNull
@@ -58,5 +59,44 @@ class MeasurementDaoTest {
         assertThat(changed).isEqualTo(0)
         assertThat(dao.findById(otherOwner, theirs.id)).isNotNull()
         assertThat(dao.findById(owner, theirs.id)).isNull()
+    }
+
+    @Test
+    fun exportAll_includesTombstones() = runTest {
+        val live: MeasurementEntity = aMeasurement(owner, weight, LocalDate(2026, 10, 10))
+        val deleted: MeasurementEntity = aMeasurement(owner, weight, LocalDate(2026, 10, 11), deletedAt = FIXTURE_NOW)
+        dao.insert(live)
+        dao.insert(deleted)
+        dao.insert(aMeasurement(Uuid.random(), weight, LocalDate(2026, 10, 10)))
+
+        assertThat(dao.exportAll(owner)).containsExactlyInAnyOrder(live, deleted)
+    }
+
+    @Test
+    fun findAnyById_findsTombstoned() = runTest {
+        val deleted: MeasurementEntity = aMeasurement(owner, weight, LocalDate(2026, 10, 11), deletedAt = FIXTURE_NOW)
+        dao.insert(deleted)
+
+        assertThat(dao.findAnyById(owner, deleted.id)).isEqualTo(deleted)
+        assertThat(dao.findAnyById(Uuid.random(), deleted.id)).isNull()
+    }
+
+    @Test
+    fun countLive_skipsTombstones() = runTest {
+        dao.insert(aMeasurement(owner, weight, LocalDate(2026, 10, 10)))
+        dao.insert(aMeasurement(owner, weight, LocalDate(2026, 10, 11), deletedAt = FIXTURE_NOW))
+        dao.insert(aMeasurement(Uuid.random(), weight, LocalDate(2026, 10, 10)))
+
+        assertThat(dao.countLive(owner)).isEqualTo(1)
+    }
+
+    @Test
+    fun update_replacesRow() = runTest {
+        val row: MeasurementEntity = aMeasurement(owner, weight, LocalDate(2026, 10, 10))
+        dao.insert(row)
+
+        dao.update(row.copy(value = 80.0))
+
+        assertThat(dao.findAnyById(owner, row.id)?.value).isEqualTo(80.0)
     }
 }

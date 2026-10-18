@@ -3,7 +3,9 @@ package com.jrussell.fitness.core.database.dao
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Update
 import com.jrussell.fitness.core.database.entity.MeasurementEntity
+import com.jrussell.fitness.core.model.MeasurementSource
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.flow.Flow
@@ -46,4 +48,28 @@ interface MeasurementDao {
         """,
     )
     suspend fun tombstone(ownerId: Uuid, id: Uuid, deletedAt: Instant, revision: Long, deviceId: Uuid): Int
+
+    /** Every row of the owner, tombstones included, for the JSON export. */
+    @Query("SELECT * FROM Measurement WHERE ownerId = :ownerId ORDER BY id")
+    suspend fun exportAll(ownerId: Uuid): List<MeasurementEntity>
+
+    /** The row with [id], tombstoned or not; the JSON merge compares against it. */
+    @Query("SELECT * FROM Measurement WHERE ownerId = :ownerId AND id = :id")
+    suspend fun findAnyById(ownerId: Uuid, id: Uuid): MeasurementEntity?
+
+    /** The row with this natural key, tombstoned or not (imported rows only; manual rows have none). */
+    @Query(
+        """
+        SELECT * FROM Measurement
+        WHERE ownerId = :ownerId AND source = :source AND externalId = :externalId
+        """,
+    )
+    suspend fun findAnyByExternalId(ownerId: Uuid, source: MeasurementSource, externalId: String): MeasurementEntity?
+
+    @Update
+    suspend fun update(entity: MeasurementEntity)
+
+    /** How many live readings of any type the owner has (a restore preview's entry count). */
+    @Query("SELECT COUNT(*) FROM Measurement WHERE ownerId = :ownerId AND deletedAt IS NULL")
+    suspend fun countLive(ownerId: Uuid): Int
 }

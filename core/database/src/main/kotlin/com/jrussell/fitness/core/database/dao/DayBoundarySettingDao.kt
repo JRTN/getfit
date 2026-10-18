@@ -46,4 +46,16 @@ interface DayBoundarySettingDao {
 
     @Update
     suspend fun update(entity: DayBoundarySettingEntity)
+
+    /** Every row of the owner, tombstones included, for the JSON export. */
+    @Query("SELECT * FROM DayBoundarySetting WHERE ownerId = :ownerId ORDER BY effectiveFrom, id")
+    suspend fun exportAll(ownerId: Uuid): List<DayBoundarySettingEntity>
+
+    /** The row with [id], tombstoned or not. */
+    @Query("SELECT * FROM DayBoundarySetting WHERE ownerId = :ownerId AND id = :id")
+    suspend fun findAnyById(ownerId: Uuid, id: Uuid): DayBoundarySettingEntity?
+
+    /** The row starting on [effectiveFrom], tombstoned or not (the unique index spans tombstones). */
+    @Query("SELECT * FROM DayBoundarySetting WHERE ownerId = :ownerId AND effectiveFrom = :effectiveFrom")
+    suspend fun findAnyByEffectiveFrom(ownerId: Uuid, effectiveFrom: LocalDate): DayBoundarySettingEntity?
 }

@@ -15,6 +15,7 @@ import com.jrussell.fitness.core.database.entity.SyncSequenceEntity
 import com.jrussell.fitness.core.database.entity.UserProfileEntity
 import com.jrussell.fitness.core.database.infrastructure.DatasetVersionDao
 import com.jrussell.fitness.core.database.infrastructure.LocalProfileDao
+import com.jrussell.fitness.core.database.infrastructure.ReferenceCatalogDao
 import com.jrussell.fitness.core.database.infrastructure.SyncSequenceDao
 
 /**
@@ -32,7 +33,7 @@ import com.jrussell.fitness.core.database.infrastructure.SyncSequenceDao
         MeasurementTypeEntity::class,
         MeasurementEntity::class,
     ],
-    version = 1,
+    version = USER_DATABASE_VERSION,
     exportSchema = true,
 )
 @TypeConverters(Converters::class)
@@ -42,6 +43,8 @@ abstract class GetFitDatabase : RoomDatabase() {
     abstract fun datasetVersionDao(): DatasetVersionDao
 
     abstract fun localProfileDao(): LocalProfileDao
+
+    abstract fun referenceCatalogDao(): ReferenceCatalogDao
 
     abstract fun dayBoundarySettingDao(): DayBoundarySettingDao
 

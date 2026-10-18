@@ -8,6 +8,9 @@ dependencies {
     api(libs.kotlinx.datetime)
     // GetFitDatabase extends RoomDatabase, so modules that hold it (:app, :core:data) need Room types.
     api(libs.room.runtime)
+    // The corruption-preserving open helper wraps the framework SQLite helper directly.
+    implementation(libs.androidx.sqlite)
+    implementation(libs.androidx.sqlite.framework)
 
     testImplementation(libs.kotlinx.coroutines.test)
 }

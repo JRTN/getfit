@@ -37,6 +37,31 @@ class SchemaJsonTest {
         assertThat(committedHash).isNotNull().isEqualTo(compiledHash)
     }
 
+    /**
+     * The pin: a schema change that keeps version 1 fails here. Bump [USER_DATABASE_VERSION], add a
+     * numbered migration with a `MigrationTestHelper` test, and add the new hash to
+     * [USER_DATABASE_IDENTITY_HASHES], keeping every earlier entry so old snapshots stay restorable.
+     */
+    @Test
+    fun pinnedHash_matchesCommittedAndCompiled() {
+        val json: String =
+            File("schemas/com.jrussell.fitness.core.database.GetFitDatabase/$USER_DATABASE_VERSION.json").readText()
+        val committedHash: String? = IDENTITY_HASH.find(json)?.groupValues?.get(1)
+        val readable = database.openHelper.readableDatabase
+        val compiledHash: String = readable.query("SELECT identity_hash FROM room_master_table").use { rows: Cursor ->
+            rows.moveToFirst()
+            rows.getString(0)
+        }
+        val userVersion: Int = readable.query("PRAGMA user_version").use { rows: Cursor ->
+            rows.moveToFirst()
+            rows.getInt(0)
+        }
+
+        assertThat(USER_DATABASE_IDENTITY_HASHES[USER_DATABASE_VERSION]).isEqualTo(committedHash)
+        assertThat(USER_DATABASE_IDENTITY_HASHES[USER_DATABASE_VERSION]).isEqualTo(compiledHash)
+        assertThat(userVersion).isEqualTo(USER_DATABASE_VERSION)
+    }
+
     private companion object {
         val IDENTITY_HASH: Regex = Regex(""""identityHash"\s*:\s*"([0-9a-f]+)"""")
     }

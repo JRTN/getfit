@@ -22,7 +22,7 @@ import kotlinx.coroutines.sync.withLock
  * Built-in measurement types get UUIDv5 IDs (identical on every device), no owner,
  * `localRevision = 0` (so a first sync push, which sends `localRevision > 0`, skips them) and no
  * origin device. Raise [MEASUREMENT_TYPES_VERSION] and add rows to [builtInMeasurementTypes] to
- * ship more; existing rows are never overwritten.
+ * ship more, or to correct an existing built-in (rows are upserted by ID).
  *
  * Repositories that depend on reference rows call [seed] before using them, so a screen opened
  * before the startup bootstrap finishes still finds them. After the first success it returns
@@ -47,16 +47,8 @@ class ReferenceSeeder @Inject constructor(
     }
 
     private suspend fun seedOnce() {
-        database.withTransaction {
-            val applied: Int = database.datasetVersionDao().version(MEASUREMENT_TYPES_KEY) ?: 0
-            if (applied < MEASUREMENT_TYPES_VERSION) {
-                val now: Instant = clock.now()
-                database.measurementTypeDao().insertAll(builtInMeasurementTypes(now))
-                database.datasetVersionDao().upsert(
-                    DatasetVersionEntity(MEASUREMENT_TYPES_KEY, MEASUREMENT_TYPES_VERSION, now),
-                )
-            }
-        }
+        val now: Instant = clock.now()
+        seedMeasurementTypes(database, builtInMeasurementTypes(now), MEASUREMENT_TYPES_VERSION, seededAt = now)
     }
 
     private fun builtInMeasurementTypes(now: Instant): List<MeasurementTypeEntity> {
@@ -84,7 +76,28 @@ class ReferenceSeeder @Inject constructor(
     }
 
     private companion object {
-        const val MEASUREMENT_TYPES_KEY: String = "measurement_types"
         const val MEASUREMENT_TYPES_VERSION: Int = 1
+    }
+}
+
+private const val MEASUREMENT_TYPES_KEY: String = "measurement_types"
+
+/**
+ * Applies [builtIns] as dataset [version] of the built-in measurement types, if a lower version
+ * (or none) is recorded: each row is inserted or replaced by its ID, so corrections to a built-in
+ * ship by raising the version. User-owned types have their own IDs and are never touched.
+ */
+internal suspend fun seedMeasurementTypes(
+    database: GetFitDatabase,
+    builtIns: List<MeasurementTypeEntity>,
+    version: Int,
+    seededAt: Instant,
+) {
+    database.withTransaction {
+        val applied: Int = database.datasetVersionDao().version(MEASUREMENT_TYPES_KEY) ?: 0
+        if (applied < version) {
+            database.referenceCatalogDao().upsertBuiltIns(builtIns)
+            database.datasetVersionDao().upsert(DatasetVersionEntity(MEASUREMENT_TYPES_KEY, version, seededAt))
+        }
     }
 }

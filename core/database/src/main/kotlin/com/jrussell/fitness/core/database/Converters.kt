@@ -12,7 +12,8 @@ import kotlinx.datetime.TimeZone
 /**
  * How `user.db` stores non-primitive column types, as the design fixes them:
  * `Uuid` → TEXT, `Instant` → INTEGER epoch milliseconds, `LocalDate` → INTEGER epoch day (cheap
- * range queries and indexes), `TimeZone` → TEXT IANA ID, `MeasurementUnit` → TEXT code. Enums use Room's built-in by-name storage.
+ * range queries and indexes), `TimeZone` → TEXT IANA ID, `MeasurementUnit` → TEXT code. Enums use
+ * Room's built-in by-name storage.
  */
 class Converters {
     @TypeConverter

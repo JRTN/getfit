@@ -53,4 +53,44 @@ class LocalProfileDaoTest {
 
         assertThat(database.localProfileDao().findLocalProfile()).isEqualTo(profile)
     }
+
+    @Test
+    fun findLocalProfile_sameCreatedAt_picksLowestId() = runTest {
+        val now: Instant = Instant.parse("2026-10-17T12:00:00Z")
+        val lower: Uuid = Uuid.parse("0199f0a1-0000-7000-8000-000000000001")
+        val higher: Uuid = Uuid.parse("0199f0a1-0000-7000-8000-000000000002")
+        database.localProfileDao().insert(profile(higher, now))
+        database.localProfileDao().insert(profile(lower, now))
+
+        assertThat(database.localProfileDao().findLocalProfile()?.id).isEqualTo(lower)
+    }
+
+    @Test
+    fun update_replacesProfile() = runTest {
+        val now: Instant = Instant.parse("2026-10-17T12:00:00Z")
+        val id: Uuid = Uuid.parse("0199f0a1-0000-7000-8000-000000000001")
+        database.localProfileDao().insert(profile(id, now))
+
+        database.localProfileDao().update(profile(id, now).copy(heightM = 1.88))
+
+        assertThat(database.localProfileDao().findLocalProfile()?.heightM).isEqualTo(1.88)
+    }
+
+    private fun profile(id: Uuid, createdAt: Instant): UserProfileEntity {
+        return UserProfileEntity(
+            id = id,
+            ownerId = id,
+            displayName = null,
+            sex = null,
+            birthDate = null,
+            heightM = null,
+            sync = SyncMetadata(
+                createdAt = createdAt,
+                updatedAt = createdAt,
+                deletedAt = null,
+                localRevision = 1,
+                originDeviceId = Uuid.parse("5b1d7e9a-0c44-4f7a-9c2e-3f6b2c1e8a4d"),
+            ),
+        )
+    }
 }

@@ -2,8 +2,10 @@ package com.jrussell.fitness.core.database.dao
 
 import android.database.Cursor
 import assertk.assertThat
+import assertk.assertions.containsExactly
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNull
+import com.jrussell.fitness.core.database.FIXTURE_NOW
 import com.jrussell.fitness.core.database.GetFitDatabase
 import com.jrussell.fitness.core.database.aMeasurementType
 import com.jrussell.fitness.core.database.entity.MeasurementTypeEntity
@@ -59,5 +61,37 @@ class MeasurementTypeDaoTest {
             }
         assertThat(count).isEqualTo(1)
         assertThat(dao.findByKey(owner, "weight")).isEqualTo(builtIn)
+    }
+
+    @Test
+    fun exportOwned_excludesBuiltIns() = runTest {
+        val builtIn: MeasurementTypeEntity = aMeasurementType(ownerId = null, key = "weight")
+        val mine: MeasurementTypeEntity = aMeasurementType(ownerId = owner, key = "custom.glucose")
+        dao.insertAll(listOf(builtIn, mine, aMeasurementType(ownerId = Uuid.random(), key = "custom.theirs")))
+
+        assertThat(dao.exportOwned(owner)).containsExactly(mine)
+    }
+
+    @Test
+    fun findAnyById_findsOwnAndBuiltIn_includingTombstoned() = runTest {
+        val builtIn: MeasurementTypeEntity = aMeasurementType(ownerId = null, key = "weight")
+        val mine: MeasurementTypeEntity =
+            aMeasurementType(ownerId = owner, key = "custom.gone").copy(deletedAt = FIXTURE_NOW)
+        val theirs: MeasurementTypeEntity = aMeasurementType(ownerId = Uuid.random(), key = "custom.theirs")
+        dao.insertAll(listOf(builtIn, mine, theirs))
+
+        assertThat(dao.findAnyById(owner, builtIn.id)).isEqualTo(builtIn)
+        assertThat(dao.findAnyById(owner, mine.id)).isEqualTo(mine)
+        assertThat(dao.findAnyById(owner, theirs.id)).isNull()
+    }
+
+    @Test
+    fun insertAndUpdate_ownedType() = runTest {
+        val mine: MeasurementTypeEntity = aMeasurementType(ownerId = owner, key = "custom.glucose")
+        dao.insert(mine)
+
+        dao.update(mine.copy(displayName = "Fasting glucose"))
+
+        assertThat(dao.findAnyById(owner, mine.id)?.displayName).isEqualTo("Fasting glucose")
     }
 }

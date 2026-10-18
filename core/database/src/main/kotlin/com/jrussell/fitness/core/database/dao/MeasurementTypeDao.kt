@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import com.jrussell.fitness.core.database.entity.MeasurementTypeEntity
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.flow.Flow
@@ -34,4 +35,18 @@ interface MeasurementTypeDao {
     /** Inserts rows, skipping any whose ID already exists (so re-seeding is harmless). */
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertAll(entities: List<MeasurementTypeEntity>)
+
+    /** The owner's own types, tombstones included, for the JSON export (built-ins are never exported). */
+    @Query("SELECT * FROM MeasurementType WHERE ownerId = :ownerId ORDER BY id")
+    suspend fun exportOwned(ownerId: Uuid): List<MeasurementTypeEntity>
+
+    /** The type with [id] if it is the owner's or a built-in, tombstoned or not. */
+    @Query("SELECT * FROM MeasurementType WHERE id = :id AND (ownerId = :ownerId OR ownerId IS NULL)")
+    suspend fun findAnyById(ownerId: Uuid, id: Uuid): MeasurementTypeEntity?
+
+    @Insert
+    suspend fun insert(entity: MeasurementTypeEntity)
+
+    @Update
+    suspend fun update(entity: MeasurementTypeEntity)
 }
