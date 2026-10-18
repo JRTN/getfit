@@ -76,7 +76,7 @@ Each feature exposes the same three files: a Navigation 3 key (`HomeKey`), a scr
 | [`:core:database`](../../core/database/) | `user.db`: Room entities, DAOs, converters, committed schema JSON | Schema v1 (7 tables) |
 | [`:core:datastore`](../../core/datastore/) | Preferences DataStore for UI-only settings | Theme mode, palette, weight unit, each screen's date range |
 | [`:core:sync`](../../core/sync/) | `SyncGateway` seam and `NoOpSyncGateway` | Seam only |
-| [`:core:reference`](../../core/reference/) | Bundled read-only USDA food catalog (`reference.db`) | Empty (M4) |
+| [`:core:reference`](../../core/reference/) | Bundled read-only USDA food catalog (`reference.db`) | Empty (M3) |
 | [`:core:healthconnect`](../../core/healthconnect/) | Health Connect client and import worker | Empty (M2) |
 | [`:core:backup`](../../core/backup/) | Snapshot and JSON export/import | Empty (M1d) |
 

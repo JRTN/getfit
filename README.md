@@ -87,10 +87,10 @@ Versioning is semantic: `0.1.0` is the first usable release, each new capability
 | M1b | Data foundation: `user.db`, stamped writes, owner scoping, day assignment, sync seam | Done |
 | M1c | Four-tab layout with a read-only Home, weight entry, metric registry, charts with a best-fit trend and table view | Done |
 | M1d | Backup: Auto Backup, scheduled snapshots, JSON export/import | Next (**`v0.1.0`**) |
-| M2 | Body and Health Connect, plus the cross-domain chart builder on Home | |
-| M3 | Training | |
-| M4 | Nutrition | |
-| M5 | Energy accounting and weight projection | |
+| M2 | Body and Health Connect | |
+| M3 | Nutrition, including saved meals | |
+| M4 | Training, including training blocks | |
+| M5 | Energy accounting, weight projection and the cross-domain chart builder on Home | |
 | M6 | Daily-driver release: polish and accessibility pass over Home and the chart builder | |
 
 ## Building

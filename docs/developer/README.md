@@ -12,6 +12,8 @@ This guide is a walkthrough for a developer joining GetFit. It explains what eac
 | `docs/developer/` (this guide) | The **walkthrough**: how the code that exists today is put together | When you want to understand or change the code |
 | [`docs/developer/stack.md`](stack.md) | The **stack**: every library and tool, why it was picked, what was rejected | When you wonder "why X and not Y?" |
 | [`docs/superpowers/plans/`](../superpowers/plans/) | The **plans**: task-by-task build instructions for each milestone, kept as a record | When you want the history of a piece of code |
+| [`docs/backlog.md`](../backlog.md) | The **backlog**: known work no plan has taken on yet, grouped by milestone | Before writing a plan, or when you wonder whether a gap is known |
+| [`docs/reviews/`](../reviews/) | **Reviews** of the whole app and design, with the owner's decisions | When you want to know why the design changed course |
 
 The spec describes the destination; this guide describes the road built so far. Where they differ, the code follows the spec, and the guide says what is not built yet.
 

@@ -84,7 +84,7 @@ There are two kinds of screens:
 | **Body** | Latest weight with the weight trend (lb or kg per week; see "Weight trend" below); progress against the active projection plan once plans exist (M5); then the user's pinned measurements (latest value each) | Each pinned measurement: start → now, with rate per week |
 | **Pinned charts** | Each pinned chart, drawn over Home's range | Same |
 
-Cards whose data does not exist yet (e.g. Nutrition before M4) are hidden, not shown empty.
+Cards whose data does not exist yet (e.g. Nutrition before M3) are hidden, not shown empty.
 
 ### Date range
 
@@ -243,3 +243,12 @@ Decided with the user after trying the first weight chart on the emulator. Showi
 - **Body's range chips are All, 7 days, 30 days and From…** (owner decision). The latest-weight card already shows the most recent weigh-in, so a Today range on Body added nothing. Home keeps Today, and stays its default.
 - A Today choice saved on Body before this change reads as Body's default, All.
 - "Charts on Today show the last 7 days" now applies only to Home; when the other tabs' Trends views gain range chips, each decides whether it offers Today.
+
+### Milestone order and the chart builder (2026-10-18)
+
+The milestones were reordered after the pre-v0.1.0 review (owner decision; decision #39 in `docs/initial_design.md`). This replaces the M2–M4 lines of "Milestone impact" above:
+- **M2:** Body and Health Connect, with single-metric Trends charts for the new body metrics. **No chart builder.**
+- **M3:** Nutrition: the Nutrition card with its projection, and Nutrition Trends.
+- **M4:** Training: the Training card, Training Trends and weekly targets.
+- **M5:** The full chart builder (all three views), saved and pinned charts and pinned measurements, alongside energy and projection. By then every domain has data to compare.
+- The tables the builder needs (`SavedChart`, `HomePinnedMeasurement`) move with it to M5. `SummaryRule` arrives with the first Home card that needs it (Nutrition, M3), and weight's rate moves onto it then. `MetricTarget.period` arrives with the first weekly target (M4).

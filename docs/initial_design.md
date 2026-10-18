@@ -72,6 +72,7 @@ All ground-floor decisions are closed. Later sections give the detail behind eac
 | 36 | Versioning and branching | Semver tags `vX.Y.Z` on `master`; trunk-based with short-lived branches; 0.x minor bump per newly useful capability; 1.0.0 = this design complete (added 2026-10-16) |
 | 37 | Default accent and M1 split | Violet accent `#6941C6` (light) / `#C3B1FF` (dark), chosen from mockups; M1 delivered as four plans: M1a design system → M1b data foundation → M1c weight, metrics and charts → M1d backup; `v0.1.0` after M1d (added 2026-10-16) |
 | 38 | Navigation and Home | Read-only Home (opens on Today; range presets Today, 7 days, 30 days, From…; averages for daily targets, tallies for period targets; eaten food only, plan shown as a projection) hosting the cross-domain chart builder (overlay scaled, overlay real units, compare two with a one-day shift) and pinned charts and measurements; Nutrition, Training and Body each have Log / Trends views (Body also Plan, for projections); charts on Today show the last 7 days. Full design: `docs/superpowers/specs/2026-10-17-navigation-home-design.md` (added 2026-10-17) |
+| 39 | Bulk building and milestone order | Saved meals (logged as separate entries, undoable, plannable across several days) and training blocks (weeks × days of templates, scheduled in one undoable action) join v1; automatic progression and multi-block programs stay v2. Milestones reordered: M2 Body and Health Connect, M3 Nutrition, M4 Training, M5 Energy, projection and the cross-domain chart builder (added 2026-10-18, from the pre-v0.1.0 review) |
 
 ## Platform, SDK levels and tooling
 
@@ -372,7 +373,17 @@ The tables below list only columns beyond the standard set (`id`, `ownerId`, `cr
 | `MealSlot` | U | `name`, `displayOrder`, `defaultMinutesAfterDayStart` | `(ownerId, displayOrder)` |
 | `DiaryEntry` | U | `localDate`, `loggedAt`, `timeZone`, `mealSlotId`, `status` (PLANNED, CONSUMED), `foodId` (null for quick-add), `amountGrams`, `enteredValue`, `enteredUnit`, `quickEnergyKcal`, `quickProteinG`, `quickCarbohydrateG`, `quickFatG`, `note` | `(ownerId, localDate)`; `(ownerId, foodId)` |
 | `HydrationEntry` | U | `localDate`, `loggedAt`, `timeZone`, `volumeMl`, `enteredValue`, `enteredUnit`, `beverageType` | `(ownerId, localDate)` |
-| `BulkOperationLog` | U | `operationType` (REBIND\_FOOD\_VERSION, …), `paramsJson`, `affectedIdsJson`, `previousValuesJson`, `performedAt`, `undoneAt` | `(ownerId, performedAt)` |
+| `BulkOperationLog` | U | `operationType` (REBIND\_FOOD\_VERSION, APPLY\_SAVED\_MEAL, SCHEDULE\_TRAINING\_BLOCK, …), `paramsJson`, `affectedIdsJson`, `previousValuesJson`, `performedAt`, `undoneAt` | `(ownerId, performedAt)` |
+| `SavedMeal` | U | `name`, `defaultMealSlotId` (nullable), `displayOrder`, `note` | `(ownerId, displayOrder)` |
+| `SavedMealItem` | U | `savedMealId`, `displayOrder`, `foodLineageId`, `amountGrams`, `enteredValue`, `enteredUnit` | `(savedMealId, displayOrder)` |
+
+**Saved meals (added 2026-10-18, owner decision: bulk building).** A saved meal is a named list of foods and amounts that is logged as separate diary entries, unlike a recipe, which becomes one food.
+- **Creating one:** "Save as meal" in the diary's multi-select action bar, or from scratch in the saved-meal editor.
+- **Logging one:** "Add saved meal" puts it on one date or several dates at once (planning a week), in a meal slot, as PLANNED or CONSUMED.
+  - All the entries are written in one stamped transaction, recorded in `BulkOperationLog` (APPLY\_SAVED\_MEAL), so the whole application can be undone.
+  - Each entry is then an ordinary `DiaryEntry` that can be edited on its own.
+- **Items point at a food lineage, not a version.** Applying a meal uses each food's latest version at that moment. The diary entries it creates are history and never change afterwards; the saved meal is a template and follows food edits.
+- **What a saved meal can't hold** *(builder's call)*: quick-add entries and water. A saved meal holds only foods.
 
 **Food versions.** `Food`, `FoodNutrient`, `ServingSize` and `RecipeIngredient` form one immutable aggregate per version. Editing inserts a new version with the same `lineageId` and `version + 1` and stamps `supersededAt` on the previous one. A recipe's `FoodNutrient` rows are computed from its ingredients when the version is created, so later edits to an ingredient never change a past recipe.
 
@@ -389,11 +400,23 @@ The tables below list only columns beyond the standard set (`id`, `ownerId`, `cr
 | `RoutineTemplate` | U | `name`, `folder`, `displayOrder`, `programId` (null in v1), `note` | `(ownerId, folder, displayOrder)` |
 | `TemplateExercise` | U | `templateId`, `displayOrder`, `exerciseId`, `supersetGroup`, `restSeconds`, `progressionRuleJson` (null in v1), `note` | `(templateId, displayOrder)` |
 | `TemplateSet` | U | `templateExerciseId`, `displayOrder`, `setType` (WARMUP, WORKING, DROP, FAILURE), `targetRepsMin`, `targetRepsMax`, `targetWeightKg`, `targetRir`, `targetDurationSeconds` | `(templateExerciseId, displayOrder)` |
-| `WorkoutSession` | U | `localDate`, `startedAt`, `endedAt`, `timeZone`, `templateId`, `status` (SCHEDULED, IN\_PROGRESS, COMPLETED, SKIPPED), `name`, `note` | `(ownerId, localDate)`; `(ownerId, status)` |
+| `WorkoutSession` | U | `localDate`, `startedAt`, `endedAt`, `timeZone`, `templateId`, `blockRunId` (nullable), `status` (SCHEDULED, IN\_PROGRESS, COMPLETED, SKIPPED), `name`, `note` | `(ownerId, localDate)`; `(ownerId, status)`; `(blockRunId)` |
 | `WorkoutExercise` | U | `sessionId`, `displayOrder`, `exerciseId`, `supersetGroup`, `note` | `(sessionId, displayOrder)`; `(exerciseId)` |
 | `WorkoutSet` | U | `workoutExerciseId`, `displayOrder`, `setType`, `weightKg`, `enteredWeightValue`, `enteredWeightUnit`, `reps`, `rir`, `durationSeconds`, `distanceM`, `completed`, `completedAt`, `note` | `(workoutExerciseId, displayOrder)` |
+| `TrainingBlock` | U | `name`, `weeks` (1–16), `displayOrder`, `note` | `(ownerId, displayOrder)` |
+| `TrainingBlockSlot` | U | `blockId`, `week` (1..`weeks`), `day` (1–7, the day of the block's week), `displayOrder`, `templateId` | `(blockId, week, day, displayOrder)` |
+| `TrainingBlockRun` | U | `blockId`, `startDate`, `status` (ACTIVE, COMPLETED, CANCELLED) | `(ownerId, status)` |
 
 Every set is written to Room the moment it is entered, so process death mid-workout loses nothing. The rest timer is in-memory state owned by a foreground service.
+
+**Training blocks (added 2026-10-18, owner decision: bulk building).** A block is several weeks of routine templates laid out by week and day, such as "Weeks 1–3 build, week 4 deload, four days a week".
+- **Starting a block:** "Start block on <date>" creates a `TrainingBlockRun` and one SCHEDULED `WorkoutSession` per slot. A slot's date is `startDate + (week − 1) × 7 + (day − 1)`.
+- **Undo and cancel:** it is all one stamped transaction, recorded in `BulkOperationLog` (SCHEDULE\_TRAINING\_BLOCK), so a mistaken start can be undone. Cancelling a run deletes its remaining SCHEDULED sessions and keeps the completed ones.
+- **What a block doesn't do:**
+  - change weights automatically: week-to-week differences come from using different templates;
+  - repeat itself: a block ends after `weeks`, and the user starts it again.
+
+  Automatic progression and multi-block programs stay in v2. The `progressionRuleJson` column is still reserved for them.
 
 ### Biometrics, sleep and days
 
@@ -417,9 +440,41 @@ Plans store inputs only. Projections are deterministic and recomputed on demand;
 | `HealthConnectSyncState` | `recordType`, `changesToken`, `lastSyncedAt` | Incremental Health Connect import position |
 | `DatasetVersion` | `datasetKey`, `version`, `seededAt` | Which exercise and nutrient seeds have been applied |
 
+### Schema notes for later milestones (added 2026-10-18)
+
+These notes were reviewed before `v0.1.0` pinned the schema. Adding a table, or a column that can be left empty, is a cheap migration later. Changing what a stored number means is not cheap, so those meanings are fixed now.
+
+**Stored units (fixed in M1d).**
+- `MeasurementType.canonicalUnit` is a code from one list (`StandardUnit` in `:core:model`). Each unit belongs to a dimension (mass, length, ratio, energy, duration, heart rate, pressure, count), and the dimension decides which display-unit setting applies.
+- The stored meanings are fixed:
+  - masses in kilograms;
+  - lengths in meters;
+  - body fat and every other percentage as a fraction from 0 to 1;
+  - durations in seconds.
+- User-defined lab markers keep any label as `custom:<label>`, with no conversion.
+
+**Body composition and circumferences (M2; the M5 projection uses them).**
+- **Circumferences:** one built-in type per site (waist, hips, chest, neck, and left and right arm, forearm, thigh and calf), stored in meters. They are shown in cm or in through a new length-unit setting.
+- **Body fat, lean mass and fat mass** are separate types, stored as a fraction (body fat) and in kilograms (the masses).
+- **Store what was measured; derive the rest.** If only body fat is entered, fat mass and lean mass are computed at query time from that day's weight, and never stored ("Derived values are never stored"). If a scan reports all three, all three are stored.
+- **Add `Measurement.groupId`** (nullable) so readings from one scan or one smart-scale weigh-in stay together. Health Connect sends body fat and lean body mass as separate records.
+- **Add a nullable `method`** (DEXA, BIA_SCALE, CALIPERS, TAPE, OTHER) where it matters. Body fat from different methods isn't comparable, so charts and trends may separate or label readings by method.
+
+**Training (M4, after the 2026-10-18 reorder).** Settle these when the Training plan is written:
+- **Load conventions:**
+  - `weightKg` is external load including the bar.
+  - Dumbbell and kettlebell exercises record the weight of **one** implement, as Strong does, so imports line up.
+  - ASSISTED exercises store assistance as a positive `assistanceKg` column rather than a negative weight.
+  - Bodyweight volume uses that day's weight from `Measurement`, computed at query time.
+- **Unilateral sets:** add `side` (LEFT, RIGHT, BOTH; default BOTH) to `TemplateSet` and `WorkoutSet`, so each side can be logged separately when the user wants to.
+- **Tracking types:** add WEIGHT_DISTANCE for carries and sled work. The set columns already allow it.
+- **Effort:** `rir` becomes a decimal (REAL) so half steps like RPE 8.5 survive.
+- **Distance:** add `enteredDistanceValue` and `enteredDistanceUnit` to `WorkoutSet`, matching weight, so a mile doesn't come back as 1.6093 km.
+- **Imported sessions:** add `source`, `sourcePackage` and `externalId` to `WorkoutSession`, with `(ownerId, source, externalId)` unique as on `Measurement`, so Health Connect and Strong imports never duplicate a workout.
+
 ### Deferred tables (v2)
 
-`Program`, `ProgramBlock`, `ProgressPhoto`, FTS4 virtual tables over food names and notes. Existing tables already carry the nullable columns these will attach to (`RoutineTemplate.programId`, `TemplateExercise.progressionRuleJson`).
+`Program` (several training blocks in sequence, with automatic progression), `ProgressPhoto`, FTS4 virtual tables over food names and notes. Existing tables already carry the nullable columns these will attach to (`RoutineTemplate.programId`, `TemplateExercise.progressionRuleJson`). Training blocks themselves are in v1 (see "Training blocks").
 
 ## reference.db and copy-on-first-use
 
@@ -859,14 +914,41 @@ Version 1 is reached when the release build replaces Cronometer and Strong for d
    - Exit: debug and release builds install side by side on the S25; CI is green.
 2. **M1 — Foundations.** Design-system tokens, palette matrix and contrast tests, bundled typeface; `user.db` with standard columns, `SyncSequence`, `CurrentOwnerProvider`, `UserProfile` and versioned settings; metric-registry contract; chart component with table toggle; `NoOpSyncGateway`; all three backup layers; manual body-weight entry; four-tab navigation with Home (range control and Body card) and Body Log / Trends (M1c).
    - Exit: enter weights → see trend-weight chart and table → export, wipe the debug app, restore, identical data.
-3. **M2 — Body and Health Connect.** Permission flow and rationale screen, inspector, import worker for weight, body fat, heart rate, resting heart rate, HRV, SpO2, sleep, steps and energy; source priority; Body tab screens; `MeasurementType` editor (including lab markers).
-   - Exit: inspector shows what the Versa 4 writes; a week of Fitbit sleep and heart data appears without duplicates.
-4. **M3 — Training.** Exercise dataset seed and overrides, custom exercises, routine templates, live workout with per-set persistence, rest-timer foreground service, previous performance, PRs and e1RM, Strong CSV import.
-   - Exit: a full gym session logged in GetFit; complete Strong history imported with exercises mapped.
-5. **M4 — Nutrition.** Reference-database builder and `reference.db`; search with copy-on-first-use; diary with meal slots, planned/consumed status, multi-select actions and quick-add; recipes; food versioning with undoable rebind; versioned targets; coverage-aware totals; hydration and its goal; `DayLog`; Cronometer CSV import.
-   - Exit: a day logged in both apps matches Cronometer's energy and macros within a stated tolerance; Cronometer history imported.
-6. **M5 — Energy and projection.** BMR formulas, the four energy modes with side-by-side estimates, daily budget on Home, projection plan screen in Body, simulator, solver and feasibility verdicts, plan-versus-actual charts.
-   - Exit: the worked example reproduces in the UI; a 20-week plan shows trajectories and a correct verdict for an infeasible target.
+3. **M2 — Body and Health Connect.**
+   - **Scope:**
+     - permission flow and rationale screen, and the inspector;
+     - an import worker for weight, body fat, heart rate, resting heart rate, HRV, SpO2, sleep, steps and energy;
+     - source priority;
+     - Body tab screens, with single-metric Trends charts for the new metrics;
+     - the `MeasurementType` editor (including lab markers and circumferences).
+   - Exit: the inspector shows what the Versa 4 writes; a week of Fitbit sleep and heart data appears without duplicates.
+4. **M3 — Nutrition.**
+   - **Scope:**
+     - the reference-database builder and `reference.db`; search with copy-on-first-use;
+     - a diary with meal slots, planned/consumed status, multi-select actions and quick-add;
+     - recipes and **saved meals**;
+     - food versioning with undoable rebind;
+     - versioned targets and coverage-aware totals;
+     - hydration and its goal; `DayLog`;
+     - Cronometer CSV import.
+   - Exit: a day logged in both apps matches Cronometer's energy and macros within a stated tolerance; Cronometer history imported; a saved meal is planned across a week in one action.
+5. **M4 — Training.**
+   - **Scope:**
+     - the exercise dataset seed and overrides, and custom exercises;
+     - routine templates and **training blocks**;
+     - a live workout with per-set persistence, and the rest timer;
+     - previous performance, PRs and e1RM;
+     - Strong CSV import.
+   - Exit: a full gym session logged in GetFit; complete Strong history imported with exercises mapped; a four-week block scheduled in one action.
+6. **M5 — Energy, projection and the chart builder.**
+   - **Scope:**
+     - BMR formulas, and the four energy modes with side-by-side estimates;
+     - the daily budget on Home;
+     - the projection plan screen in Body, with the simulator, solver and feasibility verdicts, and plan-versus-actual charts;
+     - the cross-domain chart builder (decision #38), with saved and pinned charts and pinned measurements.
+   - Exit: the worked example reproduces in the UI; a 20-week plan shows trajectories and a correct verdict for an infeasible target; a chart of protein against training volume is built and pinned to Home.
+
+*Order amended 2026-10-18 (owner decision): Nutrition before Training, because food logging is the owner's most important daily habit. The chart builder moves from M2 to M5, when every domain has data to compare.*
 7. **M6 — Daily-driver release.** Polish and accessibility pass over Home and the chart builder (built from M1c onward, decision #38), accessibility pass at 200% font scale with TalkBack, R8 release build signed with the release key.
    - Exit: the release build is installed as the daily app; Cronometer and Strong subscriptions can be canceled.
 
@@ -891,7 +973,7 @@ The largest risk is scope: an all-in-one app never reaching daily use. The miles
 ### Deferred to v2 and later
 
 - Adaptive PAL calibration in the projection engine (the adaptive expenditure metric itself ships in M5).
-- Progression rules and programs (`Program → Block → Week`); columns already reserved.
+- Progression rules and multi-block programs; columns already reserved. (Single training blocks and saved meals moved into v1 on 2026-10-18.)
 - Barcode scanning (CameraX + ML Kit) and Open Food Facts lookup.
 - Home-screen widgets (Jetpack Glance) for water and quick-add.
 - Full-text search over foods and notes (FTS4).
@@ -904,5 +986,5 @@ The largest risk is scope: an all-in-one app never reaching daily use. The miles
 
 ### Open questions
 
-- Exercise dataset license to be verified before bundling (M3).
+- Exercise dataset license to be verified before bundling (M4, Training).
 - Exact Health Connect record types written by the Versa 4 (answered by the M2 inspector).
