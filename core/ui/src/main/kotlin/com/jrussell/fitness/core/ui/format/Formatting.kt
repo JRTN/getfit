@@ -1,11 +1,15 @@
 package com.jrussell.fitness.core.ui.format
 
+import android.text.format.DateFormat
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.jrussell.fitness.core.model.MassUnit
 import com.jrussell.fitness.core.ui.R
 import java.text.NumberFormat
+import java.time.format.DateTimeFormatter
 import java.util.Locale
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.toJavaLocalDate
 
 private const val MINUS_SIGN: String = "−"
 
@@ -43,4 +47,15 @@ fun massUnitSpoken(unit: MassUnit): String {
         MassUnit.POUND -> stringResource(R.string.unit_spoken_pound)
         MassUnit.KILOGRAM -> stringResource(R.string.unit_spoken_kilogram)
     }
+}
+
+/**
+ * A compact date for labels like "since Sep 19": month and day in [locale]'s order, plus the year
+ * only when it differs from [today]'s ("Jun 1, 2025").
+ */
+fun formatShortDate(date: LocalDate, today: LocalDate, locale: Locale = Locale.getDefault()): String {
+    val skeleton: String = if (date.year == today.year) "MMMd" else "MMMdy"
+    return date.toJavaLocalDate().format(
+        DateTimeFormatter.ofPattern(DateFormat.getBestDateTimePattern(locale, skeleton), locale),
+    )
 }

@@ -11,6 +11,8 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import assertk.assertThat
+import assertk.assertions.isEqualTo
 import com.jrussell.fitness.core.designsystem.theme.GetFitTheme
 import com.jrussell.fitness.core.domain.range.DateRangeSelection
 import com.jrussell.fitness.core.model.MassUnit
@@ -70,16 +72,35 @@ class BodyScreenSemanticsTest {
     fun latestCard_showsAndReadsTheWeeklyRate() {
         show(state(history = listOf(row)))
 
-        rule.onNodeWithText("−1.2 lb/week", useUnmergedTree = true).assertIsDisplayed()
-        rule.onNodeWithContentDescription("Latest weight 212.4 pounds, today, −1.2 pounds per week")
+        rule.onNodeWithText("−1.2 lb/week since Oct 11", useUnmergedTree = true).assertIsDisplayed()
+        rule.onNodeWithContentDescription("Latest weight 212.4 pounds, today, −1.2 pounds per week since Oct 11")
             .assertIsDisplayed()
+    }
+
+    @Test
+    fun logView_hasTheRangeChips() {
+        var picked: DateRangeSelection? = null
+        show(state(history = listOf(row)), BodyActions(onRangeSelected = { picked = it }))
+
+        rule.onNodeWithText("30 days").performClick()
+
+        assertThat(picked).isEqualTo(DateRangeSelection.LastDays(30))
+    }
+
+    @Test
+    fun emptyRange_saysSoInsteadOfAddYourFirst() {
+        show(state(history = emptyList()).copy(latest = LatestWeight(212.4, today, 0.0, today)))
+
+        rule.onNodeWithText("No weigh-ins in this range").assertIsDisplayed()
     }
 
     private fun state(entry: WeightEntryState? = null, history: List<WeightRow> = emptyList()): BodyUiState {
         return BodyUiState(
             today = today,
             unit = MassUnit.POUND,
-            latest = history.firstOrNull()?.let { LatestWeight(it.value, it.date, perWeek = -1.2) },
+            latest = history.firstOrNull()?.let {
+                LatestWeight(it.value, it.date, perWeek = -1.2, since = LocalDate(2026, 10, 11))
+            },
             history = history,
             selection = DateRangeSelection.Today,
             chartRange = LocalDate(2026, 10, 11)..today,
@@ -88,10 +109,10 @@ class BodyScreenSemanticsTest {
         )
     }
 
-    private fun show(state: BodyUiState) {
+    private fun show(state: BodyUiState, actions: BodyActions = BodyActions.None) {
         rule.setContent {
             GetFitTheme {
-                BodyContent(state = state, actions = BodyActions.None)
+                BodyContent(state = state, actions = actions)
             }
         }
     }

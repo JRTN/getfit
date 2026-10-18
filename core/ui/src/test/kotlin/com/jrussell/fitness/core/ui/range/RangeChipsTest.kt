@@ -45,6 +45,16 @@ class RangeChipsTest {
         assertThat(selected).isEqualTo(DateRangeSelection.LastDays(7))
     }
 
+    @Test
+    fun clickingAll_clearsTheRange() {
+        var selected: DateRangeSelection? = null
+        show { selection: DateRangeSelection -> selected = selection }
+
+        rule.onNodeWithText("All").assert(isRadioButton()).assertIsNotSelected().performClick()
+
+        assertThat(selected).isEqualTo(DateRangeSelection.All)
+    }
+
     private fun show(onSelect: (DateRangeSelection) -> Unit) {
         rule.setContent {
             GetFitTheme {

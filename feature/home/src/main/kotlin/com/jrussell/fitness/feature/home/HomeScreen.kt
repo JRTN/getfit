@@ -30,6 +30,7 @@ import com.jrussell.fitness.core.designsystem.theme.GetFitTheme
 import com.jrussell.fitness.core.domain.range.DateRangeSelection
 import com.jrussell.fitness.core.model.MassUnit
 import com.jrussell.fitness.core.ui.format.formatOneDecimal
+import com.jrussell.fitness.core.ui.format.formatShortDate
 import com.jrussell.fitness.core.ui.format.formatSignedOneDecimal
 import com.jrussell.fitness.core.ui.format.massUnitSpoken
 import com.jrussell.fitness.core.ui.format.massUnitSymbol
@@ -93,7 +94,7 @@ fun HomeContent(
 private fun BodyCardView(card: BodyCard, today: LocalDate, onClick: () -> Unit) {
     val spoken: String = when (card) {
         is BodyCard.Today -> todaySpoken(card, today)
-        is BodyCard.Range -> rangeSpoken(card)
+        is BodyCard.Range -> rangeSpoken(card, today)
     }
     Surface(
         shape = MaterialTheme.shapes.medium,
@@ -106,7 +107,7 @@ private fun BodyCardView(card: BodyCard, today: LocalDate, onClick: () -> Unit) 
         Column(modifier = Modifier.padding(CARD_PADDING), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             when (card) {
                 is BodyCard.Today -> TodayBody(card, today)
-                is BodyCard.Range -> RangeBody(card)
+                is BodyCard.Range -> RangeBody(card, today)
             }
         }
     }
@@ -124,11 +125,11 @@ private fun TodayBody(card: BodyCard.Today, today: LocalDate) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
-    RateText(card.perWeek, symbol)
+    RateText(card.perWeek, symbol, formatShortDate(card.since, today))
 }
 
 @Composable
-private fun RangeBody(card: BodyCard.Range) {
+private fun RangeBody(card: BodyCard.Range, today: LocalDate) {
     val symbol: String = massUnitSymbol(card.unit)
     CardLabel(stringResource(R.string.home_body_weight))
     Text(
@@ -140,14 +141,14 @@ private fun RangeBody(card: BodyCard.Range) {
         ),
         style = MaterialTheme.typography.headlineSmall,
     )
-    RateText(card.change.perWeek, symbol)
+    RateText(card.change.perWeek, symbol, formatShortDate(card.since, today))
 }
 
-/** The weight trend, "−1.2 lb/week". */
+/** The weight trend and where it is measured from, "−1.2 lb/week since Oct 11". */
 @Composable
-private fun RateText(perWeek: Double, symbol: String) {
+private fun RateText(perWeek: Double, symbol: String, since: String) {
     Text(
-        text = stringResource(R.string.home_body_rate, formatSignedOneDecimal(perWeek), symbol),
+        text = stringResource(R.string.home_body_rate, formatSignedOneDecimal(perWeek), symbol, since),
         style = MaterialTheme.typography.bodyMedium,
     )
 }
@@ -164,18 +165,20 @@ private fun todaySpoken(card: BodyCard.Today, today: LocalDate): String {
         formatOneDecimal(card.latest),
         massUnitSpoken(card.unit),
         formatSignedOneDecimal(card.perWeek),
+        formatShortDate(card.since, today),
     )
     return if (card.latestDate == today) sentence else "$sentence, ${dateLabel(card.latestDate, today)}"
 }
 
 @Composable
-private fun rangeSpoken(card: BodyCard.Range): String {
+private fun rangeSpoken(card: BodyCard.Range, today: LocalDate): String {
     return stringResource(
         R.string.home_body_spoken_range,
         formatOneDecimal(card.change.start),
         formatOneDecimal(card.change.end),
         massUnitSpoken(card.unit),
         formatSignedOneDecimal(card.change.perWeek),
+        formatShortDate(card.since, today),
     )
 }
 
@@ -199,7 +202,13 @@ private fun HomeContentPreview() {
             state = HomeUiState(
                 today = today,
                 selection = DateRangeSelection.Today,
-                body = BodyCard.Today(latest = 212.4, latestDate = today, perWeek = -1.2, unit = MassUnit.POUND),
+                body = BodyCard.Today(
+                    212.4,
+                    today,
+                    perWeek = -1.2,
+                    since = LocalDate(2026, 10, 11),
+                    unit = MassUnit.POUND,
+                ),
             ),
             onRangeSelected = {},
             onOpenBody = {},

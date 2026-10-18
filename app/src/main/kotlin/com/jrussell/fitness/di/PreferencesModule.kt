@@ -5,10 +5,13 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import com.jrussell.fitness.core.data.di.IoDispatcher
+import com.jrussell.fitness.core.data.preferences.DefaultDateRangeRepository
 import com.jrussell.fitness.core.data.preferences.DefaultUserPreferencesRepository
+import com.jrussell.fitness.core.datastore.RangeSelectionDataSource
 import com.jrussell.fitness.core.datastore.UserPreferencesDataSource
 import com.jrussell.fitness.core.datastore.createUserPreferencesDataStore
 import com.jrussell.fitness.core.domain.UserPreferencesRepository
+import com.jrussell.fitness.core.domain.range.DateRangeRepository
 import com.jrussell.fitness.core.model.MassUnit
 import dagger.Binds
 import dagger.Module
@@ -22,7 +25,10 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 
-/** Binds UI preferences: one DataStore file per install, wrapped by the repository features use. */
+/**
+ * Binds UI preferences and remembered date ranges: one DataStore file per install, wrapped by the
+ * repositories features use.
+ */
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class PreferencesModule {
@@ -30,6 +36,9 @@ abstract class PreferencesModule {
     abstract fun bindUserPreferencesRepository(
         implementation: DefaultUserPreferencesRepository,
     ): UserPreferencesRepository
+
+    @Binds
+    abstract fun bindDateRangeRepository(implementation: DefaultDateRangeRepository): DateRangeRepository
 
     companion object {
         private const val FILE_NAME: String = "user_preferences"
@@ -57,6 +66,12 @@ abstract class PreferencesModule {
         @Singleton
         fun provideUserPreferencesDataSource(dataStore: DataStore<Preferences>): UserPreferencesDataSource {
             return UserPreferencesDataSource(dataStore, defaultMassUnit = customaryMassUnit(Locale.getDefault()))
+        }
+
+        @Provides
+        @Singleton
+        fun provideRangeSelectionDataSource(dataStore: DataStore<Preferences>): RangeSelectionDataSource {
+            return RangeSelectionDataSource(dataStore)
         }
     }
 }

@@ -14,11 +14,15 @@ import com.jrussell.fitness.core.domain.Outcome
 import com.jrussell.fitness.core.domain.metric.DataPoint
 import com.jrussell.fitness.core.domain.metric.MetricId
 import com.jrussell.fitness.core.domain.metric.MetricIds
+import com.jrussell.fitness.core.domain.range.DateRangeSelection
+import com.jrussell.fitness.core.domain.range.RangeScreen
 import com.jrussell.fitness.core.model.Mass
 import com.jrussell.fitness.core.model.MassUnit
 import com.jrussell.fitness.core.model.Measurement
+import com.jrussell.fitness.core.model.MeasurementTypeKeys
 import com.jrussell.fitness.core.model.UserPreferences
 import com.jrussell.fitness.core.model.ids.MeasurementId
+import com.jrussell.fitness.core.testing.FakeDateRangeRepository
 import com.jrussell.fitness.core.testing.FakeDayBoundaryRepository
 import com.jrussell.fitness.core.testing.FakeMeasurementRepository
 import com.jrussell.fitness.core.testing.FakeMetricRegistry
@@ -130,7 +134,13 @@ class BodyViewModelTest {
     fun trends_todaySelection_chartsLastSevenDays() = runTest {
         weights.value = listOf(point(10, 9, 83.0), point(10, 11, 82.5), point(10, 17, 82.0))
 
-        val state: BodyUiState = loaded(loadedViewModel())
+        val todayRange: FakeDateRangeRepository = FakeDateRangeRepository(
+            mapOf(
+                RangeScreen.BODY to DateRangeSelection.Today,
+            ),
+        )
+
+        val state: BodyUiState = loaded(loadedViewModel(todayRange))
 
         assertThat(state.chartRange).isEqualTo(LocalDate(2026, 10, 11)..today)
         assertThat(state.chartWeighIns.map { it.date }).containsExactly(LocalDate(2026, 10, 11), today)
@@ -139,13 +149,57 @@ class BodyViewModelTest {
     }
 
     @Test
-    fun latest_ratePerWeek_isBestFitOverLastThirtyDays() = runTest {
-        weights.value = listOf(point(9, 1, 95.0), point(10, 3, 83.0), point(10, 17, 82.0))
+    fun allRange_isTheDefault_andCoversEveryWeighIn() = runTest {
+        weights.value = listOf(point(3, 1, 95.0), point(10, 3, 83.0), point(10, 17, 82.0))
 
-        val latest: LatestWeight? = loaded(loadedViewModel()).latest
+        val state: BodyUiState = loaded(loadedViewModel())
 
-        // Sep 1 is outside Sep 18..Oct 17; Oct 3 → Oct 17 is -1 kg in 14 days, -0.5 kg per week.
-        assertThat(latest?.perWeek).isNotNull().isCloseTo(Mass.ofKilograms(-0.5).toPounds(), 1e-9)
+        assertThat(state.selection).isEqualTo(DateRangeSelection.All)
+        assertThat(state.chartRange).isEqualTo(LocalDate(2026, 3, 1)..today)
+        assertThat(state.latest?.since).isEqualTo(LocalDate(2026, 3, 1))
+        assertThat(state.chartWeighIns).hasSize(3)
+    }
+
+    @Test
+    fun fromRange_startsFresh_ignoringEarlierWeighIns() = runTest {
+        weights.value = listOf(point(3, 1, 95.0), point(10, 3, 83.0), point(10, 17, 82.0))
+        measurements.delegate.addManual(weighIn(LocalDate(2026, 3, 1), 95.0))
+        measurements.delegate.addManual(weighIn(LocalDate(2026, 10, 3), 83.0))
+        val ranges: FakeDateRangeRepository =
+            FakeDateRangeRepository(mapOf(RangeScreen.BODY to DateRangeSelection.From(LocalDate(2026, 10, 1))))
+
+        val state: BodyUiState = loaded(loadedViewModel(ranges))
+
+        // Oct 3 → Oct 17 is -1 kg in 14 days: -0.5 kg per week; the March weigh-in is ignored.
+        assertThat(state.latest?.perWeek).isNotNull().isCloseTo(Mass.ofKilograms(-0.5).toPounds(), 1e-9)
+        assertThat(state.latest?.since).isEqualTo(LocalDate(2026, 10, 1))
+        assertThat(state.history.map { it.date }).containsExactly(LocalDate(2026, 10, 3))
+        assertThat(state.chartWeighIns.map { it.date }).containsExactly(LocalDate(2026, 10, 3), today)
+    }
+
+    @Test
+    fun latestValue_isTheNewestWeighInEvenOutsideTheRange() = runTest {
+        weights.value = listOf(point(9, 1, 90.0))
+        val ranges: FakeDateRangeRepository =
+            FakeDateRangeRepository(mapOf(RangeScreen.BODY to DateRangeSelection.LastDays(7)))
+
+        val latest: LatestWeight? = loaded(loadedViewModel(ranges)).latest
+
+        assertThat(latest?.date).isEqualTo(LocalDate(2026, 9, 1))
+        assertThat(latest?.perWeek).isEqualTo(0.0)
+        assertThat(latest?.since).isEqualTo(LocalDate(2026, 10, 11))
+    }
+
+    @Test
+    fun onRangeSelected_isRemembered() = runTest {
+        val ranges: FakeDateRangeRepository = FakeDateRangeRepository()
+        val viewModel: BodyViewModel = loadedViewModel(ranges)
+
+        viewModel.onRangeSelected(DateRangeSelection.LastDays(30))
+
+        assertThat(ranges.saved(RangeScreen.BODY)).isEqualTo(DateRangeSelection.LastDays(30))
+        assertThat(viewModel.uiState.filterNotNull().first { it.selection != DateRangeSelection.All }.selection)
+            .isEqualTo(DateRangeSelection.LastDays(30))
     }
 
     @Test
@@ -198,12 +252,17 @@ class BodyViewModelTest {
         assertThat(measurements.added.single().takenAt).isEqualTo(clock.now)
     }
 
-    private fun loadedViewModel(): BodyViewModel {
-        return BodyViewModel(measurements, metrics, preferences, FakeDayBoundaryRepository(240), clock)
+    private fun loadedViewModel(ranges: FakeDateRangeRepository = FakeDateRangeRepository()): BodyViewModel {
+        return BodyViewModel(measurements, metrics, preferences, ranges, FakeDayBoundaryRepository(240), clock)
     }
 
     private suspend fun loaded(viewModel: BodyViewModel): BodyUiState {
         return viewModel.uiState.filterNotNull().first()
+    }
+
+    private fun weighIn(date: LocalDate, kilograms: Double): ManualMeasurement {
+        val at: Instant = LocalDateTime(date, LocalTime(8, 0)).toInstant(toronto)
+        return ManualMeasurement(MeasurementTypeKeys.WEIGHT, kilograms, at, toronto, null, null, null)
     }
 
     private fun point(month: Int, day: Int, kilograms: Double): DataPoint {

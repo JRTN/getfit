@@ -40,9 +40,11 @@ import com.jrussell.fitness.core.designsystem.icon.GetFitIcons
 import com.jrussell.fitness.core.model.MassUnit
 import com.jrussell.fitness.core.model.ids.MeasurementId
 import com.jrussell.fitness.core.ui.format.formatOneDecimal
+import com.jrussell.fitness.core.ui.format.formatShortDate
 import com.jrussell.fitness.core.ui.format.formatSignedOneDecimal
 import com.jrussell.fitness.core.ui.format.massUnitSpoken
 import com.jrussell.fitness.core.ui.format.massUnitSymbol
+import com.jrussell.fitness.core.ui.range.RangeChips
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import kotlinx.datetime.LocalDate
@@ -55,7 +57,10 @@ private val CARD_PADDING: Dp = 16.dp
 private val HAIRLINE: Dp = 1.dp
 private val MIN_ROW_HEIGHT: Dp = 56.dp
 
-/** The Log view: the latest weigh-in, "Add weight", then the last 90 days of weigh-ins with delete. */
+/**
+ * The Log view: the range chips (shared with Trends), the latest weigh-in with its rate over the
+ * range, "Add weight", then the weigh-ins inside the range with delete.
+ */
 @Composable
 internal fun BodyLogContent(state: BodyUiState, actions: BodyActions, modifier: Modifier = Modifier) {
     var pendingDelete: WeightRow? by remember { mutableStateOf(null) }
@@ -64,6 +69,9 @@ internal fun BodyLogContent(state: BodyUiState, actions: BodyActions, modifier: 
         contentPadding = PaddingValues(SCREEN_PADDING),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+        item {
+            RangeChips(selection = state.selection, onSelect = actions.onRangeSelected, today = state.today)
+        }
         state.latest?.let { latest: LatestWeight ->
             item { LatestWeightCard(latest = latest, unit = state.unit, today = state.today) }
         }
@@ -82,7 +90,9 @@ internal fun BodyLogContent(state: BodyUiState, actions: BodyActions, modifier: 
         if (state.history.isEmpty()) {
             item {
                 Text(
-                    text = stringResource(R.string.body_history_empty),
+                    text = stringResource(
+                        if (state.latest == null) R.string.body_history_empty else R.string.body_history_empty_range,
+                    ),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -109,13 +119,14 @@ internal fun BodyLogContent(state: BodyUiState, actions: BodyActions, modifier: 
     }
 }
 
-/** "212.4 lb · today" over "−1.2 lb/week", read by TalkBack as one sentence. */
+/** "212.4 lb · today" over "−1.2 lb/week since Oct 11", read by TalkBack as one sentence. */
 @Composable
 private fun LatestWeightCard(latest: LatestWeight, unit: MassUnit, today: LocalDate) {
     val value: String = formatOneDecimal(latest.value)
     val date: String = dateLabel(latest.date, today)
     val rate: String = formatSignedOneDecimal(latest.perWeek)
-    val spoken: String = stringResource(R.string.body_latest_spoken, value, massUnitSpoken(unit), date, rate)
+    val since: String = formatShortDate(latest.since, today)
+    val spoken: String = stringResource(R.string.body_latest_spoken, value, massUnitSpoken(unit), date, rate, since)
     Surface(
         shape = MaterialTheme.shapes.medium,
         border = BorderStroke(HAIRLINE, MaterialTheme.colorScheme.outlineVariant),
@@ -132,7 +143,7 @@ private fun LatestWeightCard(latest: LatestWeight, unit: MassUnit, today: LocalD
                 style = MaterialTheme.typography.headlineSmall,
             )
             Text(
-                text = stringResource(R.string.body_latest_rate, rate, massUnitSymbol(unit)),
+                text = stringResource(R.string.body_latest_rate, rate, massUnitSymbol(unit), since),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

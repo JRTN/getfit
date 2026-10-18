@@ -13,8 +13,9 @@ import com.jrussell.fitness.core.domain.metric.MetricIds
 import com.jrussell.fitness.core.domain.metric.MetricRegistry
 import com.jrussell.fitness.core.domain.metric.linearTrend
 import com.jrussell.fitness.core.domain.observeToday
+import com.jrussell.fitness.core.domain.range.DateRangeRepository
 import com.jrussell.fitness.core.domain.range.DateRangeSelection
-import com.jrussell.fitness.core.domain.range.cardRange
+import com.jrussell.fitness.core.domain.range.RangeScreen
 import com.jrussell.fitness.core.domain.range.chartRange
 import com.jrussell.fitness.core.domain.time.WallClock
 import com.jrussell.fitness.core.model.Mass
@@ -37,18 +38,18 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateRange
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.minus
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 
 /**
- * The Body tab: log weigh-ins (add, history, delete) and chart them with trend weight. Typed
+ * The Body tab: log weigh-ins (add, history, delete) and chart them. Log and Trends share one
+ * date range, remembered across restarts ([RangeScreen.BODY], All by default); it decides the
+ * history shown, the latest-weight card's rate and what the chart spans. Typed
  * weights are parsed in the user's unit and stored in kilograms; everything shown is converted
  * back to the user's unit here, so switching units never touches stored data.
  */
@@ -57,10 +58,10 @@ class BodyViewModel @Inject constructor(
     private val measurements: MeasurementRepository,
     private val metrics: MetricRegistry,
     private val preferences: UserPreferencesRepository,
+    private val ranges: DateRangeRepository,
     private val dayBoundary: DayBoundaryRepository,
     private val clock: WallClock,
 ) : ViewModel() {
-    private val selection: MutableStateFlow<DateRangeSelection> = MutableStateFlow(DateRangeSelection.Today)
     private val entry: MutableStateFlow<WeightEntryState?> = MutableStateFlow(null)
 
     /** `null` until the first read, so the tab never flashes an empty state before data arrives. */
@@ -71,7 +72,9 @@ class BodyViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), initialValue = null)
 
     fun onRangeSelected(selection: DateRangeSelection) {
-        this.selection.value = selection
+        viewModelScope.launch {
+            ranges.setSelection(RangeScreen.BODY, selection)
+        }
     }
 
     /** Opens the add-weight dialog with no error showing. */
@@ -144,58 +147,50 @@ class BodyViewModel @Inject constructor(
 
     private fun stateFor(today: LocalDate): Flow<BodyUiState> {
         val allTime: LocalDateRange = HISTORY_START..today
-        val rateRange: LocalDateRange = DateRangeSelection.LastDays(RATE_DAYS).cardRange(today)
-        val controls: Flow<Controls> = combine(selection, entry, preferences.userPreferences) {
-                selected: DateRangeSelection,
-                dialog: WeightEntryState?,
-                prefs: UserPreferences,
-            ->
+        val controls: Flow<Controls> = combine(
+            ranges.selection(RangeScreen.BODY),
+            entry,
+            preferences.userPreferences,
+        ) { selected: DateRangeSelection, dialog: WeightEntryState?, prefs: UserPreferences ->
             Controls(selected, dialog, prefs.massUnit)
         }
         return combine(
             controls,
-            measurements.observeMeasurements(
-                MeasurementTypeKeys.WEIGHT,
-                today.minus(DatePeriod(days = HISTORY_DAYS - 1)),
-                today,
-            ),
+            measurements.observeMeasurements(MeasurementTypeKeys.WEIGHT, HISTORY_START, today),
             metrics.series(MetricIds.BODY_WEIGHT, allTime, Bucket.DAY),
         ) { controls: Controls, readings: List<Measurement>, weights: List<DataPoint> ->
             val unit: MassUnit = controls.unit
-            val chartRange: LocalDateRange = controls.selection.chartRange(today)
+            // One range for the whole tab: the Log's history and rate and the Trends chart.
+            val range: LocalDateRange = controls.selection.chartRange(today, earliest = weights.firstOrNull()?.date)
+            val inRange: List<DataPoint> = weights.inRange(range, unit)
             BodyUiState(
                 today = today,
                 unit = unit,
                 latest = weights.lastOrNull()?.let { point: DataPoint ->
-                    val perWeek: Double = linearTrend(weights.inRange(rateRange, unit))?.perWeek ?: 0.0
-                    LatestWeight(point.value.inUnit(unit), point.date, perWeek)
+                    LatestWeight(
+                        value = point.value.inUnit(unit),
+                        date = point.date,
+                        perWeek = linearTrend(inRange)?.perWeek ?: 0.0,
+                        since = range.start,
+                    )
                 },
                 history = readings
+                    .filter { reading: Measurement -> reading.localDate in range }
                     .sortedWith(compareByDescending<Measurement> { it.localDate }.thenByDescending { it.startTime })
                     .map { reading: Measurement -> reading.toRow(unit) },
                 selection = controls.selection,
-                chartRange = chartRange,
-                chartWeighIns = weights.inRange(chartRange, unit),
+                chartRange = range,
+                chartWeighIns = inRange,
                 entry = controls.entry,
             )
         }
     }
 
-    private data class Controls(
-        val selection: DateRangeSelection,
-        val entry: WeightEntryState?,
-        val unit: MassUnit,
-    )
+    private data class Controls(val selection: DateRangeSelection, val entry: WeightEntryState?, val unit: MassUnit)
 
     private companion object {
-        /** Reads all history so "latest" never depends on the visible range. */
+        /** Reads all history so "latest" and the All range never depend on the visible range. */
         val HISTORY_START: LocalDate = LocalDate.fromEpochDays(0)
-
-        /** How far back the weigh-in list goes. */
-        const val HISTORY_DAYS: Int = 90
-
-        /** The latest-weight card's rate is the trend over this many days. */
-        const val RATE_DAYS: Int = 30
         const val STOP_TIMEOUT_MILLIS: Long = 5_000L
     }
 }

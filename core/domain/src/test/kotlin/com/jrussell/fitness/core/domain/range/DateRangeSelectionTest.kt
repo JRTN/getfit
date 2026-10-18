@@ -10,6 +10,19 @@ class DateRangeSelectionTest {
     private val today: LocalDate = LocalDate(2026, 10, 17)
 
     @Test
+    fun all_startsAtTheEarliestData() {
+        val earliest: LocalDate = LocalDate(2026, 8, 22)
+
+        assertThat(DateRangeSelection.All.cardRange(today, earliest)).isEqualTo(range(earliest, today))
+        assertThat(DateRangeSelection.All.chartRange(today, earliest)).isEqualTo(range(earliest, today))
+    }
+
+    @Test
+    fun all_noData_isJustToday() {
+        assertThat(DateRangeSelection.All.cardRange(today, earliest = null)).isEqualTo(range(today, today))
+    }
+
+    @Test
     fun today_cardIsOneDay_chartIsLastSevenDays() {
         assertThat(DateRangeSelection.Today.cardRange(today)).isEqualTo(range(today, today))
         assertThat(DateRangeSelection.Today.chartRange(today)).isEqualTo(range(LocalDate(2026, 10, 11), today))

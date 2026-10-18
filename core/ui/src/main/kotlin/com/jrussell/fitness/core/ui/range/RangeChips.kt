@@ -1,10 +1,8 @@
 package com.jrussell.fitness.core.ui.range
 
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DatePickerState
@@ -38,8 +36,9 @@ private const val SEVEN_DAYS: Int = 7
 private const val THIRTY_DAYS: Int = 30
 
 /**
- * The range presets shared by Home and every Trends view (decision #38): Today, 7 days, 30 days,
- * and From…, which opens a date picker for the start date. Dates after [today] can't be picked.
+ * The range presets shared by Home and the tabs (decision #38): All (clears any narrower range),
+ * Today, 7 days, 30 days, and From…, which opens a date picker for the start date. Dates after
+ * [today] can't be picked.
  * The chips form a single-choice group for TalkBack (radio role with selected state).
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -51,10 +50,16 @@ fun RangeChips(
     modifier: Modifier = Modifier,
 ) {
     var pickingStart: Boolean by rememberSaveable { mutableStateOf(false) }
-    Row(
-        modifier = modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+    // Wraps onto a second line instead of scrolling, so every choice (and the From date) stays visible.
+    FlowRow(
+        modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
+        RangeChip(
+            label = stringResource(R.string.range_all),
+            selected = selection == DateRangeSelection.All,
+        ) { onSelect(DateRangeSelection.All) }
         RangeChip(
             label = stringResource(R.string.range_today),
             selected = selection == DateRangeSelection.Today,

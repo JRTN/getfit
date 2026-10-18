@@ -30,6 +30,7 @@
     <string name="unit_spoken_kilogram">kilograms</string>
 
     <!-- Range chips -->
+    <string name="range_all">All</string>
     <string name="range_today">Today</string>
     <string name="range_7_days">7 days</string>
     <string name="range_30_days">30 days</string>

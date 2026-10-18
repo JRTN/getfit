@@ -29,6 +29,7 @@ class HomeScreenSemanticsTest {
         latest = 212.4,
         latestDate = today,
         perWeek = -1.2,
+        since = LocalDate(2026, 10, 11),
         unit = MassUnit.POUND,
     )
 
@@ -54,16 +55,21 @@ class HomeScreenSemanticsTest {
     fun bodyCard_mergesSemantics() {
         show(todayCard, onOpenBody = {})
 
-        rule.onNodeWithContentDescription("Weight 212.4 pounds, −1.2 pounds per week", substring = true)
+        rule.onNodeWithContentDescription("Weight 212.4 pounds, −1.2 pounds per week since Oct 11", substring = true)
             .assertHasClickAction()
     }
 
     @Test
     fun rangeCard_showsChangeAndRate() {
-        show(BodyCard.Range(RangeChange(start = 216.0, end = 212.4, perWeek = -3.6), MassUnit.POUND), onOpenBody = {})
+        show(
+            BodyCard.Range(RangeChange(216.0, 212.4, -3.6), since = LocalDate(2026, 9, 18), MassUnit.POUND),
+            onOpenBody = {},
+        )
 
-        rule.onNodeWithText("−3.6 lb/week", useUnmergedTree = true).assertIsDisplayed()
-        rule.onNodeWithContentDescription("Weight 216.0 to 212.4 pounds, −3.6 pounds per week").assertIsDisplayed()
+        rule.onNodeWithText("−3.6 lb/week since Sep 18", useUnmergedTree = true).assertIsDisplayed()
+        rule.onNodeWithContentDescription(
+            "Weight 216.0 to 212.4 pounds, −3.6 pounds per week since Sep 18",
+        ).assertIsDisplayed()
     }
 
     private fun show(body: BodyCard?, onOpenBody: () -> Unit) {

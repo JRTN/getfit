@@ -13,8 +13,8 @@ import kotlinx.datetime.LocalTime
  *
  * @property today the current day, after the user's day start.
  * @property latest the most recent day's weigh-in, or `null` before the first one.
- * @property history individual weigh-ins from the last 90 days, newest first.
- * @property selection the Trends range; [chartRange] is the dates the chart spans for it.
+ * @property history individual weigh-ins inside [chartRange], newest first.
+ * @property selection the tab's range (Log and Trends); [chartRange] is the dates it covers.
  * @property chartWeighIns one point per day (that day's last weigh-in) inside [chartRange].
  * @property entry the add-weight dialog, or `null` while it is closed.
  */
@@ -30,11 +30,12 @@ data class BodyUiState(
 )
 
 /**
- * The latest weigh-in: [value] in the display unit, on [date]. [perWeek] is the weight trend: the
- * slope of the best-fit line through the last 30 days of weigh-ins, per week (0 with fewer than
- * two days of weigh-ins).
+ * The latest weigh-in: [value] in the display unit, on [date] (always the newest, even outside the
+ * range). [perWeek] is the weight trend: the slope of the best-fit line through the weigh-ins in
+ * the selected range, per week (0 with fewer than two days of them), measured [since] the range's
+ * first day.
  */
-data class LatestWeight(val value: Double, val date: LocalDate, val perWeek: Double)
+data class LatestWeight(val value: Double, val date: LocalDate, val perWeek: Double, val since: LocalDate)
 
 /** One weigh-in in the history list: [value] in the display unit, taken at [time] on [date]. */
 data class WeightRow(val id: MeasurementId, val date: LocalDate, val time: LocalTime, val value: Double)

@@ -222,10 +222,18 @@ Decided with the user after trying the first weight chart on the emulator. Showi
 
 - **What the user sees as "trend" is a rate**, in lb or kg per week: the slope of the least-squares line through the weigh-ins in a range, with each weigh-in placed by its date. With fewer than two days of weigh-ins it is 0.0 (no "not enough data" message).
 - **The weight chart** draws a solid line through each day's weigh-in, with a dot on each, as the main series, and the trend as a dotted straight line from the first to the last weigh-in in the range. The table lists only the weigh-ins, with the spoken summary (which includes the rate) above it.
-- **Where the rate is measured:** Body's latest-weight card uses the last 30 days. Home's Weight card uses Home's range, with Today using the last 7 days like Today's charts.
+- **Where the rate is measured:** over the screen's selected range, labeled "since <range start>" (see "Ranges" below; this replaced a fixed 30-day window on Body the same day).
 - **Trend weight (decision #28) stays** as an internal metric (`BODY_TREND_WEIGHT`) for the M5 adaptive expenditure estimate and PAL calibration. It is no longer displayed.
 
 ### Every chart, and the trend-line switch (same day)
 
 - **The rule holds for every chart, not just weight.** The shared chart component draws each series as its values connected by a solid line with a dot on each point (the main line), and derives the trend itself: a dotted least-squares line through that series' points, in the same color, drawn under the main line. Any rate a chart reports ("per week" in the spoken summary and table) is that line's slope. Screens pass only recorded values; they never build a trend series.
 - **Each chart can hide its trend line.** Next to "View as table", every chart has "Hide trend line" / "Show trend line" (on whenever the chart is first shown; kept across rotation). Hiding it removes the dotted line; the summary's rate stays. A chart whose points fall on one date has no trend and no button. (Revised the same day: a Settings › Charts switch was tried first and replaced by this per-chart button.)
+
+### Ranges: the Log filters too, All clears, and choices are remembered (same day)
+
+- **Every rate says where it starts:** "−1.4 lb/week since Sep 19" (TalkBack: "… pounds per week since Sep 19"). The date is the range's first day; for All, the first weigh-in's. The year is shown only when it isn't this year.
+- **Body has one range for Log and Trends.** The range chips appear on both views and changing one changes the other. The range decides the history list, the latest-weight card's rate and the chart. The latest weight itself is always the newest weigh-in, even if it falls outside the range. Picking From… is how you "start fresh": earlier weigh-ins are ignored but not deleted.
+- **All** is a new chip, first in the row on every screen with range chips: from the earliest data through today. It is how you clear a narrower range. Body defaults to All; Home defaults to Today.
+- **Remembered separately:** Home's and Body's ranges are saved (with the UI preferences) and restored on the next launch, independently of each other.
+- The chips wrap onto a second line instead of scrolling sideways, so a long "From Oct 1, 2026" chip is never cut off.

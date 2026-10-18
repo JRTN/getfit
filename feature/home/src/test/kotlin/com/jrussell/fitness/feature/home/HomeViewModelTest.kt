@@ -11,8 +11,10 @@ import com.jrussell.fitness.core.domain.metric.MetricId
 import com.jrussell.fitness.core.domain.metric.MetricIds
 import com.jrussell.fitness.core.domain.metric.RangeChange
 import com.jrussell.fitness.core.domain.range.DateRangeSelection
+import com.jrussell.fitness.core.domain.range.RangeScreen
 import com.jrussell.fitness.core.model.MassUnit
 import com.jrussell.fitness.core.model.UserPreferences
+import com.jrussell.fitness.core.testing.FakeDateRangeRepository
 import com.jrussell.fitness.core.testing.FakeDayBoundaryRepository
 import com.jrussell.fitness.core.testing.FakeMetricRegistry
 import com.jrussell.fitness.core.testing.FakeUserPreferencesRepository
@@ -40,6 +42,7 @@ class HomeViewModelTest {
             MetricIds.BODY_WEIGHT to weights,
         ),
     )
+    private val ranges: FakeDateRangeRepository = FakeDateRangeRepository()
     private val preferences: FakeUserPreferencesRepository =
         FakeUserPreferencesRepository(UserPreferences.DEFAULT.copy(massUnit = MassUnit.KILOGRAM))
 
@@ -63,6 +66,7 @@ class HomeViewModelTest {
         assertThat(card.latestDate).isEqualTo(today)
         // Today's rate is the trend over the last 7 days, like Today's charts; Oct 1 is outside.
         assertThat(card.perWeek).isCloseTo(-3.5, 1e-9)
+        assertThat(card.since).isEqualTo(LocalDate(2026, 10, 11))
     }
 
     @Test
@@ -81,6 +85,7 @@ class HomeViewModelTest {
         assertThat(card.change.start).isCloseTo(99.0, 1e-9)
         assertThat(card.change.end).isCloseTo(98.0, 1e-9)
         assertThat(card.change.perWeek).isCloseTo(-0.25, 1e-9)
+        assertThat(card.since).isEqualTo(LocalDate(2026, 9, 18))
     }
 
     @Test
@@ -120,7 +125,7 @@ class HomeViewModelTest {
     }
 
     private fun newViewModel(): HomeViewModel {
-        return HomeViewModel(metrics, preferences, FakeDayBoundaryRepository(), clock)
+        return HomeViewModel(metrics, preferences, ranges, FakeDayBoundaryRepository(), clock)
     }
 
     private suspend fun rangeCard(selection: DateRangeSelection): BodyCard.Range {
@@ -135,5 +140,30 @@ class HomeViewModelTest {
 
     private fun point(month: Int, day: Int, kilograms: Double): DataPoint {
         return DataPoint(LocalDate(2026, month, day), kilograms, coverage = null)
+    }
+
+    @Test
+    fun allRange_startsAtTheFirstWeighIn() = runTest {
+        weights.value = listOf(point(3, 1, 100.0), point(10, 17, 98.0))
+
+        val card: BodyCard.Range = rangeCard(DateRangeSelection.All)
+
+        assertThat(card.since).isEqualTo(LocalDate(2026, 3, 1))
+        assertThat(card.change.start).isCloseTo(100.0, 1e-9)
+    }
+
+    @Test
+    fun onRangeSelected_isRememberedForHomeOnly() = runTest {
+        newViewModel().onRangeSelected(DateRangeSelection.LastDays(7))
+
+        assertThat(ranges.saved(RangeScreen.HOME)).isEqualTo(DateRangeSelection.LastDays(7))
+        assertThat(ranges.saved(RangeScreen.BODY)).isNull()
+    }
+
+    @Test
+    fun savedRange_isShownOnOpen() = runTest {
+        ranges.setSelection(RangeScreen.HOME, DateRangeSelection.LastDays(30))
+
+        assertThat(loaded(newViewModel()).selection).isEqualTo(DateRangeSelection.LastDays(30))
     }
 }
