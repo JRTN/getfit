@@ -29,6 +29,7 @@ import java.util.Locale
 import javax.inject.Inject
 import kotlin.time.Instant
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -64,6 +65,9 @@ class BodyViewModel @Inject constructor(
 ) : ViewModel() {
     private val entry: MutableStateFlow<WeightEntryState?> = MutableStateFlow(null)
 
+    /** The save in progress, if any; further saves are ignored until it finishes. */
+    private var saving: Job? = null
+
     /** `null` until the first read, so the tab never flashes an empty state before data arrives. */
     @OptIn(ExperimentalCoroutinesApi::class)
     val uiState: StateFlow<BodyUiState?> = observeToday(clock, dayBoundary).flatMapLatest { day: LocalDate ->
@@ -95,7 +99,8 @@ class BodyViewModel @Inject constructor(
      * Saves [text] as a weigh-in in the user's unit. [pickedDate] and [pickedTime] are `null`
      * unless the user changed them in the dialog. A picked date files the reading under that day
      * even if the time is before the day start; otherwise the day-start rule decides. A time in
-     * the future is saved as now. An invalid weight leaves the dialog open with a field error.
+     * the future is saved as now. An invalid weight leaves the dialog open with a field error. A call
+     * made while a save is still running is ignored.
      */
     fun onSaveWeight(
         text: String,
@@ -103,7 +108,11 @@ class BodyViewModel @Inject constructor(
         pickedTime: LocalTime?,
         locale: Locale = Locale.getDefault(),
     ) {
-        viewModelScope.launch {
+        // Keyboard Done followed by Save (or a double tap) must not store the weigh-in twice.
+        if (saving?.isActive == true) {
+            return
+        }
+        saving = viewModelScope.launch {
             val unit: MassUnit = preferences.userPreferences.first().massUnit
             when (val parsed: WeightInputResult = parseWeightInput(text, unit, locale)) {
                 is WeightInputResult.Invalid -> entry.value = WeightEntryState(error = parsed.reason)

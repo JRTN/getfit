@@ -47,7 +47,7 @@ All navigation state is in [`TopLevelBackStack`](../../app/src/main/kotlin/com/j
 - **Tabs** come from [`TopLevelDestination`](../../app/src/main/kotlin/com/jrussell/fitness/navigation/TopLevelDestination.kt): four tabs, each with an outlined icon and a filled icon for the selected state. Each tab keeps its own history.
 - **`switchTo(tab)`** shows a tab and restores where you were in it.
 - **Settings is an overlay**, not a tab: `openOverlay(SettingsKey)` shows it over whichever tab is current. It can never be stacked twice, and switching tabs closes it.
-- **Back** (`removeLast`) closes the overlay first, then pops the current tab, then returns to Home. On Home's root it returns `false`, and the activity calls `moveTaskToBack(true)`: the app goes to the background but stays alive, like the system default.
+- **Back** (`removeLast`) closes the overlay first, then pops the current tab, then returns to Home. On Home's root there is nothing left to pop, so Navigation 3 does not intercept back at all and Android's default runs. On Android 12 and later (the app needs 14) that moves the app to the background without finishing it. `MainActivity`'s `onExit = { moveTaskToBack(true) }` is a fallback for the case where back *is* intercepted at the root and `removeLast` returns `false`; Navigation 3 1.2.0 never does that.
 
 Try it on the emulator: open Settings, switch tabs, and press back from Body. Then read `removeLast`.
 

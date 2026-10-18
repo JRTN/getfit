@@ -21,7 +21,9 @@ import com.jrussell.fitness.navigation.TopLevelBackStack
  * decorators; all of them stay in composition, and only the visible ones are handed to `NavDisplay`.
  * An entry's state is dropped only when it is popped from its own stack.
  *
- * @param onExit called when back is pressed on the start tab's root; the app moves to the background.
+ * @param onExit called if a back press reaches [TopLevelBackStack.removeLast] with nothing left to
+ *   close. Navigation 3 1.2.0 stops intercepting back at the start tab's root, so in practice
+ *   Android's default runs there (moving the app to the background); this is the fallback.
  */
 @Composable
 fun <K : Any> TabNavDisplay(

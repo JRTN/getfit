@@ -31,6 +31,7 @@ import com.jrussell.fitness.core.testing.FakeWallClock
 import com.jrussell.fitness.core.testing.MainDispatcherRule
 import java.util.Locale
 import kotlin.time.Instant
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
@@ -252,6 +253,21 @@ class BodyViewModelTest {
         assertThat(measurements.added.single().takenAt).isEqualTo(clock.now)
     }
 
+    @Test
+    fun onSaveWeight_secondTapWhileSaving_savesOnce() = runTest {
+        val viewModel: BodyViewModel = loadedViewModel()
+        val gate: CompletableDeferred<Unit> = CompletableDeferred()
+        measurements.gate = gate
+
+        // Keyboard Done, then Save, before the first write finishes.
+        viewModel.onSaveWeight("181.7", pickedDate = null, pickedTime = null, locale = Locale.US)
+        viewModel.onSaveWeight("181.7", pickedDate = null, pickedTime = null, locale = Locale.US)
+        gate.complete(Unit)
+
+        assertThat(measurements.added).hasSize(1)
+        assertThat(measurements.delegate.measurements).hasSize(1)
+    }
+
     private fun loadedViewModel(ranges: FakeDateRangeRepository = FakeDateRangeRepository()): BodyViewModel {
         return BodyViewModel(measurements, metrics, preferences, ranges, FakeDayBoundaryRepository(240), clock)
     }
@@ -273,8 +289,12 @@ class BodyViewModelTest {
     private class RecordingMeasurements(val delegate: FakeMeasurementRepository) : MeasurementRepository by delegate {
         val added: MutableList<ManualMeasurement> = mutableListOf()
 
+        /** While set, saves wait here, as a slow disk write would. */
+        var gate: CompletableDeferred<Unit>? = null
+
         override suspend fun addManual(entry: ManualMeasurement): Outcome<MeasurementId> {
             added += entry
+            gate?.await()
             return delegate.addManual(entry)
         }
     }

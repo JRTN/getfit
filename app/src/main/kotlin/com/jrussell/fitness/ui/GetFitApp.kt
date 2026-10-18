@@ -41,7 +41,7 @@ import com.jrussell.fitness.navigation.TopLevelDestination
  * bar, and [TabNavDisplay] showing the current screen between them (each tab keeps its state).
  *
  * @param navigation the tab back stack (owned by `MainViewModel`).
- * @param onExit called when back is pressed on Home's root screen; the app moves to the background.
+ * @param onExit the fallback for a back press with nothing left to close (see [TabNavDisplay]).
  */
 @Composable
 fun GetFitApp(navigation: TopLevelBackStack<NavKey>, onExit: () -> Unit) {
