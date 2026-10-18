@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Chart component -->
+    <string name="chart_view_table">View as table</string>
+    <string name="chart_view_chart">View as chart</string>
+    <string name="chart_no_data">No data in this range</string>
+    <string name="chart_table_date">Date</string>
+    <plurals name="chart_days">
+        <item quantity="one">%d day</item>
+        <item quantity="other">%d days</item>
+    </plurals>
+    <!-- Spoken summary: title, span ("30 days"), first value, last value, unit spoken, trend phrase. -->
+    <string name="chart_summary">%1$s, %2$s, %3$s to %4$s %5$s, %6$s</string>
+    <!-- Spoken summary with a single value: title, span, value, unit spoken. -->
+    <string name="chart_summary_single">%1$s, %2$s, %3$s %4$s</string>
+    <string name="chart_trend_increasing">increasing %1$s %2$s per week</string>
+    <string name="chart_trend_decreasing">decreasing %1$s %2$s per week</string>
+    <string name="chart_trend_steady">steady</string>
+
+    <!-- Range chips -->
+    <string name="range_today">Today</string>
+    <string name="range_7_days">7 days</string>
+    <string name="range_30_days">30 days</string>
+    <string name="range_from">From…</string>
+    <string name="range_from_date">From %1$s</string>
+    <string name="range_picker_confirm">OK</string>
+    <string name="range_picker_cancel">Cancel</string>
+</resources>

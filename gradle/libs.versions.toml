@@ -23,6 +23,7 @@ konsist = "0.18.1"
 detekt = "2.0.0-alpha.6"
 ktlintGradle = "14.2.0"
 dependencyAnalysis = "3.9.0"
+vico = "3.3.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -61,6 +62,7 @@ robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "
 detekt-api = { group = "dev.detekt", name = "detekt-api", version.ref = "detekt" }
 detekt-test = { group = "dev.detekt", name = "detekt-test", version.ref = "detekt" }
 konsist = { group = "com.lemonappdev", name = "konsist", version.ref = "konsist" }
+vico-compose-m3 = { group = "com.patrykandpatrick.vico", name = "compose-m3", version.ref = "vico" }
 
 # Build-logic classpath
 android-gradlePlugin = { group = "com.android.tools.build", name = "gradle", version.ref = "agp" }
